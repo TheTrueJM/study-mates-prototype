@@ -61,14 +61,14 @@ class Student(db.Model):
     availability = db.relationship("Availability", backref="student")
 
     # Combine (Union) these lists when handling Matches
-    matchesA = db.relationship("StudentMatch", foreign_keys="[StudentMatch.studentA_id]", backref="student")
-    matchesB = db.relationship("StudentMatch", foreign_keys="[StudentMatch.studentB_id]", backref="student")
+    matchesAsA = db.relationship("StudentMatch", foreign_keys="[StudentMatch.studentA_id]", backref="student")
+    matchesAsB = db.relationship("StudentMatch", foreign_keys="[StudentMatch.studentB_id]", backref="student")
     
     @property
     def matches(self):
         return [
             m.studentB_id if m.studentA_id == self.id else m.studentA_id
-            for m in self.matchesA.union(self.matchesB)
+            for m in self.matchesAsA.union(self.matchesAsB)
         ]
 
     def __repr__(self):
@@ -76,15 +76,35 @@ class Student(db.Model):
 
 
 class Group(db.Model):
+    __tablename__ = "groups"
+
     num = db.Column(db.Integer, primary_key=True)
     tutorial_code = db.Column(db.String(6), db.ForeignKey("tutorial.code"), primary_key=True)
 
 class GroupMember(db.Model):
+    __tablename__ = "group_members"
+
     group_num = db.Column(db.Integer, db.ForeignKey("num"), primary_key=True)
     tutorial_code = db.Column(db.String(6), db.ForeignKey("group.tutorial_code"), primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey("student.id"), primary_key=True)
 
-
 class StudentMatch(db.Model): # NOTE: Store students as (min(A_id, B_id), max(A_id, B_id)) to not need symmetric storage
+    __tablename__ = "student_matches"
+
     studentA_id = db.Column(db.Integer, db.ForeignKey("student.id"), primary_key=True)
     studentB_id = db.Column(db.Integer, db.ForeignKey("student.id"), primary_key=True)
+
+
+
+class DiscussionCategory(db.Model):
+    __tablename__ = "discussion_categories"
+
+    name = db.Column(db.String(25), primary_key=True)
+    questions = db.relationship("discussion_question", backref="discussion_category")
+
+class DiscussionQuestion(db.Model):
+    __tablename__ = "discussion_questions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    question = db.Column(db.String(100))
+    category_name = db.Column(db.String(25), db.ForeignKey("discussion_category.name"))
