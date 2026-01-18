@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>test</title>
+
+        <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+        <script>
+          let uuid = localStorage.getItem("uuid");
+          let currentRoom = null;
+          const socket = io(
+            "ws://127.0.0.1:5000",
+            {
+              auth: {
+                uuid: uuid
+              }
+            }
+          );
+
+          socket.on("connect", ()=>{
+            console.log("Socket ID: ", socket.id);
+            document.getElementById("status").innerText = "connected";
+            document.getElementById("session").innerText = socket.id;
+          });
+
+          socket.on("disconnect", ()=>{
+            console.log("Socket ID: ", socket.id);
+            document.getElementById("status").innerText = "disconnected";
+          });
+
+          socket.on("session", (data)=>{
+            console.log("UUID: ", data.uuid);
+            document.getElementById("uuid").innerText = data.uuid;
+            if (!uuid){
+                uuid = data.uuid;
+                localStorage.setItem("uuid", uuid);
+            }
+          });
+
+          socket.on("list", (data)=>{
+            document.getElementById("users").innerHTML = "";
+            for(let i=0; i<data.users; i++){
+              const li = document.createElement("li");
+              li.innerText = "User" + i;
+              document.getElementById("users").appendChild(li);
+            }
+          });
+
+          socket.on("room_joined", (data)=>{
+            currentRoom = data.room;
+            document.getElementById("room").innerText = data.room;
+            updateRoomButtons();
+          });
+
+          socket.on("room_left", (data)=>{
+            currentRoom = null;
+            document.getElementById("room").innerText = "None";
+            updateRoomButtons();
+          });
+
+          function reset_uuid() {
+            uuid = null;
+            localStorage.removeItem("uuid");
+            location.reload();
+          }
+
+          function leaveRoom() {
+            socket.emit("leave_room");
+          }
+
+          function updateRoomButtons() {
+            const leaveBtn = document.getElementById("leave-room-btn");
+            if (currentRoom) {
+              leaveBtn.style.display = "inline-block";
+            } else {
+              leaveBtn.style.display = "none";
+            }
+          }
+        </script>
+    </head>
+    <body>
+        <h1 style="color:blue">STUDENT MODE</h1>
+        <h3>Status: <span id="status">disconnected</span></h3>
+        <p>User ID: <span id="uuid"></span></p>
+        <p>Session ID: <span id="session"></span> </p>
+        <p>Current Room: <span id="room">None</span></p>
+        <p>Users: </p>
+        <ul id="users">
+
+        </ul>
+
+        <button onclick="reset_uuid()">Reset UUID</button>
+        <button onclick="window.location.href='/teacher'">Become Teacher</button>
+        <button id="leave-room-btn" onclick="leaveRoom()" style="display: none;">Leave Room</button>
+    </body>
+</html>

@@ -8,7 +8,7 @@ import os
 socketio = SocketIO(
     logger=True,
     cors_allows_origins = "*",
-    cors_credentials = False
+    cors_credentials = False,
 )
 
 def create_app():
