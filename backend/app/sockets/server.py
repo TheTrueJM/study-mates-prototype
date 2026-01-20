@@ -54,13 +54,17 @@ def connect(data):
     if request.sid not in sessions:
         if data is not None:
             userID = data.get("uuid", None)
+            role = data.get("role", "student")
             if userID is None:
                 userID = str(uuid.uuid4())
         else:
             userID = str(uuid.uuid4())
+            role = "student"
 
         if userID not in users:
-            users[userID] = {"sessions": [], "room": data.get("room", None)}
+            users[userID] = {"sessions": [], "room": data.get("room", None), "role": role}
+        else:
+            users[userID]["role"] = role
 
         current_room = users[userID]["room"]
 
@@ -103,20 +107,24 @@ def create_room():
 @socketio.on("assign_room")
 def assign_room(data):
     user_ids = data.get("students", [])
+    valid_user_ids = [uid for uid in user_ids if uid in users and users[uid]["role"] != "teacher"]
+
+    if not valid_user_ids:
+        return
+
     new_room = _create_room()
 
     affected_rooms = set()
     affected_rooms.add(None)
     affected_rooms.add(new_room)
 
-    for user_id in user_ids:
-        if user_id in users:
-            _leave_room(user_id)
-            users[user_id]["room"] = new_room
-            for session_id in users[user_id]["sessions"]:
-                join_room(new_room, sid=session_id)
-                rooms[new_room].append(user_id)
-                emit("room_joined", {"room": new_room}, to=session_id)
+    for user_id in valid_user_ids:
+        _leave_room(user_id)
+        users[user_id]["room"] = new_room
+        for session_id in users[user_id]["sessions"]:
+            join_room(new_room, sid=session_id)
+            rooms[new_room].append(user_id)
+            emit("room_joined", {"room": new_room}, to=session_id)
 
     for room in affected_rooms:
         _emit_list_update(room)
@@ -142,6 +150,7 @@ def get_students():
         user_list.append({
             "id": user_id,
             "room": user_data["room"],
-            "sessions": len(user_data["sessions"])
+            "sessions": len(user_data["sessions"]),
+            "role": user_data.get("role", "student")
         })
     emit("students_list", {"students": user_list})

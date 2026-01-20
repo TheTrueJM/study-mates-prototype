@@ -12,7 +12,8 @@
             {
               auth: {
                 uuid: uuid,
-                room: current_room
+                room: current_room,
+                role: "teacher"
               }
             }
           );
@@ -69,10 +70,12 @@
             studentsList.innerHTML = "";
             if (data.students) {
                 data.students.forEach(user => {
+                    const isTeacher = user.role === "teacher";
+                    const label = `${user.id.substring(0,8)} ${user.room ? `(Room: ${user.room})` : '(Lobby)'} ${isTeacher ? '<span style="color:red; font-weight:bold;">(TEACHER)</span>' : ''}`;
                     const div = document.createElement("div");
                     div.innerHTML = `
-                        <input type="checkbox" id="user-${user.id}" value="${user.id}">
-                        <label for="user-${user.id}">${user.id.substring(0,8)} ${user.room ? `(Room: ${user.room})` : '(Lobby)'}</label>
+                        ${isTeacher ? '' : `<input type="checkbox" id="user-${user.id}" value="${user.id}">`}
+                        <label for="user-${user.id}">${label}</label>
                     `;
                     studentsList.appendChild(div);
                 });
