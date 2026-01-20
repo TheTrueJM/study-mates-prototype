@@ -44,16 +44,23 @@
             }
           });
 
-          socket.on("room_list", (data)=>{
-            console.log(data);
-            const studentsList = document.getElementById("students");
-            studentsList.innerHTML = "";
-            if (data.students) {
-                data.students.forEach(userId => {
-                    const li = document.createElement("li");
-                    li.innerText = userId.substring(0,8);
-                    studentsList.appendChild(li);
-                });
+          socket.on("room_list", (data) => {
+            document.getElementById("rooms").innerHTML = "";
+
+            for (const r of data) {
+              const li = document.createElement("li");
+              const ul = document.createElement("ul");
+
+              li.innerText = r.room;
+
+              for (const student of r.students) {
+                const studentLi = document.createElement("li");
+                studentLi.innerText = student;
+                ul.appendChild(studentLi);
+              }
+
+              li.appendChild(ul);
+              document.getElementById("rooms").appendChild(li);
             }
           });
 
@@ -135,7 +142,7 @@
 
           <div style="flex: 1;">
             <h3>Rooms</h3>
-            <ul id="students"></ul>
+            <ul id="rooms"></ul>
           </div>
         </div>
 
