@@ -14,6 +14,21 @@ rooms = dict()
 def get_users_in_room(room):
     return [uid for uid, data in users.items() if data["room"] == room]
 
+def _emit_list_update(room):
+    uids = get_users_in_room(room)
+    payload = {"students": uids}
+    if room:
+        emit("list", payload, room=room)
+    else:
+        emit("list", payload, broadcast=True)
+
+def _emit_room_list():
+    payload = []
+    for room_name, uids in rooms.items():
+        room = {"room": room_name, "students": uids}
+        payload.append(room)
+    emit("room_list", payload, broadcast=True)
+
 def _create_room():
     while True:
         room_name  = ''.join(random.choices(string.ascii_uppercase, k=3))
@@ -32,23 +47,20 @@ def connect(data):
             userID = str(uuid.uuid4())
 
         if userID not in users:
-            users[userID] = {"sessions": [], "room": None}
+            users[userID] = {"sessions": [], "room": data.get("room", None)}
 
+        current_room = users[userID]["room"]
         users[userID]["sessions"].append(request.sid)
         sessions[request.sid] = userID
-        emit("session", {"uuid": userID})
+        emit("session", {"uuid": userID, "room": current_room})
     else:
         userID = sessions.get(request.sid)
-
-    current_room = users[userID]["room"]
+        current_room = users[userID]["room"]
 
     if current_room:
         join_room(current_room, sid=request.sid)
-        room_users = len(get_users_in_room(current_room))
-        emit("list", {"students": room_users}, room=current_room, broadcast=True)
-    else:
-        room_users = len(get_users_in_room(None))
-        emit("list", {"students": room_users}, broadcast=True)
+
+    _emit_list_update(current_room)
 
 @socketio.on("disconnect")
 def disconnect():
@@ -56,21 +68,13 @@ def disconnect():
 
     if userID in users:
         current_room = users[userID]["room"]
-        if current_room:
-            leave_room(current_room, sid=request.sid)
-
         users[userID]["sessions"].remove(request.sid)
 
         if not users[userID]["sessions"]:
             del users[userID]
         del sessions[request.sid]
 
-        if current_room:
-            room_users = len(get_users_in_room(current_room))
-            emit("list", {"students": room_users}, room=current_room, broadcast=True)
-        else:
-            room_users = len(get_users_in_room(None))
-            emit("list", {"students": room_users}, broadcast=True)
+        _emit_list_update(current_room)
 
 @socketio.on("create_room")
 def create_room():
@@ -79,29 +83,31 @@ def create_room():
 
 @socketio.on("assign_room")
 def assign_room(data):
-    user_ids = data.get("users", [])
-    new_room = data.get("room", None)
+    user_ids = data.get("students", [])
+    new_room = _create_room()
 
-    if not new_room:
-        return
+    affected_rooms = set()
+    affected_rooms.add(None)
+    affected_rooms.add(new_room)
 
     for user_id in user_ids:
         if user_id in users:
-            current_room = users[user_id]["room"]
-            if current_room:
-                # todo: restrict to x maximum number of sessions allowed
+            old_room = users[user_id]["room"]
+            if old_room:
+                affected_rooms.add(old_room)
                 for session_id in users[user_id]["sessions"]:
-                    leave_room(current_room, sid=session_id)
+                    rooms[old_room].discard(user_id)
+                    leave_room(old_room, sid=session_id)
 
             users[user_id]["room"] = new_room
             for session_id in users[user_id]["sessions"]:
                 join_room(new_room, sid=session_id)
+                rooms[new_room].append(user_id)
                 emit("room_joined", {"room": new_room}, to=session_id)
 
-        old_room_users = get_users_in_room(current_room)
-        lobby_users = get_users_in_room(None)
-        emit("list", {"users": len(old_room_users)}, room=current_room, broadcast=True)
-        emit("list", {"users": len(lobby_users)}, broadcast=True)
+    for room in affected_rooms:
+        _emit_list_update(room)
+    _emit_room_list()
 
 @socketio.on("leave_room")
 def leave_curr_room():
@@ -111,17 +117,16 @@ def leave_curr_room():
         if current_room:
             users[userID]["room"] = None
             for session_id in users[userID]["sessions"]:
+                rooms[current_room].discard(userID)
                 leave_room(current_room, sid=session_id)
 
             emit("room_left")
 
-            old_room_users = get_users_in_room(current_room)
-            lobby_users = get_users_in_room(None)
-            emit("list", {"users": len(old_room_users)}, room=current_room, broadcast=True)
-            emit("list", {"users": len(lobby_users)}, broadcast=True)
+            _emit_list_update(current_room)
+            _emit_list_update(None)
 
-@socketio.on("get_users")
-def get_users():
+@socketio.on("get_students")
+def get_students():
     user_list = []
     for user_id, user_data in users.items():
         user_list.append({
@@ -129,4 +134,4 @@ def get_users():
             "room": user_data["room"],
             "sessions": len(user_data["sessions"])
         })
-    emit("users_list", {"users": user_list})
+    emit("students_list", {"students": user_list})
