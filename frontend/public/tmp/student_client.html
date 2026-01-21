@@ -32,7 +32,9 @@
           socket.on("session", (data)=>{
             console.log("UUID: ", data.uuid);
             console.log("Room: ", data.room);
+            console.log("Parent: ", data.parent);
             document.getElementById("uuid").innerText = data.uuid;
+            document.getElementById("parent").innerText = data.parent;
             document.getElementById("room").innerText = data.room;
             if (!uuid){
                 uuid = data.uuid;
@@ -58,12 +60,14 @@
 
           socket.on("room_joined", (data)=>{
             current_room = data.room;
+            document.getElementById("parent").innerText = data.parent;
             document.getElementById("room").innerText = data.room;
             localStorage.setItem("current_room", current_room);
           });
 
           socket.on("room_left", (data)=>{
             current_room = null;
+            document.getElementById("parent").innerText = "";
             document.getElementById("room").innerText = "None";
             localStorage.removeItem("current_room");
           });
@@ -84,7 +88,7 @@
         <h3>Status: <span id="status">disconnected</span></h3>
         <p>User ID: <span id="uuid"></span></p>
         <p>Session ID: <span id="session"></span> </p>
-        <p>Current Room: <span id="room">None</span></p>
+        <p>Current Room: <span id="parent"><span id="room">None</span></span></p>
         <p>Users: </p>
         <ul id="users">
 

@@ -9,7 +9,12 @@ from .. import socketio
 
 users = dict()
 sessions = dict()
-rooms = dict()
+rooms = dict({
+    "CAB000": {
+         "students": [],
+         "subrooms": None
+    },
+})
 
 def get_users_in_room(room):
     return [uid for uid, data in users.items() if data["room"] == room]
