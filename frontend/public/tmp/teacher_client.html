@@ -45,23 +45,68 @@
             }
           });
 
+          // declare: function written by GLM-4.6
           socket.on("room_list", (data) => {
-            document.getElementById("rooms").innerHTML = "";
+            const roomsContainer = document.getElementById("rooms");
+            roomsContainer.innerHTML = "";
 
-            for (const r of data) {
+            for (const roomName in data) {
+              const roomData = data[roomName];
               const li = document.createElement("li");
+
+              const nameSpan = document.createElement("span");
+              nameSpan.className = "room-name";
+              nameSpan.innerText = roomName;
+              li.appendChild(nameSpan);
+
+              const joinBtn = document.createElement("button");
+              joinBtn.innerText = "Join";
+              joinBtn.setAttribute("onclick", "joinRoom(this)");
+              li.appendChild(joinBtn);
+
+              const moveBtn = document.createElement("button");
+              moveBtn.innerText = "Move student(s)";
+              moveBtn.setAttribute("onclick", "assignToRoom(this)");
+              li.appendChild(moveBtn);
+
               const ul = document.createElement("ul");
 
-              li.innerText = r.room;
+              if (roomData.subrooms) {
+                for (const subName in roomData.subrooms) {
+                  const subLi = document.createElement("li");
+                  const subSpan = document.createElement("span");
+                  subSpan.className = "room-name";
+                  subSpan.innerText = subName;
+                  subLi.appendChild(subSpan);
 
-              for (const student of r.students) {
-                const studentLi = document.createElement("li");
-                studentLi.innerText = student;
-                ul.appendChild(studentLi);
+                  const subJoinBtn = document.createElement("button");
+                  subJoinBtn.innerText = "Join";
+                  subJoinBtn.setAttribute("onclick", "joinRoom(this, true)");
+                  subLi.appendChild(subJoinBtn);
+
+                  const subMoveBtn = document.createElement("button");
+                  subMoveBtn.innerText = "Move student(s)";
+                  subMoveBtn.setAttribute("onclick", "assignToRoom(this, true)");
+                  subLi.appendChild(subMoveBtn);
+
+                  ul.appendChild(subLi);
+                }
               }
 
+              const createLi = document.createElement("li");
+              const input = document.createElement("input");
+              input.type = "text";
+              input.placeholder = "New subroom name";
+              createLi.appendChild(input);
+
+              const createBtn = document.createElement("button");
+              createBtn.innerText = "Create";
+              createBtn.setAttribute("onclick", "createSubroom(this)");
+              createLi.appendChild(createBtn);
+
+              ul.appendChild(createLi);
               li.appendChild(ul);
-              document.getElementById("rooms").appendChild(li);
+              roomsContainer.appendChild(li);
             }
           });
 
@@ -84,16 +129,14 @@
 
           socket.on("room_assigned", (data)=>{
             current_room = data.room;
-            document.getElementById("room").innerText = data.room;
             localStorage.setItem("current_room", current_room);
-            updateRoomButtons();
+            location.reload();
           });
 
           socket.on("room_left", (data)=>{
             current_room = null;
-            document.getElementById("room").innerText = "None";
             localStorage.removeItem("current_room");
-            updateRoomButtons();
+            location.reload();
           });
 
           function reset_uuid() {
@@ -102,13 +145,49 @@
             location.reload();
           }
 
-          function assignToRoom() {
+          function assignToRoom(button, is_subroom=false) { // student
+            const room_id = button.parentElement.querySelector(".room-name").textContent;
             const checkboxes = document.querySelectorAll('#all-students input[type="checkbox"]:checked');
             const selectedstudents = Array.from(checkboxes).map(cb => cb.value);
 
             if (selectedstudents.length > 0) {
-              socket.emit("assign_room", {students: selectedstudents});
+              socket.emit("assign_room",
+                {
+                  students: selectedstudents,
+                  room_name: room_id,
+                  is_subroom: is_subroom
+                }
+              );
             }
+          }
+
+          function joinRoom(button, is_subroom=false) { // teacher
+            const room_id = button.parentElement.querySelector(".room-name").textContent;
+            socket.emit("assign_room", room_id,
+              {
+                students: [uuid],
+                room_name: room_id,
+                is_subroom: is_subroom
+              }
+            );
+          }
+
+          function createRoom(room_name=null, parent=null) {
+            if (!room_name){
+              const room_name = document.getElementById("room-name-input").value;
+            }
+            socket.emit("create_room", {
+                "name": room_name,
+                "parent": parent
+              }
+            );
+          }
+
+          function createSubroom(button) {
+            const input = button.previousElementSibling;
+            const room_name = input.value;
+            const parent = button.parentElement.querySelector(".room-name").textContent;
+            createRoom(room_name, parent);
           }
 
           function leaveRoom() {
@@ -117,15 +196,6 @@
 
           function refreshstudents() {
             socket.emit("get_students");
-          }
-
-          function updateRoomButtons() {
-            const leaveBtn = document.getElementById("leave-room-btn");
-            if (current_room) {
-              leaveBtn.style.display = "inline-block";
-            } else {
-              leaveBtn.style.display = "none";
-            }
           }
         </script>
     </head>
@@ -138,18 +208,53 @@
 
         <div style="display: flex; gap: 20px;">
           <div style="flex: 1;">
-            <h3>Students (all rooms)</h3>
+            <h3>Students (Current Room)</h3>
             <div id="all-students"></div>
 
           </div>
 
           <div style="flex: 1;">
             <h3>Rooms</h3>
-            <ul id="rooms"></ul>
+            <span style="font-weight: bold;">Create Parent Room</span>
+            <input type="text" id="room-name-input" placeholder="Room Name">
+            <button onclick="createRoom()">Create</button>
+            <ul id="rooms">
+              <li>
+                <span class="room-name">Room-1</span>
+                <button onclick="joinRoom(this)">Join</button>
+                <button onclick="assignToRoom(this)">Move student(s)</button>
+                <ul>
+                  <li>
+                    <input type="text" placeholder="New subroom name" />
+                    <button onclick="createSubroom(this)">Create</button>
+                  </li>
+                </ul>
+              </li>
+              <li>
+                <span class="room-name">Room-2</span>
+                <button onclick="joinRoom(this)">Join</button>
+                <button onclick="assignToRoom(this)">Move student(s)</button>
+                <ul>
+                  <li>
+                    <span class="room-name">Room-2.1</span>
+                    <button onclick="joinRoom(this, true)">Join</button>
+                    <button onclick="assignToRoom(this, true)">Move student(s)</button>
+                  </li>
+                  <li>
+                    <span class="room-name">Room-2.2</span>
+                    <button onclick="joinRoom(this, true)">Join</button>
+                    <button onclick="assignToRoom(this, true)">Move student(s)</button>
+                  </li>
+                  <li>
+                    <input type="text" placeholder="New subroom name" />
+                    <button onclick="createSubroom(this)">Create</button>
+                  </li>
+                </ul>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <button onclick="assignToRoom()" style="margin-top: 10px;">Assign to a room</button>
         <button onclick="reset_uuid()">Reset UUID</button>
         <button onclick="window.location.href='/'">Become Student</button>
         <button onclick="refreshstudents()">Refresh students</button>
