@@ -6,13 +6,12 @@
         <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
         <script>
           let uuid = localStorage.getItem("uuid");
-          let current_room = localStorage.getItem("current_room");
+          let current_room = null;
           const socket = io(
             "ws://127.0.0.1:5000",
             {
               auth: {
                 uuid: uuid,
-                room: current_room,
                 role: "teacher"
               }
             }
@@ -22,7 +21,11 @@
             console.log("Socket ID: ", socket.id);
             document.getElementById("status").innerText = "connected";
             document.getElementById("session").innerText = socket.id;
-            socket.emit("get_students");
+            socket.emit("get_students",
+              {
+                "uuid": uuid
+              }
+            );
           });
 
           socket.on("disconnect", ()=>{
@@ -34,14 +37,13 @@
             console.log("UUID: ", data.uuid);
             console.log("Room: ", data.room);
             document.getElementById("uuid").innerText = data.uuid;
-            document.getElementById("room").innerText = data.room;
+            updateRoomUI(data.room || null);
             if (!uuid){
                 uuid = data.uuid;
                 localStorage.setItem("uuid", uuid);
             }
             if (!current_room){
                 current_room = data.room;
-                localStorage.setItem("room", current_room);
             }
           });
 
@@ -56,7 +58,7 @@
 
               const nameSpan = document.createElement("span");
               nameSpan.className = "room-name";
-              nameSpan.innerText = roomName;
+              nameSpan.innerText = roomData.room;
               li.appendChild(nameSpan);
 
               const joinBtn = document.createElement("button");
@@ -70,6 +72,8 @@
               li.appendChild(moveBtn);
 
               const ul = document.createElement("ul");
+
+              console.log(roomData);
 
               if (roomData.subrooms) {
                 for (const subName in roomData.subrooms) {
@@ -127,16 +131,30 @@
             }
           });
 
+          function updateRoomUI(room) {
+            const roomLabel = room || "none";
+            document.getElementById("room").innerText = roomLabel;
+            const leaveBtn = document.getElementById("leave-room-btn");
+            if (leaveBtn) {
+              leaveBtn.style.display = room ? "inline-block" : "none";
+            }
+          }
+
           socket.on("room_assigned", (data)=>{
-            current_room = data.room;
-            localStorage.setItem("current_room", current_room);
-            location.reload();
+            current_room = data.room || null;
+            updateRoomUI(current_room);
+          });
+
+          socket.on("room_joined", (data)=>{
+            const parent = data.parent;
+            const subroom = data.subroom;
+            current_room = subroom ? `${parent} -> ${subroom}` : parent;
+            updateRoomUI(current_room);
           });
 
           socket.on("room_left", (data)=>{
             current_room = null;
-            localStorage.removeItem("current_room");
-            location.reload();
+            updateRoomUI(null);
           });
 
           function reset_uuid() {
@@ -163,7 +181,7 @@
 
           function joinRoom(button, is_subroom=false) { // teacher
             const room_id = button.parentElement.querySelector(".room-name").textContent;
-            socket.emit("assign_room", room_id,
+            socket.emit("assign_room",
               {
                 students: [uuid],
                 room_name: room_id,
@@ -174,8 +192,12 @@
 
           function createRoom(room_name=null, parent=null) {
             if (!room_name){
-              const room_name = document.getElementById("room-name-input").value;
+              room_name = document.getElementById("room-name-input").value;
             }
+
+            console.log("room name: ", room_name);
+            console.log("parent", parent);
+
             socket.emit("create_room", {
                 "name": room_name,
                 "parent": parent
@@ -185,8 +207,9 @@
 
           function createSubroom(button) {
             const input = button.previousElementSibling;
+            const parentContainer = button.parentElement.parentElement.parentElement;
+            const parent = parentContainer.querySelector(".room-name").textContent;
             const room_name = input.value;
-            const parent = button.parentElement.querySelector(".room-name").textContent;
             createRoom(room_name, parent);
           }
 
@@ -195,7 +218,11 @@
           }
 
           function refreshstudents() {
-            socket.emit("get_students");
+            socket.emit("get_students",
+              {
+                "uuid": uuid
+              }
+            );
           }
         </script>
     </head>
@@ -258,6 +285,6 @@
         <button onclick="reset_uuid()">Reset UUID</button>
         <button onclick="window.location.href='/'">Become Student</button>
         <button onclick="refreshstudents()">Refresh students</button>
-        <button id="leave-room-btn" onclick="leaveRoom()" style="display: none;">Leave Room</button>
+        <button id="leave-room-btn" onclick="leaveRoom()" style="display: inline-block;">Leave Room</button>
     </body>
 </html>

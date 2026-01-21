@@ -7,7 +7,7 @@ import os
 
 socketio = SocketIO(
     logger=True,
-    cors_allows_origins = "*",
+    cors_allowed_origins = "*",
     cors_credentials = False,
 )
 

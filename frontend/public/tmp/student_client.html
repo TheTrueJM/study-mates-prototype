@@ -6,13 +6,12 @@
         <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
         <script>
           let uuid = localStorage.getItem("uuid");
-          let current_room = localStorage.getItem("current_room");
+          let current_room = null;
           const socket = io(
             "ws://127.0.0.1:5000",
             {
               auth: {
                 uuid: uuid,
-                room: current_room,
                 role: "student"
               }
             }
@@ -32,22 +31,24 @@
           socket.on("session", (data)=>{
             console.log("UUID: ", data.uuid);
             console.log("Room: ", data.room);
-            console.log("Parent: ", data.parent);
+            //console.log("Parent: ", data.parent);
             document.getElementById("uuid").innerText = data.uuid;
-            document.getElementById("parent").innerText = data.parent;
-            document.getElementById("room").innerText = data.room;
+            //document.getElementById("parent").innerText = data.parent;
+            document.getElementById("room").innerText = data.room || "none";
             if (!uuid){
                 uuid = data.uuid;
                 localStorage.setItem("uuid", uuid);
             }
             if (!current_room){
                 current_room = data.room;
-                localStorage.setItem("room", current_room);
             }
           });
 
           socket.on("list", (data)=>{
             const usersList = document.getElementById("users");
+
+            console.log(data.students)
+
             usersList.innerHTML = "";
             if (data.students) {
                 data.students.forEach(userId => {
@@ -59,23 +60,31 @@
           });
 
           socket.on("room_joined", (data)=>{
-            current_room = data.room;
-            document.getElementById("parent").innerText = data.parent;
-            document.getElementById("room").innerText = data.room;
-            localStorage.setItem("current_room", current_room);
+            parent = data.parent;
+            subroom = data.subroom;
+
+            console.log("parent ", parent);
+            console.log("subroom ", subroom);
+
+            room = subroom ? `${parent} -> ${subroom}` : parent;
+            document.getElementById("room").innerText = room;
           });
 
           socket.on("room_left", (data)=>{
             current_room = null;
-            document.getElementById("parent").innerText = "";
-            document.getElementById("room").innerText = "None";
-            localStorage.removeItem("current_room");
+            parent = data.parent;
+            subroom = data.subroom;
+
+            console.log("parent ", parent);
+            console.log("subroom ", subroom);
+
+            room = subroom ? `${parent} -> ${subroom}` : parent;
+            document.getElementById("room").innerText = room;
           });
 
           function reset_uuid() {
             uuid = null;
             localStorage.removeItem("uuid");
-            location.reload();
           }
 
           function leaveRoom() {
@@ -88,7 +97,7 @@
         <h3>Status: <span id="status">disconnected</span></h3>
         <p>User ID: <span id="uuid"></span></p>
         <p>Session ID: <span id="session"></span> </p>
-        <p>Current Room: <span id="parent"><span id="room">None</span></span></p>
+        <p>Current Room: <span id="room"></span></p>
         <p>Users: </p>
         <ul id="users">
 
