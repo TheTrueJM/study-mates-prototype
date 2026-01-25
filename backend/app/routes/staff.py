@@ -10,8 +10,8 @@ import os
 staff_bp = Blueprint("staff", __name__, url_prefix="/staff")
 
 
-@login_required
 @staff_bp.route("/", methods=["GET"])
+@login_required
 def index():
     session["role"] = "staff"
     session["tutorial_code"] = None
@@ -20,8 +20,8 @@ def index():
     )
     return send_file(client_path)
 
-@login_required
 @staff_bp.route("/tutorial/<code>", methods=["GET"])
+@login_required
 def tutorial(code):
     session["tutorial_code"] = code
     client_path = os.path.join(
@@ -40,17 +40,18 @@ def login():
         password = request.form.get("password")
         
         # Check if staff exists
+        # Update if Identification changes
         staff: Staff | None = db.session.scalar(db.select(Staff).where(or_(Staff.id==id_or_username, Staff.username==id_or_username)))
 
         # Validate staff identity and password
         if not isinstance(staff, Staff):
-            error = "User not found for that email address"
+            error = "User not found for that id or username"
 
         elif not check_password_hash(staff.password_hash, password):
             error = "Incorrect password"
         
         if error:
-            pass
+            print(error)
             # flash(error, "danger")
         else:
             # Log the staff in
@@ -70,13 +71,13 @@ def login():
     return send_file(client_path)
 
 
-@login_required
 @staff_bp.route("/logout")
+@login_required
 def logout():
     logout_user()
 
     # flash("Logout successful", "info")
-    return redirect(url_for("index"))
+    return redirect(url_for("staff.login"))
 
 
 
@@ -92,6 +93,7 @@ def register():
             surname = request.form.get("surname")
 
             # Check if staff already exists
+            # Update if Identification changes
             staff: Staff | None = db.session.scalar(db.select(Staff).where(or_(Staff.id==id, Staff.username==username)))
 
             # Also: need to check that username doesn't follow ID pattern (and vice versa)

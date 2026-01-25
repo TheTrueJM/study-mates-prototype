@@ -1,11 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 from sqlalchemy.sql import func
 
 
 db = SQLAlchemy()
 
 
-class Staff(db.Model):
+class Staff(db.Model, UserMixin):
     __tablename__ = "staff"
 
     id = db.Column(db.String(25), primary_key=True) # Could be changed to non-identifiable id
@@ -61,15 +62,15 @@ class Student(db.Model):
     availability = db.relationship("Availability", backref="student")
 
     # Combine (Union) these lists when handling Matches
-    matchesAsA = db.relationship("StudentMatch", foreign_keys="[StudentMatch.studentA_id]", backref="student")
-    matchesAsB = db.relationship("StudentMatch", foreign_keys="[StudentMatch.studentB_id]", backref="student")
+    # matchesAsA = db.relationship("StudentMatch", foreign_keys="[StudentMatch.studentA_id]", backref="student")
+    # matchesAsB = db.relationship("StudentMatch", foreign_keys="[StudentMatch.studentB_id]", backref="student")
     
-    @property
-    def matches(self):
-        return [
-            m.studentB_id if m.studentA_id == self.id else m.studentA_id
-            for m in self.matchesAsA.union(self.matchesAsB)
-        ]
+    # @property
+    # def matches(self):
+    #     return [
+    #         m.studentB_id if m.studentA_id == self.id else m.studentA_id
+    #         for m in self.matchesAsA.union(self.matchesAsB)
+    #     ]
 
     def __repr__(self):
         return f"{self.id}: {self.username}"
@@ -100,7 +101,7 @@ class DiscussionCategory(db.Model):
     __tablename__ = "discussion_categories"
 
     name = db.Column(db.String(25), primary_key=True)
-    questions = db.relationship("discussion_question", backref="discussion_category")
+    questions = db.relationship("DiscussionQuestion", backref="discussion_category")
 
 class DiscussionQuestion(db.Model):
     __tablename__ = "discussion_questions"

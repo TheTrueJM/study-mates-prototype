@@ -168,7 +168,7 @@ def start_grouping():
             tutorial["state"] = "groups"
 
             for idx, student_id in enumerate(students):
-                group_id = idx // group_size
+                group_id = 1 + idx // group_size
                 tutorial["groups"].setdefault(group_id, []).append(student_id)
                 tutorial["students"][student_id]["group"] = group_id
 
