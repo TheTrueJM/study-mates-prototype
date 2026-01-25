@@ -43,8 +43,8 @@ class TimePeriod(db.Model): # NOTE: This will need to be prefilled with the code
 class Availability(db.Model):
     __tablename__ = "availabilities"
 
-    student_id = db.Column(db.Integer, db.ForeignKey("student.id"), primary_key=True)
-    time_period_code = db.Column(db.String(4), db.ForeignKey("time_period.code"), primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), primary_key=True)
+    time_period_code = db.Column(db.String(4), db.ForeignKey("time_periods.code"), primary_key=True)
 
     def __repr__(self):
         return f"{self.student_id} - {self.time_period_id}"
@@ -54,7 +54,7 @@ class Student(db.Model):
     __tablename__ = "students"
 
     id = db.Column(db.Integer, primary_key=True) # Can change to string UUID
-    tutorial_code = db.Column(db.String(6), db.ForeignKey("tutorial.code"))
+    tutorial_code = db.Column(db.String(6), db.ForeignKey("tutorials.code"))
     username = db.Column(db.String(50), nullable=False)
     currentGPA = db.Column(db.Float, default=None)
     goalGPA = db.Column(db.Float, default=4)
@@ -79,20 +79,20 @@ class Group(db.Model):
     __tablename__ = "groups"
 
     num = db.Column(db.Integer, primary_key=True)
-    tutorial_code = db.Column(db.String(6), db.ForeignKey("tutorial.code"), primary_key=True)
+    tutorial_code = db.Column(db.String(6), db.ForeignKey("tutorials.code"), primary_key=True)
 
 class GroupMember(db.Model):
     __tablename__ = "group_members"
 
-    group_num = db.Column(db.Integer, db.ForeignKey("num"), primary_key=True)
-    tutorial_code = db.Column(db.String(6), db.ForeignKey("group.tutorial_code"), primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey("student.id"), primary_key=True)
+    group_num = db.Column(db.Integer, primary_key=True)
+    tutorial_code = db.Column(db.String(6), db.ForeignKey("groups.tutorial_code"), primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("students.id"), primary_key=True)
 
 class StudentMatch(db.Model): # NOTE: Store students as (min(A_id, B_id), max(A_id, B_id)) to not need symmetric storage
     __tablename__ = "student_matches"
 
-    studentA_id = db.Column(db.Integer, db.ForeignKey("student.id"), primary_key=True)
-    studentB_id = db.Column(db.Integer, db.ForeignKey("student.id"), primary_key=True)
+    studentA_id = db.Column(db.Integer, db.ForeignKey("students.id"), primary_key=True)
+    studentB_id = db.Column(db.Integer, db.ForeignKey("students.id"), primary_key=True)
 
 
 
@@ -107,4 +107,4 @@ class DiscussionQuestion(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     question = db.Column(db.String(100))
-    category_name = db.Column(db.String(25), db.ForeignKey("discussion_category.name"))
+    category_name = db.Column(db.String(25), db.ForeignKey("discussion_categories.name"))

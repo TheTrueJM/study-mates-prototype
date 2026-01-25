@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Study Mates - Tutorial</title>
+
+        <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+    </head>
+    
+    <body>
+        <h1 id="title">Tutorial</h1>
+        <h3>State: <span id="state">lobby</span></h3>
+
+        <!-- Display if State == lobby -->
+        <button id="group-start-btn">Start Grouping</button>
+        <h2>Students</h2>
+        <ul id="students">
+            <!-- Student1 -->
+            <!-- Student2 -->
+            <!-- ... -->
+        </ul>
+
+        <!-- Display if State == groups -->
+        <button id="discussion-start-btn">Start Discussion</button>
+        <button id="group-remake-btn">Remake Grouping</button>
+        <h2>Groups</h2>
+        <div id="groups">
+            <!-- Group1: Student1, Student2, ... -->
+            <!-- Group2: Student1, Student2, ... -->
+            <!-- ... -->
+        </div>
+
+        <!-- Display if State == discussion -->
+        <button id="discussion-end-btn">End Discussion</button> <!-- switch to Start? -->
+        <button id="group-next-btn">Next Grouping</button>
+        <h2>Discussion Questions</h2>
+        <ul id="questions">
+            <!-- Question1 -->
+            <!-- Question2 -->
+            <!-- ... -->
+        </ul>
+
+
+        <script>
+          const code = window.location.pathname.split('/').pop();
+          let uuid = localStorage.getItem("uuid");
+
+          const socket = io(
+            "ws://127.0.0.1:5000", {
+              auth: { uuid: uuid, role: "staff", tutorial: code }
+            }
+          );
+
+          socket.on("session", data => {
+            uuid = data.uuid;
+            localStorage.setItem("uuid", uuid);
+          });
+
+          socket.on("tutorial_update", tutorial => {
+            document.getElementById("title").innerText = tutorial.meta.name;
+            document.getElementById("state").innerText = tutorial.state;
+
+            const studentsEl = document.getElementById("students");
+            studentsEl.innerHTML = "";
+            Object.entries(tutorial.students).forEach(([id, s]) => {
+              const li = document.createElement("li");
+              li.innerText = `${s.details.name || id.slice(0, 6)} - Group: ${s.group ?? '—'}`;
+              studentsEl.appendChild(li);
+            });
+
+            const groupsEl = document.getElementById("groups");
+            groupsEl.innerHTML = "";
+            Object.entries(tutorial.groups).forEach(([gid, members]) => {
+              const div = document.createElement("div");
+              div.innerHTML = `<strong>Group ${gid}</strong>: ${members.length} students`;
+              groupsEl.appendChild(div);
+            });
+        });
+
+
+        document.getElementById("group-start-btn").onclick = () => {
+          socket.emit("start_grouping");
+        };
+
+
+        document.getElementById("discussion-start-btn").onclick = () => {
+          socket.emit("start_discussion");
+        };
+        </script>
+    </body>
+</html>

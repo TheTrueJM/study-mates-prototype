@@ -16,10 +16,14 @@ socketio = SocketIO(
 def create_app():
     app = Flask(__name__)
 
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "insecure-key")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///study_mates.sqlite")
 
     db.init_app(app)
     socketio.init_app(app)
+
+    with app.app_context():
+        db.create_all()
 
     # Register blueprints
     app.register_blueprint(staff_bp, url_prefix="/staff")

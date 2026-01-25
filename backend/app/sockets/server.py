@@ -34,6 +34,9 @@ def _emit_tutorial_update(code):
         payload = {"state": tutorial["state"], "group": data.get("group")}
         emit("student_update", payload, room=student_id)
 
+    # Alternative upload all Groups to all Students - Filter on Frontend
+    # emit("students_update", tutorial["groups"], room=code)
+
 
 # -----------------------------
 # Socket lifecycle
@@ -88,6 +91,7 @@ def create_tutorial(data):
 
     name = data.get("name")
     group_size = int(data.get("group_size")) or None
+    # Discussion Questions, Discussion Time
 
     if not group_size or group_size < 2:
         emit("create_failed")
@@ -107,7 +111,7 @@ def create_tutorial(data):
     users[user_id]["tutorial"] = code
     join_room(f"staff:{code}")
 
-    emit("tutorial_created", {"code": code, "name": name})
+    emit("tutorial_created", {"code": code})
 
 
 @socketio.on("join_tutorial")
@@ -148,7 +152,7 @@ def _join_tutorial(user_id, code, details={}):
 # -----------------------------
 
 @socketio.on("start_grouping")
-def start_grouping(data):
+def start_grouping():
     user_id = sessions.get(request.sid)
 
     if user_id:

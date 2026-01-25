@@ -4,19 +4,14 @@ import os
 
 student_bp = Blueprint("student", __name__)
 
-@student_bp.route("/")
-def index():
-    client_path = os.path.join(
-        os.getcwd(), "../frontend/public/tmp/student_client.html"
-    )
-    return send_file(client_path)
-
 
 @student_bp.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
         code = request.form.get("code")
+        name = request.form.get("name"), # Generate Random on Frontend, Here, or Socket-Server?
         session["tutorial_code"] = code
+        session["student_details"]["name"] = name
         return redirect(url_for("student.details"))
 
     client_path = os.path.join(
@@ -32,7 +27,6 @@ def details():
 
     if request.method == "POST":
         session["student_details"] = {
-            "name": request.form.get("name"), # Generate Random on Frontend, Here, or Socket-Server?
             "currentGPA": request.form.get("currentGPA"),
             "goalGPA": request.form.get("goalGPA", 4),
             "availability": request.form.get("availability")
