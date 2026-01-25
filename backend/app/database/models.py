@@ -9,10 +9,10 @@ class Staff(db.Model):
     __tablename__ = "staff"
 
     id = db.Column(db.String(25), primary_key=True) # Could be changed to non-identifiable id
-    username = db.Column(db.String(50), unique=True, nullable=False)
+    username = db.Column(db.String(51), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    firstname = db.Column(db.String(50)) # Could be removed for non-identifiable
-    surname = db.Column(db.String(50)) # Could be removed for non-identifiable
+    firstname = db.Column(db.String(25)) # Could be removed for non-identifiable
+    surname = db.Column(db.String(25)) # Could be removed for non-identifiable
     
     def __repr__(self):
         return f"{self.id}: {self.username}"

@@ -1,156 +1,193 @@
-import random
-import string
-import uuid
-
-from flask import request
+from flask import request, session
 from flask_socketio import emit, join_room, leave_room
-
 from .. import socketio
+
+import random, string, uuid
+
 
 users = dict()
 sessions = dict()
-rooms = dict()
+tutorials = dict()
 
-def get_users_in_room(room):
-    return [uid for uid, data in users.items() if data["room"] == room]
 
-def _emit_list_update(room):
-    uids = get_users_in_room(room)
-    payload = {"students": uids}
-    if room:
-        emit("list", payload, room=room)
-    else:
-        emit("list", payload, broadcast=True)
+# -----------------------------
+# Helpers
+# -----------------------------
 
-def _emit_room_list():
-    payload = []
-    print(rooms)
-    for room_name, uids in rooms.items():
-        room = {"room": room_name, "students": uids}
-        payload.append(room)
-    emit("room_list", payload, broadcast=True)
 
-def _create_room():
+def _generate_code(length=6):
     while True:
-        room_name  = ''.join(random.choices(string.ascii_uppercase, k=3))
-        if room_name not in rooms:
-            rooms[room_name] = []
-            return room_name
+        code  = ''.join(random.choices(string.ascii_uppercase, k=length))
+        if code not in tutorials:
+            return code
 
-def _leave_room(userID):
-    current_room = users[userID]["room"]
-    if current_room:
-        users[userID]["room"] = None
-        rooms[current_room].remove(userID)
 
-        for session_id in users[userID]["sessions"]:
-            leave_room(current_room, sid=session_id)
+def _emit_tutorial_update(code):
+    tutorial = tutorials.get(code)
+    if not tutorial:
+        return
+    
+    emit("tutorial_update", tutorial, room=f"staff:{code}")
+    
 
-        if not rooms[current_room]:
-            del rooms[current_room]
+    for student_id, data in tutorial["students"].items():
+        payload = {"state": tutorial["state"], "group": data.get("group")}
+        emit("student_update", payload, room=student_id)
+
+
+# -----------------------------
+# Socket lifecycle
+# -----------------------------
+
 
 @socketio.on("connect")
-def connect(data):
-    if request.sid not in sessions:
-        if data is not None:
-            userID = data.get("uuid", None)
-            role = data.get("role", "student")
-            if userID is None:
-                userID = str(uuid.uuid4())
-        else:
-            userID = str(uuid.uuid4())
-            role = "student"
+def connect(auth):
+    user_id = auth.get("uuid") if auth else None # if auth else == or ?
+    role = auth.get("role", "student") if auth else "student"
+    code = auth.get("tutorial") if auth else None
 
-        if userID not in users:
-            users[userID] = {"sessions": [], "room": data.get("room", None), "role": role}
-        else:
-            users[userID]["role"] = role
+    if not user_id: user_id = str(uuid.uuid4())
 
-        current_room = users[userID]["room"]
+    if user_id not in users:
+        users[user_id] = {
+            "sessions": set(),
+            "role": role,
+            "tutorial": None
+        }
 
-        if current_room not in rooms:
-            users[userID]["room"] = None
-            current_room = None
+    users[user_id]["sessions"].add(request.sid)
+    sessions[request.sid] = user_id
 
-        users[userID]["sessions"].append(request.sid)
-        sessions[request.sid] = userID
-        emit("session", {"uuid": userID, "room": current_room})
-    else:
-        userID = sessions.get(request.sid)
-        current_room = users[userID]["room"]
+    emit("session", {"uuid": user_id})
 
-    if current_room:
-        join_room(current_room, sid=request.sid)
+    # Auto-join tutorial if provided
+    if code and code in tutorials:
+        _join_tutorial(user_id, code)
 
-    _emit_list_update(current_room)
-    _emit_room_list()
 
 @socketio.on("disconnect")
 def disconnect():
-    userID = sessions.get(request.sid, None)
+    user_id = sessions.pop(request.sid, None)
+    if user_id:
+        users[user_id]["sessions"].discard(request.sid)
 
-    if userID in users:
-        current_room = users[userID]["room"]
-        users[userID]["sessions"].remove(request.sid)
+        if not users[user_id]["sessions"]:
+            users.pop(user_id, None)
 
-        if not users[userID]["sessions"]:
-            del users[userID]
-        del sessions[request.sid]
 
-        _emit_list_update(current_room)
+# -----------------------------
+# Tutorial management
+# -----------------------------
 
-@socketio.on("create_room")
-def create_room():
-    room_name = _create_room()
-    emit("room_created", {"room": room_name})
 
-@socketio.on("assign_room")
-def assign_room(data):
-    user_ids = data.get("students", [])
-    valid_user_ids = [uid for uid in user_ids if uid in users and users[uid]["role"] != "teacher"]
-
-    if not valid_user_ids:
+@socketio.on("create_tutorial")
+def create_tutorial(data):
+    user_id = sessions.get(request.sid)
+    if not user_id or users[user_id]["role"] != "staff":
         return
 
-    new_room = _create_room()
+    name = data.get("name")
+    group_size = int(data.get("group_size")) or None
 
-    affected_rooms = set()
-    affected_rooms.add(None)
-    affected_rooms.add(new_room)
+    if not group_size or group_size < 2:
+        emit("create_failed")
+        return
 
-    for user_id in valid_user_ids:
-        _leave_room(user_id)
-        users[user_id]["room"] = new_room
-        for session_id in users[user_id]["sessions"]:
-            join_room(new_room, sid=session_id)
-            rooms[new_room].append(user_id)
-            emit("room_joined", {"room": new_room}, to=session_id)
+    code = _generate_code()
 
-    for room in affected_rooms:
-        _emit_list_update(room)
-    _emit_room_list()
+    tutorials[code] = {
+        "name": name,
+        "staff": user_id,
+        "students": {},
+        "groups": {},
+        "group_size": group_size,
+        "state": "lobby",
+    }
 
-@socketio.on("leave_room")
-def leave_curr_room():
-    userID = sessions.get(request.sid)
-    if userID and userID in users:
-        prev_room = users[userID]["room"]
-        _leave_room(userID)
-        emit("room_left")
+    users[user_id]["tutorial"] = code
+    join_room(f"staff:{code}")
 
-        if prev_room in rooms:
-            _emit_list_update(prev_room)
-        _emit_list_update(None)
-        _emit_room_list()
+    emit("tutorial_created", {"code": code, "name": name})
 
-@socketio.on("get_students")
-def get_students():
-    user_list = []
-    for user_id, user_data in users.items():
-        user_list.append({
-            "id": user_id,
-            "room": user_data["room"],
-            "sessions": len(user_data["sessions"]),
-            "role": user_data.get("role", "student")
-        })
-    emit("students_list", {"students": user_list})
+
+@socketio.on("join_tutorial")
+def join_tutorial(data):
+    code = data.get("code")
+    details = data.get("details", {})
+
+    user_id = sessions.get(request.sid)
+    if not user_id or code not in tutorials:
+        emit("join_failed")
+        return
+
+    _join_tutorial(user_id, code, details)
+
+
+def _join_tutorial(user_id, code, details={}):
+    tutorial = tutorials.get(code)
+
+    if tutorial:
+        users[user_id]["tutorial"] = code
+        join_room(code)
+        join_room(user_id) # personal room
+
+        if users[user_id]["role"] == "student":
+            tutorial["students"][user_id] = {
+                "details": details,
+                "group": None
+            }
+
+        elif users[user_id]["role"] == "staff":
+            join_room(f"staff:{code}")
+
+        _emit_tutorial_update(code)
+
+
+# -----------------------------
+# Grouping
+# -----------------------------
+
+@socketio.on("start_grouping")
+def start_grouping(data):
+    user_id = sessions.get(request.sid)
+
+    if user_id:
+        code = users[user_id]["tutorial"]
+        tutorial = tutorials.get(code)
+
+        if tutorial and tutorial["staff"] == user_id:
+            group_size = tutorial["group_size"]
+            students = list(tutorial["students"].keys())
+            random.shuffle(students)
+
+            tutorial["groups"] = {}
+            tutorial["state"] = "groups"
+
+            for idx, student_id in enumerate(students):
+                group_id = idx // group_size
+                tutorial["groups"].setdefault(group_id, []).append(student_id)
+                tutorial["students"][student_id]["group"] = group_id
+
+            _emit_tutorial_update(code)
+
+
+# -----------------------------
+# Discussion
+# -----------------------------
+
+
+@socketio.on("start_discussion")
+def start_discussion():
+    user_id = sessions.get(request.sid)
+    code = users[user_id]["tutorial"]
+    tutorial = tutorials.get(code)
+
+
+    if tutorial and tutorial["staff"] == user_id:
+        tutorial["state"] = "discussion"
+
+        # Placeholder: questions = db.get_questions(code)
+        questions = ["Question Test1", "Question Test2", "Question Test3"]
+        emit("discussion_started", {"questions": questions}, room=code)
+
+        _emit_tutorial_update(code)
