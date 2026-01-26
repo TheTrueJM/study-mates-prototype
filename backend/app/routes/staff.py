@@ -133,3 +133,20 @@ def register():
         os.getcwd(), "../frontend/public/staff/register.html"
     )
     return send_file(client_path)
+
+
+### REMOVE THIS LATER
+@staff_bp.route("/test_user", methods=["GET", "POST"])
+def test_user():
+    exists: Staff | None = db.session.scalar(db.select(Staff).where(or_(Staff.id=="n1234", Staff.username=="test")))
+    if exists is None:
+        staff = Staff(
+            id="n1234",
+            username="test",
+            password_hash=generate_password_hash("test"),
+            firstname=None,
+            surname=None
+        )
+        db.session.add(staff)
+        db.session.commit()
+    return redirect(url_for("staff.login"))
