@@ -5,9 +5,20 @@ from .. import socketio
 import random, string, uuid
 
 
-users = dict()
-sessions = dict()
+users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code}, ... }
+sessions = dict() # { sID: UUID }
 tutorials = dict()
+# {
+#   code: {
+#       staff: UUID,
+#       name: name,
+#       group_size: size,
+#       state: lobby|groups|discussion,
+#       students: { UUID, ... },
+#       groups: { id: [ UUID, ... ], ... }
+#   },
+#   ...
+# }
 
 
 # -----------------------------
