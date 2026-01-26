@@ -11,3 +11,8 @@ When the server emits something back to the client, you can access the payloads 
 
 
 ## server.py
+~~Removed join_room(user_id) because its useless, whatever you emit is only relative to the current session connected to that room unless you specify `broadcast=True` (although session IDs change every time you refresh the session variables do not clear out). also i really hate the concept of joining multiple rooms at the same time~~
+
+^ I CHANGED MY MIND, i think that was actually necessary to broadcast to all sessions of the same user, which is better than the O(N) loop i did in my implementation, having join_room(user_id) turns it to O(1).
+
+I flattened the data structure for student details in _join_tutorial and /details route so its cleaner, also these session variables are popped to avoid redundancy since these details are expected to be asked once.

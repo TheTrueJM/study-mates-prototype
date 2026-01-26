@@ -70,18 +70,6 @@ def _emit_tutorial_update(code):
 
 @socketio.on("connect")
 def connect(auth):
-    """
-    If the user hasn't specified a UUID in the authentication headers,
-    a new UUID will be generated and inserted into the users dictionary.
-
-    Otherwise, if the user has a valid UUID, then their current session be
-    appended into their "sessions" set and global sessions dictionary for potential
-    quick lookup later if needed.
-
-    The user will be sent back their UUID, role, tutorial code, to their client and
-    automatically join a tutorial if already assigned one.
-    """
-
     user_id = auth.get("uuid") if auth else None
     role = session.get("role", "student")
     code = session.get("tutorial_code")
@@ -132,12 +120,12 @@ def disconnect():
 @socketio.on("create_tutorial")
 def create_tutorial(data):
     user_id = sessions.get(request.sid)
-    if not user_id or users[user_id]["role"] != "staff":
+    if not user_id or users.get(user_id, {}).get("role") != "staff":
         return
 
     name = data.get("name")
     group_size = int(data.get("group_size")) or None
-    # Discussion Questions, Discussion Time
+    # TODO: Discussion Questions, Discussion Time
 
     if not group_size or group_size < 2:
         emit("create_failed")
@@ -156,7 +144,7 @@ def create_tutorial(data):
     }
 
     users[user_id]["tutorial"] = code
-    join_room(f"staff:{code}")
+    join_room(code, namespace="/staff")
 
     emit("tutorial_created", {"code": code})
 
@@ -176,21 +164,25 @@ def join_tutorial(data):
 def _join_tutorial(user_id, code):
     if tutorial := tutorials.get(code, None):
         users[user_id]["tutorial"] = code
-        join_room(code)
-        join_room(user_id) # personal room
 
         if users[user_id]["role"] == "student":
-            name = session.get("name") # Error if no name?
-            details = session.get("student_details", dict())
-            tutorial["students"][user_id] = {
-                "name": name,
-                "details": details,
-                "group": None
-            }
-
+            if user_id not in tutorial["students"]:
+                tutorial["students"][user_id] = {
+                    "name": session.get("name"),
+                    "currentGPA": session.get("currentGPA"),
+                    "goalGPA": session.get("goalGPA"),
+                    "availability": session.get("availability"),
+                    "group": None
+                }
+                session.pop("student_details", None)
+                session.pop("currentGPA", None)
+                session.pop("goalGPA", None)
+                session.pop("availability", None)
+            join_room(code)
         elif users[user_id]["role"] == "staff":
-            join_room(f"staff:{code}")
+            join_room(code, namespace="/staff")
 
+        join_room(user_id)
         _emit_tutorial_update(code)
 
 

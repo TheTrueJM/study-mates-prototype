@@ -51,3 +51,46 @@ def test_no_uuid(client, socketio_client):
     assert response.get("uuid", False)
     assert response.get("role", False) == "student"
     assert response.get("tutorial", False) == None
+
+def test_create_tutorial(client, socketio_client):
+    set_session(
+        client,
+        name="test",
+        currentGPA=0.0,
+        goalGPA=6.7,
+        availability=""
+    )
+    sio = socketio_client(test_client=client, disconnect=False)
+    assert sio.is_connected()
+    response = get_last_received(sio)
+    uuid = response.get("uuid", False)
+    assert uuid
+
+    from app.server import users, tutorials
+    users[uuid]["role"] = "staff"
+
+    sio.emit("create_tutorial",
+        {
+            "name": "CAB202",
+            "group_size": 2
+        }
+    )
+
+    # after create_tutorial()
+
+    code = users[uuid].get("tutorial", None)
+    assert code
+
+    tutorial = tutorials.get(code)
+    assert tutorial is not None
+
+    assert tutorial["name"] == "CAB202"
+    assert tutorial["group_size"] == 2
+    assert tutorial["staff"] == uuid
+    assert tutorial["state"] == "lobby"
+    assert tutorial["students"] == dict()
+    assert tutorial["groups"] == dict()
+    assert tutorial["questions"] == list()
+
+    response = get_last_received(sio)
+    assert response.get("code", None) == code
