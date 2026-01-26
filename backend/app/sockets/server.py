@@ -10,7 +10,7 @@ sessions = dict() # { sID: UUID }
 tutorials = dict()
 # {
 #   code: {
-#       staff: UUID, 
+#       staff: UUID,
 #       name: name,
 #       state: lobby|groups|discussion,
 #       group_size: size,
@@ -38,7 +38,7 @@ def _emit_tutorial_update(code):
     tutorial = tutorials.get(code)
     if not tutorial:
         return
-    
+
     emit("tutorial_update", tutorial, room=f"staff:{code}")
 
     for student_id, data in tutorial["students"].items():
@@ -70,6 +70,18 @@ def _emit_tutorial_update(code):
 
 @socketio.on("connect")
 def connect(auth):
+    """
+    If the user hasn't specified a UUID in the authentication headers,
+    a new UUID will be generated and inserted into the users dictionary.
+
+    Otherwise, if the user has a valid UUID, then their current session be
+    appended into their "sessions" set and global sessions dictionary for potential
+    quick lookup later if needed.
+
+    The user will be sent back their UUID, role, tutorial code, to their client and
+    automatically join a tutorial if already assigned one.
+    """
+
     user_id = auth.get("uuid") if auth else None
     role = session.get("role", "student")
     code = session.get("tutorial_code")
@@ -86,11 +98,15 @@ def connect(auth):
     users[user_id]["sessions"].add(request.sid)
     sessions[request.sid] = user_id
 
-    emit("session", {"uuid": user_id})
+    emit("session",
+        {
+            "uuid": user_id,
+            "role": role,
+            "tutorial": code
+        }
+    )
 
-    # Auto-join tutorial if provided
-    if code and code in tutorials:
-        _join_tutorial(user_id, code)
+    _join_tutorial(user_id, code)
 
 
 @socketio.on("disconnect")
@@ -158,7 +174,7 @@ def join_tutorial(data):
 
 
 def _join_tutorial(user_id, code):
-    if tutorial := tutorials.get(code):
+    if tutorial := tutorials.get(code, None):
         users[user_id]["tutorial"] = code
         join_room(code)
         join_room(user_id) # personal room

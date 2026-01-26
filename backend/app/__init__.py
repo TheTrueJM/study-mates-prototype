@@ -10,7 +10,7 @@ import os
 socketio = SocketIO(
     logger=True,
     cors_allows_origins = "*",
-    cors_credentials = False,
+    cors_credentials = False
 )
 
 def create_app():
@@ -33,7 +33,7 @@ def create_app():
 
     login_manager = LoginManager()
 
-    login_manager.login_view = "staff.login" 
+    login_manager.login_view = "staff.login"
     login_manager.init_app(app)
 
     @login_manager.user_loader
