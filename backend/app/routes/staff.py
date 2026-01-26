@@ -15,18 +15,18 @@ staff_bp = Blueprint("staff", __name__, url_prefix="/staff")
 def index():
     session["role"] = "staff"
     session["tutorial_code"] = None
-    client_path = os.path.join(
-        os.getcwd(), "../frontend/public/staff/index.html"
-    )
+
+    client_path = os.path.join(os.getcwd(), "../frontend/public/staff/index.html")
     return send_file(client_path)
+
 
 @staff_bp.route("/tutorial/<code>", methods=["GET"])
 @login_required
 def tutorial(code):
+    ## To-Do: Kick back to Index if Tutorial doesn't exist on server
     session["tutorial_code"] = code
-    client_path = os.path.join(
-        os.getcwd(), "../frontend/public/staff/tutorial.html"
-    )
+
+    client_path = os.path.join(os.getcwd(), "../frontend/public/staff/tutorial.html")
     return send_file(client_path)
 
 
@@ -40,13 +40,12 @@ def login():
         password = request.form.get("password")
         
         # Check if staff exists
-        # Update if Identification changes
+        # To-Do: Update if Identification changes
         staff: Staff | None = db.session.scalar(db.select(Staff).where(or_(Staff.id==id_or_username, Staff.username==id_or_username)))
 
         # Validate staff identity and password
         if not isinstance(staff, Staff):
             error = "User not found for that id or username"
-
         elif not check_password_hash(staff.password_hash, password):
             error = "Incorrect password"
         
@@ -54,7 +53,6 @@ def login():
             print(error)
             # flash(error, "danger")
         else:
-            # Log the staff in
             login_user(staff)
             # flash("Login successful", "success")
 
@@ -65,9 +63,7 @@ def login():
             return redirect(destination)
     
     # return render_template("auth.html", form=login_form, heading="Login")
-    client_path = os.path.join(
-        os.getcwd(), "../frontend/public/staff/login.html"
-    )
+    client_path = os.path.join(os.getcwd(), "../frontend/public/staff/login.html")
     return send_file(client_path)
 
 
@@ -75,7 +71,6 @@ def login():
 @login_required
 def logout():
     logout_user()
-
     # flash("Logout successful", "info")
     return redirect(url_for("staff.login"))
 
@@ -129,9 +124,7 @@ def register():
                 return redirect(destination)
         
         # return render_template("auth.html", form=register_form, heading="Register")
-    client_path = os.path.join(
-        os.getcwd(), "../frontend/public/staff/register.html"
-    )
+    client_path = os.path.join(os.getcwd(), "../frontend/public/staff/register.html")
     return send_file(client_path)
 
 
