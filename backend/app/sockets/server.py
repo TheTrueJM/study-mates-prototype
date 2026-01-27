@@ -3,7 +3,10 @@ from flask_socketio import emit, join_room, leave_room
 from .. import socketio
 
 import random, string, uuid
+import logging
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code}, ... }
 sessions = dict() # { sID: UUID }
@@ -70,6 +73,7 @@ def _emit_tutorial_update(code):
 
 @socketio.on("connect")
 def connect(auth):
+    logger.info("connect reached")
     user_id = auth.get("uuid") if auth else None
     role = session.get("role", "student")
     code = session.get("tutorial_code")
@@ -83,8 +87,11 @@ def connect(auth):
             "tutorial": None
         }
 
+    logger.info(f"DEBUG: {users[user_id]}")
     users[user_id]["sessions"].add(request.sid)
+    logger.info(f"DEBUG: {request.sid}")
     sessions[request.sid] = user_id
+    logger.info("Before emit session reached")
 
     emit("session",
         {
@@ -146,7 +153,7 @@ def create_tutorial(data):
     users[user_id]["tutorial"] = code
     join_room(code, namespace="/staff")
 
-    emit("tutorial_created", {"code": code})
+    #emit("tutorial_created", {"code": code})
 
 
 @socketio.on("join_tutorial")

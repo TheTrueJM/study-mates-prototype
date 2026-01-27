@@ -16,10 +16,20 @@ def get_session(client):
     with client.flask_test_client.session_transaction() as s:
         return s
 
-def get_last_received(sio_client):
+def get_last_received(sio_client, timeout=5):
     # get_received returns this for example:
     # [{'name': 'session', 'args': [{'uuid': 'a182809c-ed95-4ebb-86ab-d08ea3ecfa08', 'abc': 'waow'}], 'namespace': '/'}, {'name': 'session', 'args': [{'uuid': 'ac9a7da9-a85a-41d8-990b-a7343caf2f87', 'abc': 'waow'}], 'namespace': '/'}]
-    return sio_client.get_received()[-1]["args"][0]
+
+    import time
+    deadline = time.time() + timeout
+
+    while len(r := sio_client.get_received()) == 0:
+        logger.info(r)
+        if time.time() > deadline:
+            return None
+        time.sleep(0.1)
+
+    return r.pop()["args"][0]
 
 @pytest.fixture
 def app():
@@ -48,6 +58,9 @@ def test_no_uuid(client, socketio_client):
     assert sio.is_connected()
 
     response = get_last_received(sio)
+
+    logger.info(response)
+
     assert response.get("uuid", False)
     assert response.get("role", False) == "student"
     assert response.get("tutorial", False) == None
@@ -61,13 +74,16 @@ def test_create_tutorial(client, socketio_client):
         availability=""
     )
     sio = socketio_client(test_client=client, disconnect=False)
+    logger.info(f"Connection: {sio.is_connected()}")
+
     assert sio.is_connected()
     response = get_last_received(sio)
+    assert response is not None, "Timeout"
     uuid = response.get("uuid", False)
     assert uuid
 
-    from app.server import users, tutorials
-    users[uuid]["role"] = "staff"
+    from app.sockets import server
+    server.users[uuid]["role"] = "staff"
 
     sio.emit("create_tutorial",
         {
@@ -78,10 +94,10 @@ def test_create_tutorial(client, socketio_client):
 
     # after create_tutorial()
 
-    code = users[uuid].get("tutorial", None)
+    code = server.users[uuid].get("tutorial", None)
     assert code
 
-    tutorial = tutorials.get(code)
+    tutorial = server.tutorials.get(code)
     assert tutorial is not None
 
     assert tutorial["name"] == "CAB202"
@@ -93,4 +109,5 @@ def test_create_tutorial(client, socketio_client):
     assert tutorial["questions"] == list()
 
     response = get_last_received(sio)
+    assert response is not None, "Timeout"
     assert response.get("code", None) == code
