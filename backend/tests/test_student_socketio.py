@@ -119,3 +119,137 @@ def test_create_tutorial(client, socketio_client):
    response = get_last_received(sio, namespace=namespace)
    assert response is not None, "Timeout"
    assert response.get("code", None) == code
+
+
+def test_staff_creates_student_joins(app, client, socketio_client):
+    from app.sockets import utils
+
+    staff_client = app.test_client()
+    set_session(staff_client, name="Staff", currentGPA=0.0, goalGPA=0.0, availability="")
+
+    staff_sio = socketio_client(namespace="/staff", test_client=staff_client, disconnect=False)
+    response = get_last_received(staff_sio, namespace="/staff")
+    assert response is not None, "Staff connection timeout"
+    staff_uuid = response.get("uuid")
+    assert staff_uuid
+    utils.users[staff_uuid]["role"] = "staff"
+
+    staff_sio.emit("create_tutorial", {"name": "Jointest", "group_size": 3}, namespace="/staff")
+    time.sleep(0.5)
+
+    code = utils.users[staff_uuid].get("tutorial")
+    assert code is not None
+
+    student_client = app.test_client()
+    set_session(student_client, name="Student1", currentGPA=5.0, goalGPA=6.0, availability="Mon")
+
+    student_sio = socketio_client(test_client=student_client, disconnect=False)
+    response = get_last_received(student_sio)
+    assert response is not None, "Student connection timeout"
+    student_uuid = response.get("uuid")
+
+    student_sio.emit("join_tutorial", {"code": code})
+    time.sleep(0.5)
+
+    tutorial = utils.tutorials.get(code)
+    assert student_uuid in tutorial["students"]
+    assert tutorial["students"][student_uuid]["name"] == "Student1"
+    assert tutorial["students"][student_uuid]["currentGPA"] == 5.0
+
+    staff_sio.disconnect(namespace="/staff")
+    student_sio.disconnect()
+
+
+def test_five_students_grouping(app, client, socketio_client):
+    from app.sockets import utils
+
+    staff_client = app.test_client()
+    set_session(staff_client, name="Staff", currentGPA=0.0, goalGPA=0.0, availability="")
+
+    staff_sio = socketio_client(namespace="/staff", test_client=staff_client, disconnect=False)
+    response = get_last_received(staff_sio, namespace="/staff")
+    assert response is not None, "Staff connection timeout"
+    staff_uuid = response.get("uuid")
+    utils.users[staff_uuid]["role"] = "staff"
+
+    staff_sio.emit("create_tutorial", {"name": "GroupTest", "group_size": 3}, namespace="/staff")
+    time.sleep(0.5)
+    code = utils.users[staff_uuid].get("tutorial")
+
+    students = []
+    student_uuids = []
+
+    for i in range(5):
+        student_client = app.test_client()
+        set_session(student_client, name=f"Student{i+1}", currentGPA=5.0, goalGPA=6.0, availability="Mon")
+
+        student_sio = socketio_client(test_client=student_client, disconnect=False)
+        response = get_last_received(student_sio)
+        student_uuid = response.get("uuid")
+        student_uuids.append(student_uuid)
+
+        student_sio.emit("join_tutorial", {"code": code})
+        time.sleep(0.1)
+        students.append(student_sio)
+
+    time.sleep(0.5)
+
+    tutorial = utils.tutorials.get(code)
+    assert len(tutorial["students"]) == 5
+
+    staff_sio.emit("start_grouping", namespace="/staff")
+    time.sleep(0.5)
+
+    assert tutorial["state"] == "groups"
+    assert len(tutorial["groups"]) == 2
+
+    group_sizes = sorted([len(members) for members in tutorial["groups"].values()])
+    assert group_sizes == [2, 3]
+
+    for group_id, members in tutorial["groups"].items():
+        member_names = [tutorial["students"][uid]["name"] for uid in members]
+        logger.info(f"Group {group_id} assignments: {member_names}")
+
+    for student_uuid in student_uuids:
+        assert tutorial["students"][student_uuid]["group"] is not None
+
+    staff_sio.disconnect(namespace="/staff")
+    for sio in students:
+        sio.disconnect()
+
+
+def test_student_auto_join(app, client, socketio_client):
+    from app.sockets import utils
+
+    staff_client = app.test_client()
+    set_session(staff_client, name="Staff", currentGPA=0.0, goalGPA=0.0, availability="")
+
+    staff_sio = socketio_client(namespace="/staff", test_client=staff_client, disconnect=False)
+    response = get_last_received(staff_sio, namespace="/staff")
+    staff_uuid = response.get("uuid")
+    utils.users[staff_uuid]["role"] = "staff"
+
+    staff_sio.emit("create_tutorial", {"name": "AutoJoinTest", "group_size": 2}, namespace="/staff")
+    time.sleep(0.5)
+    code = utils.users[staff_uuid].get("tutorial")
+
+    student_client = app.test_client()
+    set_session(student_client,
+                name="AutoStudent",
+                currentGPA=5.0,
+                goalGPA=6.0,
+                availability="Mon",
+                tutorial_code=code)
+
+    student_sio = socketio_client(test_client=student_client, disconnect=False)
+    response = get_last_received(student_sio)
+    logger.info(response)
+    assert response.get("tutorial") == code
+    student_uuid = response.get("uuid")
+
+    tutorial = utils.tutorials.get(code)
+    assert student_uuid in tutorial["students"]
+    assert tutorial["students"][student_uuid]["name"] == "AutoStudent"
+
+    staff_sio.disconnect(namespace="/staff")
+    student_sio.disconnect()

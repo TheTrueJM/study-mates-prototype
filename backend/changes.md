@@ -9,6 +9,7 @@ Why do we have to specify the test_client in our pytests? its so we can allow se
 
 When the server emits something back to the client, you can access the payloads via get_received(), get_last_recieved just gets the last sent payload.
 
+reset_socket_state exists to clear out "global state pollution" which prevented new clients from connecting after say from Test A to Test B.
 
 ## server.py
 ~~Removed join_room(user_id) because its useless, whatever you emit is only relative to the current session connected to that room unless you specify `broadcast=True` (although session IDs change every time you refresh the session variables do not clear out). also i really hate the concept of joining multiple rooms at the same time~~

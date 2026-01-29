@@ -34,7 +34,7 @@ def connect(auth):
         {
             "uuid": user_id,
             "role": role,
-            "tutorial": code
+            "tutorial": utils.users[user_id]["tutorial"]
         }
     )
 

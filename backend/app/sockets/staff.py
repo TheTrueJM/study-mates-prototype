@@ -1,5 +1,7 @@
 import logging
 import uuid
+import random
+
 from flask import request, session
 from flask_socketio import emit, join_room
 from .. import socketio
@@ -30,7 +32,7 @@ def connect(auth):
         {
             "uuid": user_id,
             "role": role,
-            "tutorial": code
+            "tutorial": utils.users[user_id]["tutorial"]
         },
         namespace="/staff"
     )
