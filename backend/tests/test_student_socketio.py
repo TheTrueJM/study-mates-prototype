@@ -1,6 +1,7 @@
 from app import create_app, socketio
 
 import pytest, logging, os, time
+from pudb import set_trace
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -14,19 +15,35 @@ def get_session(client):
    with client.flask_test_client.session_transaction() as s:
        return s
 
-def get_last_received(sio_client, timeout=5, namespace="/"):
-   # get_received returns this for example:
-   # [{'name': 'session', 'args': [{'uuid': 'a182809c-ed95-4ebb-86ab-d08ea3ecfa08', 'abc': 'waow'}], 'namespace': '/'}, {'name': 'session', 'args': [{'uuid': 'ac9a7da9-a85a-41d8-990b-a7343caf2f87', 'abc': 'waow'}], 'namespace': '/'}]
+def get_last_received(sio_client, timeout=5, namespace="/", name=None, all=False):
+    # get_received returns this for example:
+    # [{'name': 'session', 'args': [{'uuid': 'a182809c-ed95-4ebb-86ab-d08ea3ecfa08', 'abc': 'waow'}], 'namespace': '/'}, {'name': 'session', 'args': [{'uuid': 'ac9a7da9-a85a-41d8-990b-a7343caf2f87', 'abc': 'waow'}], 'namespace': '/'}]
 
-   deadline = time.time() + timeout
+    deadline = time.time() + timeout
 
-   while len(r := sio_client.get_received(namespace)) == 0:
-       logger.info(r)
-       if time.time() > deadline:
-           return None
-       time.sleep(0.1)
+    while (
+        len(r := sio_client.get_received(namespace)) == 0
+        or (
+            name is not None
+            and not (
+                match := next(
+                    (m for m in reversed(r) if m["name"] == name),
+                    None,
+                )
+            )
+        )
+    ):
+        logger.info(r)
+        if time.time() > deadline:
+            return None
+        time.sleep(0.1)
 
-   return r.pop()["args"][0]
+    if all:
+        return r
+    elif name is None:
+        return r.pop()["args"][0]
+
+    return match["args"][0]
 
 @pytest.fixture
 def app():
@@ -58,67 +75,67 @@ def reset_socket_state():
     yield
 
 def test_no_uuid(client, socketio_client):
-   sio = socketio_client(test_client=client, disconnect=False)
-   assert sio.is_connected()
+    sio = socketio_client(test_client=client, disconnect=False)
+    assert sio.is_connected()
 
-   response = get_last_received(sio)
+    response = get_last_received(sio)
 
-   logger.info(response)
+    logger.info(response)
 
-   assert response.get("uuid", False)
-   assert response.get("role", False) == "student"
-   assert response.get("tutorial", False) == None
+    assert response.get("uuid", False)
+    assert response.get("role", False) == "student"
+    assert response.get("tutorial", False) == None
 
 def test_create_tutorial(client, socketio_client):
-   namespace = "/staff"
-   set_session(
+    namespace = "/staff"
+    set_session(
        client,
        name="test",
        currentGPA=0.0,
        goalGPA=6.7,
        availability=""
-   )
-   sio = socketio_client(namespace=namespace, test_client=client, disconnect=False)
-   logger.info(f"Connection: {sio.is_connected(namespace)}")
+    )
+    sio = socketio_client(namespace=namespace, test_client=client, disconnect=False)
+    logger.info(f"Connection: {sio.is_connected(namespace)}")
 
-   assert sio.is_connected(namespace)
-   response = get_last_received(sio, namespace=namespace)
-   assert response is not None, "Timeout"
-   uuid = response.get("uuid", False)
-   assert uuid
+    assert sio.is_connected(namespace)
+    response = get_last_received(sio, namespace=namespace)
+    assert response is not None, "Timeout"
+    uuid = response.get("uuid", False)
+    assert uuid
 
-   from app.sockets import utils
-   utils.users[uuid]["role"] = "staff"
+    from app.sockets import utils
+    utils.users[uuid]["role"] = "staff"
 
-   sio.emit("create_tutorial",
-       {
-           "name": "CAB202",
-           "group_size": 2
-       },
-       namespace=namespace
-   )
+    sio.emit("create_tutorial",
+        {
+            "name": "CAB202",
+            "group_size": 2
+        },
+        namespace=namespace
+    )
 
-   time.sleep(0.5)
+    time.sleep(0.5)
 
-   # after create_tutorial()
+    # after create_tutorial()
 
-   code = utils.users[uuid].get("tutorial", None)
-   assert code is not None
+    code = utils.users[uuid].get("tutorial", None)
+    assert code is not None
 
-   tutorial = utils.tutorials.get(code)
-   assert tutorial is not None
+    tutorial = utils.tutorials.get(code)
+    assert tutorial is not None
 
-   assert tutorial["name"] == "CAB202"
-   assert tutorial["group_size"] == 2
-   assert tutorial["staff"] == uuid
-   assert tutorial["state"] == "lobby"
-   assert tutorial["students"] == dict()
-   assert tutorial["groups"] == dict()
-   assert tutorial["questions"] == list()
+    assert tutorial["name"] == "CAB202"
+    assert tutorial["group_size"] == 2
+    assert tutorial["staff"] == uuid
+    assert tutorial["state"] == "lobby"
+    assert tutorial["students"] == dict()
+    assert tutorial["groups"] == dict()
+    assert tutorial["questions"] == list()
 
-   response = get_last_received(sio, namespace=namespace)
-   assert response is not None, "Timeout"
-   assert response.get("code", None) == code
+    response = get_last_received(sio, namespace=namespace)
+    assert response is not None, "Timeout"
+    assert response.get("code", None) == code
 
 
 def test_staff_creates_student_joins(app, client, socketio_client):
@@ -242,10 +259,12 @@ def test_student_auto_join(app, client, socketio_client):
                 tutorial_code=code)
 
     student_sio = socketio_client(test_client=student_client, disconnect=False)
-    response = get_last_received(student_sio)
+
+    response = get_last_received(student_sio, name="student_update", all=True)
     logger.info(response)
-    assert response.get("tutorial") == code
-    student_uuid = response.get("uuid")
+    tutorial_code = response[-1]["args"][0].get("tutorial_code", None)
+    student_uuid = response[-2]["args"][0].get("uuid", None)
+    assert tutorial_code == code
 
     tutorial = utils.tutorials.get(code)
     assert student_uuid in tutorial["students"]

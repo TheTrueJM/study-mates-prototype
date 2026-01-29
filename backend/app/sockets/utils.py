@@ -43,7 +43,7 @@ def _emit_tutorial_update(code):
     if not tutorial:
         return
 
-    emit("tutorial_update", tutorial, room=f"staff:{code}", namespace="/staff")
+    emit("tutorial_update", tutorial, room=code, namespace="/staff")
 
     for student_id, data in tutorial["students"].items():
         group_number = data.get("group")
@@ -54,7 +54,8 @@ def _emit_tutorial_update(code):
             "state": tutorial["state"],
             "group_number": group_number,
             "group_members": members,
-            "questions": tutorial["questions"]
+            "questions": tutorial["questions"],
+            "tutorial_code": code
         }
         emit("student_update", payload, room=student_id)
 
@@ -114,7 +115,7 @@ def disconnect():
             users[user_id]["tutorial"] = None
 
             if tutorial := tutorials.get(code):
-                tutorial["students"].pop(user_id)
+                tutorial["students"].pop(user_id, None)
 
         if not users[user_id]["sessions"]:
             users.pop(user_id, None)

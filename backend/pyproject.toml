@@ -1,10 +1,10 @@
-[pytest]
-pythonpath = ["."]
-addopts = [
-    "--disable-warnings"
-]
-
 [tool.pytest.ini_options]
+pythonpath = [ "." ]
+addopts = [
+    "--disable-warnings",
+    "--pdbcls=pudb.debugger:Debugger",
+    "-s"
+]
 log_file = "tests/pytest.log"
 log_file_level = "INFO"
 log_file_format = "%(asctime)s [%(levelname)s] %(message)s"
