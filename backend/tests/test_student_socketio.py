@@ -1,3 +1,4 @@
+# ORIGINAL TEST_STUDENT_SOCKETIO.py FILE
 from app import create_app, socketio
 
 import pytest, logging, os, time
@@ -178,6 +179,9 @@ def test_staff_creates_student_joins(app, client, socketio_client):
 
 
 def test_five_students_grouping(app, client, socketio_client):
+    # note: this only verifies group slicing and doesn't verify
+    # based on student attributes (yet)
+
     from app.sockets import utils
 
     staff_client = app.test_client()
@@ -225,6 +229,8 @@ def test_five_students_grouping(app, client, socketio_client):
 
     for group_id, members in tutorial["groups"].items():
         member_names = [tutorial["students"][uid]["name"] for uid in members]
+        from pudb import set_trace
+        set_trace()
         logger.info(f"Group {group_id} assignments: {member_names}")
 
     for student_uuid in student_uuids:

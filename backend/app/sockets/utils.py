@@ -91,6 +91,8 @@ def _join_tutorial(user_id, code, namespace):
 
         join_room(user_id, namespace=namespace)
         _emit_tutorial_update(code)
+    else:
+        emit("fail", {"message": "Tutorial not found"}, namespace=namespace)
 
 
 def multi_namespace_event(event, namespaces):
