@@ -1,3 +1,4 @@
+# utils.py
 import random
 import string
 import uuid
@@ -9,26 +10,9 @@ from .. import socketio
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code}, ... }
-sessions = dict() # { sID: UUID }
+users = dict()
+sessions = dict()
 tutorials = dict()
-# {
-#   code: {
-#       staff: UUID,
-#       name: name,
-#       state: lobby|groups|discussion,
-#       group_size: size,
-#       students: { UUID, ... },
-#       groups: { id: [ UUID, ... ], ... },
-#       questions: [question, ...]
-#   },
-#   ...
-# }
-
-
-# -----------------------------
-# Helpers
-# -----------------------------
 
 
 def _generate_code(length=6):
@@ -59,40 +43,33 @@ def _emit_tutorial_update(code):
         }
         emit("student_update", payload, room=student_id)
 
-    # Alternative: Upload all Groups to all Students - Filter on Frontend using UUID
-    # payload = {
-    #     "name": tutorial["name"],
-    #     "state": tutorial["state"],
-    #     "groups": tutorial["groups"]
-    # }
-    # emit("students_update", payload, room=code)
-
 
 def _join_tutorial(user_id, code, namespace):
-    if tutorial := tutorials.get(code, None):
-        users[user_id]["tutorial"] = code
+    if not (tutorial := tutorials.get(code)):
+        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace=namespace)
+        return
 
-        if users[user_id]["role"] == "student":
-            if user_id not in tutorial["students"]:
-                tutorial["students"][user_id] = {
-                    "name": session.get("name"),
-                    "currentGPA": session.get("currentGPA"),
-                    "goalGPA": session.get("goalGPA"),
-                    "availability": session.get("availability"),
-                    "group": None
-                }
-                session.pop("student_details", None)
-                session.pop("currentGPA", None)
-                session.pop("goalGPA", None)
-                session.pop("availability", None)
-            join_room(code, namespace=namespace)
-        elif users[user_id]["role"] == "staff":
-            join_room(code, namespace=namespace)
+    users[user_id]["tutorial"] = code
 
-        join_room(user_id, namespace=namespace)
-        _emit_tutorial_update(code)
-    else:
-        emit("fail", {"message": "Tutorial not found"}, namespace=namespace)
+    if users[user_id]["role"] == "student":
+        if user_id not in tutorial["students"]:
+            tutorial["students"][user_id] = {
+                "name": session.get("name"),
+                "currentGPA": session.get("currentGPA"),
+                "goalGPA": session.get("goalGPA"),
+                "availability": session.get("availability"),
+                "group": None
+            }
+            session.pop("student_details", None)
+            session.pop("currentGPA", None)
+            session.pop("goalGPA", None)
+            session.pop("availability", None)
+        join_room(code, namespace=namespace)
+    elif users[user_id]["role"] == "staff":
+        join_room(code, namespace=namespace)
+
+    join_room(user_id, namespace=namespace)
+    _emit_tutorial_update(code)
 
 
 def multi_namespace_event(event, namespaces):
@@ -101,11 +78,6 @@ def multi_namespace_event(event, namespaces):
             socketio.on(event, namespace=ns)(f)
         return f
     return decorator
-
-
-# -----------------------------
-# Socket lifecycle
-# -----------------------------
 
 
 @multi_namespace_event("disconnect", ["/", "/staff"])

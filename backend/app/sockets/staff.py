@@ -1,3 +1,4 @@
+# staff.py
 import logging
 import uuid
 import random
@@ -47,19 +48,21 @@ def connect(auth):
 
 @socketio.on("create_tutorial", namespace="/staff")
 def create_tutorial(data):
-    user_id = utils.sessions.get(request.sid)
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
+        return
 
     logger.info(f"Creating tutorial for {user_id}")
 
-    if not user_id or utils.users.get(user_id, {}).get("role") != "staff":
+    if utils.users.get(user_id, {}).get("role") != "staff":
+        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
         return
 
     name = data.get("name")
     group_size = int(data.get("group_size")) or None
-    # TODO: Discussion Questions, Discussion Time
 
     if not group_size or group_size < 2:
-        emit("create_failed", namespace="/staff")
+        emit("error", {"message": "Invalid group size"}, to=request.sid, namespace="/staff")
         return
 
     code = utils._generate_code()
@@ -84,16 +87,27 @@ def create_tutorial(data):
 
 @socketio.on("reset_lobby", namespace="/staff")
 def reset_lobby():
-    user_id = utils.sessions.get(request.sid)
-    code = utils.users[user_id]["tutorial"]
-    tutorial = utils.tutorials.get(code)
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
+        return
 
-    if tutorial and tutorial["staff"] == user_id:
-        tutorial["state"] = "lobby"
-        tutorial["groups"].clear()
-        tutorial["questions"].clear()
+    if not (code := utils.users.get(user_id, {}).get("tutorial")):
+        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
+        return
 
-        utils._emit_tutorial_update(code)
+    if not (tutorial := utils.tutorials.get(code)):
+        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
+        return
+
+    if tutorial["staff"] != user_id:
+        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
+        return
+
+    tutorial["state"] = "lobby"
+    tutorial["groups"].clear()
+    tutorial["questions"].clear()
+
+    utils._emit_tutorial_update(code)
 
 
 # -----------------------------
@@ -102,27 +116,36 @@ def reset_lobby():
 
 @socketio.on("start_grouping", namespace="/staff")
 def start_grouping():
-    user_id = utils.sessions.get(request.sid)
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
+        return
 
-    if user_id:
-        code = utils.users[user_id]["tutorial"]
-        tutorial = utils.tutorials.get(code)
+    if not (code := utils.users.get(user_id, {}).get("tutorial")):
+        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
+        return
 
-        if tutorial and tutorial["staff"] == user_id:
-            tutorial["questions"].clear()
-            group_size = tutorial["group_size"]
-            students = list(tutorial["students"].keys())
-            random.shuffle(students)
+    if not (tutorial := utils.tutorials.get(code)):
+        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
+        return
 
-            tutorial["groups"].clear()
-            tutorial["state"] = "groups"
+    if tutorial["staff"] != user_id:
+        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
+        return
 
-            for idx, student_id in enumerate(students):
-                group_id = 1 + idx // group_size
-                tutorial["groups"].setdefault(group_id, []).append(student_id)
-                tutorial["students"][student_id]["group"] = group_id
+    tutorial["questions"].clear()
+    group_size = tutorial["group_size"]
+    students = list(tutorial["students"].keys())
+    random.shuffle(students)
 
-            utils._emit_tutorial_update(code)
+    tutorial["groups"].clear()
+    tutorial["state"] = "groups"
+
+    for idx, student_id in enumerate(students):
+        group_id = 1 + idx // group_size
+        tutorial["groups"].setdefault(group_id, []).append(student_id)
+        tutorial["students"][student_id]["group"] = group_id
+
+    utils._emit_tutorial_update(code)
 
 
 # -----------------------------
@@ -132,16 +155,25 @@ def start_grouping():
 
 @socketio.on("start_discussion", namespace="/staff")
 def start_discussion():
-    user_id = utils.sessions.get(request.sid)
-    code = utils.users[user_id]["tutorial"]
-    tutorial = utils.tutorials.get(code)
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
+        return
 
-    if tutorial and tutorial["staff"] == user_id:
-        tutorial["state"] = "discussion"
+    if not (code := utils.users.get(user_id, {}).get("tutorial")):
+        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
+        return
 
-        # Placeholder: questions = db.get_questions(code)
-        questions = ["Question Test1", "Question Test2", "Question Test3"]
-        tutorial["questions"] = questions
-        # emit("discussion_started", {"questions": questions}, room=code, namespace="/staff")
+    if not (tutorial := utils.tutorials.get(code)):
+        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
+        return
 
-        utils._emit_tutorial_update(code)
+    if tutorial["staff"] != user_id:
+        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
+        return
+
+    tutorial["state"] = "discussion"
+
+    questions = ["Question Test1", "Question Test2", "Question Test3"]
+    tutorial["questions"] = questions
+
+    utils._emit_tutorial_update(code)

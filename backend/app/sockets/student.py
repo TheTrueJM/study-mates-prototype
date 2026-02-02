@@ -1,3 +1,4 @@
+# student.py
 import logging
 import uuid
 from flask import request, session
@@ -43,11 +44,12 @@ def connect(auth):
 
 @socketio.on("join_tutorial")
 def join_tutorial(data):
-    code = data.get("code")
+    if not (code := data.get("code")):
+        emit("error", {"message": "Code required"}, to=request.sid)
+        return
 
-    user_id = utils.sessions.get(request.sid)
-    if not user_id or code not in utils.tutorials:
-        emit("join_failed")
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid)
         return
 
     utils._join_tutorial(user_id, code, namespace="/")
