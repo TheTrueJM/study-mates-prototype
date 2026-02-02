@@ -106,6 +106,9 @@ def reset_lobby():
     tutorial["groups"].clear()
     tutorial["questions"].clear()
 
+    for student in tutorial["students"].values():
+        student["group"] = None
+
     utils._emit_tutorial_update(code)
 
 

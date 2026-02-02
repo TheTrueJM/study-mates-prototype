@@ -182,3 +182,60 @@ def test_grouping_logic(app, socketio_client, num_students, group_size, expected
     staff_sio.disconnect(namespace="/staff")
     for sio in students:
         sio.disconnect()
+
+def test_reset_lobby(app, socketio_client):
+    staff_client = app.test_client()
+    set_session(staff_client, name="Staff", currentGPA=0.0, goalGPA=0.0, availability="")
+
+    staff_sio = socketio_client(namespace="/staff", test_client=staff_client, disconnect=False)
+    response = get_last_received(staff_sio, namespace="/staff")
+    assert response is not None, "Staff connection timeout"
+    staff_uuid = response.get("uuid")
+    utils.users[staff_uuid]["role"] = "staff"
+
+    staff_sio.emit("create_tutorial", {"name": "ResetTest", "group_size": 2}, namespace="/staff")
+    time.sleep(0.5)
+    code = utils.users[staff_uuid].get("tutorial")
+    assert code is not None
+
+    students = []
+    student_uuids = []
+
+    for i in range(4):
+        student_client = app.test_client()
+        set_session(student_client, name=f"Student{i+1}", currentGPA=5.0, goalGPA=6.0, availability="Mon")
+
+        student_sio = socketio_client(test_client=student_client, disconnect=False)
+        response = get_last_received(student_sio, name="session")
+        student_uuid = response.get("uuid")
+        student_uuids.append(student_uuid)
+
+        student_sio.emit("join_tutorial", {"code": code})
+        time.sleep(0.1)
+        students.append(student_sio)
+
+    time.sleep(0.5)
+
+    tutorial = utils.tutorials.get(code)
+    assert len(tutorial["students"]) == 4
+
+    staff_sio.emit("start_grouping", namespace="/staff")
+    time.sleep(0.5)
+
+    assert tutorial["state"] == "groups"
+    assert len(tutorial["groups"]) > 0
+    for uid in student_uuids:
+        assert tutorial["students"][uid]["group"] is not None
+
+    staff_sio.emit("reset_lobby", namespace="/staff")
+    time.sleep(0.5)
+
+    assert tutorial["state"] == "lobby"
+    assert tutorial["groups"] == {}
+    assert tutorial["questions"] == []
+    for uid in student_uuids:
+        assert tutorial["students"][uid]["group"] is None
+
+    staff_sio.disconnect(namespace="/staff")
+    for sio in students:
+        sio.disconnect()
