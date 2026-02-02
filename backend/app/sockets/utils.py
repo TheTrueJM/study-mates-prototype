@@ -1,4 +1,3 @@
-# utils.py
 import random
 import string
 import uuid
@@ -10,9 +9,27 @@ from .. import socketio
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-users = dict()
-sessions = dict()
+users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code}, ... }
+sessions = dict() # { sID: UUID }
 tutorials = dict()
+
+# {
+#   code: {
+#       staff: UUID,
+#       name: name,
+#       state: lobby|groups|discussion,
+#       group_size: size,
+#       students: { UUID, ... },
+#       groups: { id: [ UUID, ... ], ... },
+#       questions: [question, ...]
+#   },
+#   ...
+# }
+
+
+# -----------------------------
+# Helpers
+# -----------------------------
 
 
 def _generate_code(length=6):
@@ -45,7 +62,9 @@ def _emit_tutorial_update(code):
 
 
 def _join_tutorial(user_id, code, namespace):
-    if not (tutorial := tutorials.get(code)):
+    join_room(user_id, namespace=namespace)
+
+    if not (tutorial := tutorials.get(code)) and namespace!="/staff":
         emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace=namespace)
         return
 
@@ -68,7 +87,6 @@ def _join_tutorial(user_id, code, namespace):
     elif users[user_id]["role"] == "staff":
         join_room(code, namespace=namespace)
 
-    join_room(user_id, namespace=namespace)
     _emit_tutorial_update(code)
 
 
@@ -78,6 +96,11 @@ def multi_namespace_event(event, namespaces):
             socketio.on(event, namespace=ns)(f)
         return f
     return decorator
+
+
+# -----------------------------
+# Socket lifecycle
+# -----------------------------
 
 
 @multi_namespace_event("disconnect", ["/", "/staff"])

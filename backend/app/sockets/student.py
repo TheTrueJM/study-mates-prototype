@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 @socketio.on("connect")
 def connect(auth):
-    logger.info("connect reached")
     user_id = auth.get("uuid") if auth else None
     role = session.get("role", "student")
     code = session.get("tutorial_code")

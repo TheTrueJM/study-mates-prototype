@@ -1,4 +1,3 @@
-# staff.py
 import logging
 import uuid
 import random
@@ -48,18 +47,18 @@ def connect(auth):
 
 @socketio.on("create_tutorial", namespace="/staff")
 def create_tutorial(data):
-    if not (user_id := utils.sessions.get(request.sid)):
-        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
-        return
-
-    logger.info(f"Creating tutorial for {user_id}")
+    user_id = utils.sessions.get(request.sid)
 
     if utils.users.get(user_id, {}).get("role") != "staff":
         emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
         return
+    elif utils.users.get(user_id, {}).get("tutorial") is not None:
+        emit("error", {"message": "Already in a tutorial"}, to=request.sid, namespace="/staff")
+        return
 
     name = data.get("name")
     group_size = int(data.get("group_size")) or None
+    # TODO: Discussion Questions, Discussion Time
 
     if not group_size or group_size < 2:
         emit("error", {"message": "Invalid group size"}, to=request.sid, namespace="/staff")
