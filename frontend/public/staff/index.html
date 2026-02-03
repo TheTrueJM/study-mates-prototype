@@ -28,7 +28,7 @@
     <script>
       let uuid = localStorage.getItem("uuid");
 
-      const socket = io("ws://127.0.0.1:5000", {auth: { uuid: uuid }});
+      const socket = io("ws://127.0.0.1:5000/staff", {auth: { uuid: uuid }});
 
       
       document.getElementById("create-form").addEventListener("submit", e => {

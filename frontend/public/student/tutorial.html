@@ -27,7 +27,7 @@
     <script>
       let uuid = localStorage.getItem("uuid");
 
-      const socket = io("ws://127.0.0.1:5000", {auth: { uuid: uuid }});
+      const socket = io("ws://127.0.0.1:5000/", {auth: { uuid: uuid }});
 
       socket.on("session", data => {
         uuid = data.uuid;
