@@ -121,9 +121,15 @@ def test_staff_creates_student_joins(app, client, socketio_client):
     student_sio.disconnect()
 
 @pytest.mark.parametrize("num_students,group_size,expected_sizes", [
-    (5, 2, [1, 2, 2]),
-    (6, 3, [3, 3]),
+    (30, 5, [5, 5, 5, 5, 5, 5]),
+    (30, 4, [2, 4, 4, 4, 4, 4, 4, 4]),
+    (27, 3, [3, 3, 3, 3, 3, 3, 3, 3, 3]),
+    (26, 3, [2, 3, 3, 3, 3, 3, 3, 3, 3]),
+    (11, 4, [3, 4, 4]),
     (7, 3, [1, 3, 3]),
+    (6, 3, [3, 3]),
+    (5, 2, [1, 2, 2]),
+    (2, 2, [2]),
     (1, 5, [1]),
 ])
 # right now this counts odd ones out and puts them into a group instead

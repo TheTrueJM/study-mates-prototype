@@ -58,7 +58,7 @@ def _emit_tutorial_update(code):
             "questions": tutorial["questions"],
             "tutorial_code": code
         }
-        emit("student_update", payload, room=student_id)
+        emit("student_update", payload, room=student_id, namespace="/")
 
 
 def _join_tutorial(user_id, code, namespace):
