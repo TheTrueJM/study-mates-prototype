@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Study Mates - Tutorial Setup</title>
+
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+  </head>
+  
+  <body>
+    <form id="create-form">
+      <label>
+        Tutorial Session Name:
+        <input type="text" id="name" required/>
+      </label>
+      <br><br>
+
+      <!-- Update to Slider -->
+      <label>
+        Students per Group:
+        <input type="number" id="group_size" min="2" value="5" required/>
+      </label>
+      <br><br>
+
+      <button type="submit">Begin Tutorial</button>
+    </form>
+
+
+    <script>
+      let uuid = localStorage.getItem("uuid");
+
+      const socket = io("ws://127.0.0.1:5000/staff", {auth: { uuid: uuid }});
+
+      
+      document.getElementById("create-form").addEventListener("submit", e => {
+        e.preventDefault();
+
+        socket.emit("create_tutorial", {
+          name: document.getElementById("name").value,
+          group_size: document.getElementById("group_size").value
+        });
+      });
+
+
+      socket.on("tutorial_created", data => {
+        window.location.href = `/staff/tutorial/${data.code}`;
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Study Mates - Tutorial</title>
+      <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  </head>
+
+  <body>
+    <h1 id="title">Tutorial</h1>
+    <h3>State: <span id="state">lobby</span></h3>
+
+    <div id="lobby">Waiting for the instructor to start...</div>
+
+    <div id="group" style="display:none;">
+      <h2>Your Group</h2>
+      <p>Group number: <span id="group-num"></span></p>
+      <ul id="members"></ul>
+    </div>
+
+    <!-- Change to a Pop-Up that users can toggle if they wish to use their device instead of whiteboard -->
+    <div id="discussion" style="display:none;">
+      <h2>Discussion</h2>
+      <div id="questions"></div>
+    </div>
+
+
+    <script>
+      let uuid = localStorage.getItem("uuid");
+
+      const socket = io("ws://127.0.0.1:5000/", {auth: { uuid: uuid }});
+
+      socket.on("session", data => {
+        uuid = data.uuid;
+        localStorage.setItem("uuid", uuid);
+      });
+
+      
+      socket.on("student_update", tutorial => {
+        console.log(tutorial)
+        document.getElementById("title").innerText = tutorial.name;
+        document.getElementById("state").innerText = tutorial.state;
+
+        document.getElementById("lobby").style.display = tutorial.state === "lobby" ? "block" : "none";
+        document.getElementById("group").style.display = tutorial.state !== "lobby" ? "block" : "none";
+        document.getElementById("discussion").style.display = tutorial.state === "discussion" ? "block" : "none";
+
+        if (tutorial.group_number !== null && tutorial.group_number !== undefined) {
+          document.getElementById("group-num").innerText = tutorial.group_number;
+        }
+
+        if (tutorial.group_members !== null && tutorial.group_members !== undefined) {
+          const membersEl = document.getElementById("members");
+          membersEl.innerHTML = "";
+          tutorial.group_members.forEach(member => {
+            const li = document.createElement("li");
+            li.innerText = member;
+            membersEl.appendChild(li);
+          });
+        }
+
+        const questionsEl = document.getElementById("questions");
+        questionsEl.innerHTML = "";
+        tutorial.questions.forEach(question => {
+            const p = document.createElement("p");
+            p.innerText = question;
+            questionsEl.appendChild(p);
+        });
+      });
+    </script>
+  </body>
+</html>
