@@ -18,20 +18,16 @@ def index():
     return send_file(client_path)
 
 
-@student_bp.route("/details", methods=["GET", "POST"]) # Possibly Unnessary Route, and can Fully handle on frontend
+@student_bp.route("/details", methods=["GET", "POST"])
 def details():
-    ## To-Do: Kick back to Index if Tutorial doesn't exist on server
     if not session.get("tutorial_code"):
         return redirect(url_for("student.index"))
 
     if request.method == "POST":
-        session["student_details"] = {
-            "currentGPA": request.form.get("currentGPA"),
-            "goalGPA": request.form.get("goalGPA", 4),
-            "availability": request.form.get("availability") # Handle Differently from Frontend Selection
-        }
+        session["currentGPA"] = request.form.get("currentGPA")
+        session["goalGPA"] = request.form.get("goalGPA", 4)
+        session["availability"] = request.form.get("availability")
         return redirect(url_for("student.tutorial", code=session["tutorial_code"]))
-
 
     client_path = os.path.join(os.getcwd(), "../frontend/public/student/details.html")
     return send_file(client_path)
