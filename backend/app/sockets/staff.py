@@ -1,6 +1,7 @@
 import logging
 import uuid
 import random
+from collections import deque
 
 from flask import request, session
 from flask_socketio import emit, join_room
@@ -150,7 +151,80 @@ def start_grouping():
         tutorial["groups"].setdefault(group_id, []).append(student_id)
         tutorial["students"][student_id]["group"] = group_id
 
+    ### Below is the Basic Code for the proper Matching Algorithm
+    # connections: dict[tuple, float] = _build_graph(tutorial["students"])
+    # unmatched = list(tutorial["students"].keys())
+    # queue = deque()
+    # group_id = 1
+
+    # # This should be created and stored within the tutorial, so that it is preserved between matchings
+    # previous_matches = dict({student: set() for student in unmatched})
+    # # This should be created and stored within the tutorial, so that it is preserved between matchings
+    # threshold = 0.75
+
+    # while unmatched and queue:
+    #     current_student = queue.popleft() or unmatched.pop()
+    #     tutorial["groups"][group_id] = [current_student]
+    #     for (new_student, weight) in connections[current_student]:
+    #         if new_student in unmatched:
+    #             unmatched.remove(new_student)
+    #             if weight >= threshold:
+    #                 queue.append(new_student)
+    #                 if len(tutorial["groups"][group_id]) < group_size: # Handle previous_matches
+    #                     tutorial["groups"][group_id].append(new_student)
+    #                     if len(tutorial["groups"][group_id]) == group_size:
+    #                         # Add all students in the current group to eachother's previous matches
+    #                         group_id += 1
+    #                         break
+    #             else:
+    #                 queue.appendleft(new_student)
+
+    # threshold = max(threshold - 0.15, 0.45)
+
     utils._emit_tutorial_update(code)
+
+
+
+    def _build_graph(students: dict[str, dict]):
+        vertices = students.keys()
+        edges = dict()
+        maximum = 0
+
+        for i in range(len(vertices) - 1):
+            s1 = vertices[i]
+            for j in range(i + 1, len(vertices)):
+                s2 = vertices[j]
+
+                score = 0
+                if students[s1]["currentGPA"] and students[s2]["currentGPA"] and abs(students[s1]["currentGPA"] - students[s2]["currentGPA"]) <= 0.5:
+                    score += 5
+                if not students[s1]["currentGPA"] and not students[s2]["currentGPA"]:
+                    score += 5
+                if abs(students[s1]["goalGPA"] - students[s2]["goalGPA"]) <= 0.5:
+                    score += 5
+
+                # TODO: Implement this when "availability" is a list or set
+                # for availability in students[s1]["availability"]:
+                #     if availability in students[s2]["availability"]:
+                #         score += 1
+
+                if score:
+                    maximum = max(maximum, score)
+                    edges.setdefault(vertices[i], []).append(vertices[j], score)
+                    edges.setdefault(vertices[j], []).append(vertices[i], score)
+                    # Alternative way for edges
+                    # edges[(max(vertices[i], vertices[j]), min(vertices[i], vertices[j]))] = score
+        
+        if maximum:
+            # Normalise Results to values between 0.0-1.0
+            for u in edges:
+                # For Alterntive Edge Structure:
+                # edges[edge] /= maximum
+                for _ in range(len(edges[u])):
+                    v, weight = edges[u]
+                    edges[u].append((v, weight / maximum))
+        
+        return edges
 
 
 # -----------------------------
