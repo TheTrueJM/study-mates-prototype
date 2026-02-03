@@ -2,7 +2,7 @@ from flask import Blueprint, session, request, redirect, url_for, send_file, ren
 from flask_bcrypt import generate_password_hash, check_password_hash
 from flask_login import login_required, login_user, logout_user
 from sqlalchemy import or_
-from ..database import db, Staff
+from ..database import db, Staff, DiscussionCategory, DiscussionQuestion
 
 import os
 
@@ -131,15 +131,57 @@ def register():
 ### REMOVE THIS LATER
 @staff_bp.route("/test_user", methods=["GET", "POST"])
 def test_user():
-    exists: Staff | None = db.session.scalar(db.select(Staff).where(or_(Staff.id=="n1234", Staff.username=="test")))
-    if exists is None:
-        staff = Staff(
-            id="n1234",
-            username="test",
-            password_hash=generate_password_hash("test"),
-            firstname=None,
-            surname=None
-        )
-        db.session.add(staff)
-        db.session.commit()
+    if False:
+        exists: Staff | None = db.session.scalar(db.select(Staff).where(or_(Staff.id=="n1234", Staff.username=="test")))
+        if exists is None:
+            staff = Staff(
+                id="n1234",
+                username="test",
+                password_hash=generate_password_hash("test"),
+                firstname=None,
+                surname=None
+            )
+            db.session.add(staff)
+            db.session.commit()
+    return redirect(url_for("staff.login"))
+
+
+### REMOVE THIS LATER
+@staff_bp.route("/discussion_data", methods=["GET", "POST"])
+def discussion_data():
+    if False:
+        exists: list[DiscussionCategory | None] = db.session.query(DiscussionCategory).all()
+        if not exists:
+            discussion = {
+                "academic": [
+                    "What are your career goals after graduation?",
+                    "What study techniques work best for you?",
+                    "What aspect of this course interests you most?",
+                    "How do you prefer to collaborate on group projects?",
+                    "Do you like to get work done fast, or do you tend to leave it to the due date?"
+                    ],
+                "casual": [
+                    "What is your favourite video game?",
+                    "How do you like to unwind after a long day?",
+                    "What is your favourite food?",
+                    "Who is your most played music artist?",
+                    "Where is your dream holiday destination?"
+                ],
+                "study": [
+                    "What unit did you enjoy the most?",
+                    "When did you realise you wanted to study your course?",
+                    "Who is your favourite productive/educational YouTuber?",
+                    "What is your favourite part of university"
+                ]
+            }
+
+            for category in discussion:
+                discussion_category = DiscussionCategory(name=category)
+                db.session.add(discussion_category)
+                db.session.commit()
+                for question in discussion[category]:
+                    discussion_question = DiscussionQuestion(question=question, category_name=category)
+                    db.session.add(discussion_question)
+                db.session.commit()
+
     return redirect(url_for("staff.login"))

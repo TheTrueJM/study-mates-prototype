@@ -7,6 +7,9 @@ from flask_socketio import emit, join_room
 from .. import socketio
 from . import utils
 
+from sqlalchemy.sql.expression import func
+from ..database import db, DiscussionQuestion
+
 logger = logging.getLogger(__name__)
 
 
@@ -175,7 +178,12 @@ def start_discussion():
 
     tutorial["state"] = "discussion"
 
-    questions = ["Question Test1", "Question Test2", "Question Test3"]
+    academic: DiscussionQuestion = db.session.query(DiscussionQuestion).filter(DiscussionQuestion.category_name == "academic").order_by(func.random()).first()
+    casual: DiscussionQuestion = db.session.query(DiscussionQuestion).filter(DiscussionQuestion.category_name == "casual").order_by(func.random()).first()
+    study: DiscussionQuestion = db.session.query(DiscussionQuestion).filter(DiscussionQuestion.category_name == "study").order_by(func.random()).first()
+
+
+    questions = [academic.question, casual.question, study.question]
     tutorial["questions"] = questions
 
     utils._emit_tutorial_update(code)
