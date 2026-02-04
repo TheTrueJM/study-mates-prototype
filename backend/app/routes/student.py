@@ -24,9 +24,12 @@ def details():
         return redirect(url_for("student.index"))
 
     if request.method == "POST":
+        ### Ensure 'availability' is a list, more likely do this on frontend
+        availability=request.form.get("availabilityData")
+        print(type(availability), availability)
         session["currentGPA"] = request.form.get("currentGPA")
         session["goalGPA"] = request.form.get("goalGPA", 4)
-        session["availability"] = request.form.get("availability")
+        session["availability"] = availability
         return redirect(url_for("student.tutorial", code=session["tutorial_code"]))
 
     client_path = os.path.join(os.getcwd(), "../frontend/public/student/details.html")

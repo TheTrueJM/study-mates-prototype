@@ -2,6 +2,14 @@
 <html>
     <head>
         <title>Studty Mates - Your Details</title>
+
+        <style>
+            button[data-active="true"] {
+                background-color: green;
+                color: white;
+            }
+        </style>
+
     </head>
 
     <body>
@@ -22,12 +30,60 @@
         
             <!-- Update to Selection Type for Days and Times - Requires JS Functionality -->
             <label>
-                Availability:
-                <input type="text" name="availability"/>
+                Availability: <br> <br>
+                <input type="hidden" name="availability" id="availabilityData">
+                <div id="availability"></div>
             </label>
             <br><br>
 
             <button type="submit">Continue</button>
         </form>
     </body>
+
+    <script>
+        const days = [
+        "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday", "Sunday"
+        ];
+
+        const times = ["Morning", "Afternoon", "Evening"];
+
+        // Store selections as a Set of "Day[:3]Period[0]"
+        const selected = new Set();
+
+        const container = document.getElementById("availability");
+
+        days.forEach(day => {
+            const dayRow = document.createElement("div");
+            dayRow.textContent = day + ": ";
+
+            times.forEach(time => {
+                const btn = document.createElement("button");
+                btn.type = "button"; // prevent form submit
+                btn.textContent = time;
+
+                btn.addEventListener("click", () => {
+                    const key = `${day.slice(0,3)}${time[0]}`;
+
+                    if (selected.has(key)) {
+                        selected.delete(key);
+                        btn.dataset.active = "false";
+                    } else {
+                        selected.add(key);
+                        btn.dataset.active = "true";
+                    }
+                    });
+                    dayRow.appendChild(btn);
+            });
+            container.appendChild(dayRow);
+        });
+
+        // Rework this submission, probably a manual request instead of POST form, so that availability will be sent as list (or set)
+        document.querySelector("form").addEventListener("submit", () => {
+            console.log('good')
+            const availabilityArray = Array.from(selected);
+
+            document.getElementById("availabilityData").value = JSON.stringify(availabilityArray);
+        });
+    </script>
 </html>
