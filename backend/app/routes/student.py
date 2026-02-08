@@ -1,5 +1,6 @@
 from flask import Blueprint, session, request, redirect, url_for, send_file, render_template
 import os
+from app.enums import get_availability_code, Day, TimePeriod, parse_availability
 
 
 student_bp = Blueprint("student", __name__)
@@ -24,9 +25,11 @@ def details():
         return redirect(url_for("student.index"))
 
     if request.method == "POST":
-        session["currentGPA"] = request.form.get("currentGPA")
-        session["goalGPA"] = request.form.get("goalGPA", 4)
-        session["availability"] = request.form.get("availability")
+        session["currentGPA"] = float(request.form.get("currentGPA", 0.0))
+        session["goalGPA"] = float(request.form.get("goalGPA", 4.0))
+        # e.g form output: ['MONM', 'WEDA', 'THUA', 'FRIA', 'SUNN']
+        availability_list = request.form.getlist("availability")
+        session["availability"] = parse_availability(availability_list)
         return redirect(url_for("student.tutorial", code=session["tutorial_code"]))
 
     client_path = os.path.join(os.getcwd(), "../frontend/public/student/details.html")

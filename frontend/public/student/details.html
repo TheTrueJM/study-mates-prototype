@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Studty Mates - Your Details</title>
+        <title>Study Mates - Your Details</title>
     </head>
 
     <body>
@@ -19,12 +19,54 @@
                 <input type="number" name="goalGPA" step="0.1" value="4.0"/>
             </label>
             <br><br>
-        
-            <!-- Update to Selection Type for Days and Times - Requires JS Functionality -->
+
             <label>
                 Availability:
-                <input type="text" name="availability"/>
             </label>
+            <br><br>
+
+            <table border="1" cellpadding="5">
+                <tr>
+                    <th></th>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
+                    <th>Sun</th>
+                </tr>
+                <tr>
+                    <td>Morning</td>
+                    <td><input type="checkbox" name="availability" value="MONM"></td>
+                    <td><input type="checkbox" name="availability" value="TUEM"></td>
+                    <td><input type="checkbox" name="availability" value="WEDM"></td>
+                    <td><input type="checkbox" name="availability" value="THUM"></td>
+                    <td><input type="checkbox" name="availability" value="FRIM"></td>
+                    <td><input type="checkbox" name="availability" value="SATM"></td>
+                    <td><input type="checkbox" name="availability" value="SUNM"></td>
+                </tr>
+                <tr>
+                    <td>Afternoon</td>
+                    <td><input type="checkbox" name="availability" value="MONA"></td>
+                    <td><input type="checkbox" name="availability" value="TUEA"></td>
+                    <td><input type="checkbox" name="availability" value="WEDA"></td>
+                    <td><input type="checkbox" name="availability" value="THUA"></td>
+                    <td><input type="checkbox" name="availability" value="FRIA"></td>
+                    <td><input type="checkbox" name="availability" value="SATA"></td>
+                    <td><input type="checkbox" name="availability" value="SUNA"></td>
+                </tr>
+                <tr>
+                    <td>Night</td>
+                    <td><input type="checkbox" name="availability" value="MONN"></td>
+                    <td><input type="checkbox" name="availability" value="TUEN"></td>
+                    <td><input type="checkbox" name="availability" value="WEDN"></td>
+                    <td><input type="checkbox" name="availability" value="THUN"></td>
+                    <td><input type="checkbox" name="availability" value="FRIN"></td>
+                    <td><input type="checkbox" name="availability" value="SATN"></td>
+                    <td><input type="checkbox" name="availability" value="SUNN"></td>
+                </tr>
+            </table>
             <br><br>
 
             <button type="submit">Continue</button>

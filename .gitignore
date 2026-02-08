@@ -3,3 +3,6 @@ __pycache__/
 node_modules/
 instance/
 pytest.log
+.DS_Store
+CLAUDE.md
+backend/uv.lock
