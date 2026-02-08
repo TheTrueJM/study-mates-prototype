@@ -26,7 +26,7 @@ def details():
 
     if request.method == "POST":
         session["currentGPA"] = float(request.form.get("currentGPA", 4.0))
-        session["goalGPA"] = float(request.form.get("goalGPA", 4.0))
+        session["goalGPA"] = float(request.form.get("goalGPA", 0.0))
         # e.g form output: ['MONM', 'WEDA', 'THUA', 'FRIA', 'SUNN']
         availability_list = request.form.getlist("availability")
         session["availability"] = parse_availability(availability_list)

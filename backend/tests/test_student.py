@@ -158,71 +158,71 @@ def test_student_unauthorised_staff_access(app, socketio_client):
 
 def test_parse_availability_valid_single_code():
     result = parse_availability("MONM")
-    assert result == ["MONM"]
+    assert result == {"MONM"}
 
     result = parse_availability(["MONM"])
-    assert result == ["MONM"]
+    assert result == {"MONM"}
 
 
 def test_parse_availability_valid_multiple_codes():
     result = parse_availability("MONM TUEA WEDN")
-    assert sorted(result) == ["MONM", "TUEA", "WEDN"]
+    assert result == {"MONM", "TUEA", "WEDN"}
 
     result = parse_availability(["MONM", "TUEA", "WEDN"])
-    assert sorted(result) == ["MONM", "TUEA", "WEDN"]
+    assert result == {"MONM", "TUEA", "WEDN"}
 
 
 def test_parse_availability_valid_comma_separated():
     result = parse_availability("MONM,TUEA")
-    assert sorted(result) == ["MONM", "TUEA"]
+    assert result == {"MONM", "TUEA"}
 
     result = parse_availability(["MONM", "TUEA"])
-    assert sorted(result) == ["MONM", "TUEA"]
+    assert result == {"MONM", "TUEA"}
 
 
 def test_parse_availability_valid_lower_case():
     result = parse_availability("monm tuea")
-    assert sorted(result) == ["MONM", "TUEA"]
+    assert result == {"MONM", "TUEA"}
 
     result = parse_availability(["monm", "tuea"])
-    assert sorted(result) == ["MONM", "TUEA"]
+    assert result == {"MONM", "TUEA"}
 
 
 def test_parse_availability_dedupes_codes():
     result = parse_availability("MONM MONM TUEA")
-    assert result == ["MONM", "TUEA"]
+    assert result == {"MONM", "TUEA"}
 
     result = parse_availability(["MONM", "MONM", "TUEA"])
-    assert result == ["MONM", "TUEA"]
+    assert result == {"MONM", "TUEA"}
 
 
 def test_parse_availability_empty_string():
     result = parse_availability("")
-    assert result == []
+    assert result == set()
 
     result = parse_availability([])
-    assert result == []
+    assert result == set()
 
 
 def test_parse_availability_only_whitespace():
     result = parse_availability("   ")
-    assert result == []
+    assert result == set()
 
     result = parse_availability(["   "])
-    assert result == []
+    assert result == set()
 
 
 def test_parse_availability_partial_invalid_codes():
     result = parse_availability("MONM FAKE TUEA")
-    assert sorted(result) == ["MONM", "TUEA"]
+    assert result == {"MONM", "TUEA"}
 
     result = parse_availability(["MONM", "FAKE", "TUEA"])
-    assert sorted(result) == ["MONM", "TUEA"]
+    assert result == {"MONM", "TUEA"}
 
 
 def test_parse_availability_all_invalid_codes():
     result = parse_availability("FAKE FAKE2 FAKE3")
-    assert result == []
+    assert result == set()
 
     result = parse_availability(["FAKE", "FAKE2", "FAKE3"])
-    assert result == []
+    assert result == set()
