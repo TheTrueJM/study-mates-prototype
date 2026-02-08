@@ -2,6 +2,7 @@ import logging
 import uuid
 import random
 import math
+from functools import wraps
 
 from flask import request, session
 from flask_socketio import emit, join_room
@@ -9,6 +10,29 @@ from .. import socketio, _start_timer_thread, _stop_timer_thread
 from . import utils
 
 logger = logging.getLogger(__name__)
+
+
+def _with_tutorial_auth(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not (user_id := utils.sessions.get(request.sid)):
+            emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
+            return
+
+        if not (code := utils.users.get(user_id, {}).get("tutorial")):
+            emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
+            return
+
+        if not (tutorial := utils.tutorials.get(code)):
+            emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
+            return
+
+        if tutorial["staff"] != user_id:
+            emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
+            return
+
+        return f(user_id, code, tutorial, *args, **kwargs)
+    return wrapper
 
 
 @socketio.on("connect", namespace="/staff")
@@ -92,23 +116,8 @@ def create_tutorial(data):
 
 
 @socketio.on("reset_lobby", namespace="/staff")
-def reset_lobby():
-    if not (user_id := utils.sessions.get(request.sid)):
-        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (code := utils.users.get(user_id, {}).get("tutorial")):
-        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (tutorial := utils.tutorials.get(code)):
-        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if tutorial["staff"] != user_id:
-        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
-        return
-
+@_with_tutorial_auth
+def reset_lobby(user_id, code, tutorial):
     tutorial["state"] = "lobby"
     tutorial["groups"].clear()
     tutorial["questions"].clear()
@@ -124,23 +133,8 @@ def reset_lobby():
 # -----------------------------
 
 @socketio.on("start_grouping", namespace="/staff")
-def start_grouping():
-    if not (user_id := utils.sessions.get(request.sid)):
-        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (code := utils.users.get(user_id, {}).get("tutorial")):
-        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (tutorial := utils.tutorials.get(code)):
-        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if tutorial["staff"] != user_id:
-        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
-        return
-
+@_with_tutorial_auth
+def start_grouping(user_id, code, tutorial):
     tutorial["questions"].clear()
     group_size = tutorial["group_size"]
     students = list(tutorial["students"].keys())
@@ -163,23 +157,8 @@ def start_grouping():
 
 
 @socketio.on("start_discussion", namespace="/staff")
-def start_discussion():
-    if not (user_id := utils.sessions.get(request.sid)):
-        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (code := utils.users.get(user_id, {}).get("tutorial")):
-        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (tutorial := utils.tutorials.get(code)):
-        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if tutorial["staff"] != user_id:
-        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
-        return
-
+@_with_tutorial_auth
+def start_discussion(user_id, code, tutorial):
     tutorial["state"] = "discussion"
     tutorial["timer"]["remaining"] = tutorial["timer"]["duration"]
     tutorial["timer"]["running"] = True
@@ -192,69 +171,24 @@ def start_discussion():
 
 
 @socketio.on("start_timer", namespace="/staff")
-def start_timer():
-    if not (user_id := utils.sessions.get(request.sid)):
-        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (code := utils.users.get(user_id, {}).get("tutorial")):
-        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (tutorial := utils.tutorials.get(code)):
-        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if tutorial["staff"] != user_id:
-        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
-        return
-
+@_with_tutorial_auth
+def start_timer(user_id, code, tutorial):
     tutorial["timer"]["running"] = True
     _start_timer_thread(code)
     utils._emit_tutorial_update(code)
 
 
 @socketio.on("stop_timer", namespace="/staff")
-def stop_timer():
-    if not (user_id := utils.sessions.get(request.sid)):
-        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (code := utils.users.get(user_id, {}).get("tutorial")):
-        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (tutorial := utils.tutorials.get(code)):
-        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if tutorial["staff"] != user_id:
-        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
-        return
-
+@_with_tutorial_auth
+def stop_timer(user_id, code, tutorial):
     tutorial["timer"]["running"] = False
     _stop_timer_thread(code)
     utils._emit_tutorial_update(code)
 
 
 @socketio.on("edit_timer", namespace="/staff")
-def edit_timer(data):
-    if not (user_id := utils.sessions.get(request.sid)):
-        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (code := utils.users.get(user_id, {}).get("tutorial")):
-        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
-        return
-
-    if not (tutorial := utils.tutorials.get(code)):
-        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
-        return
-
-    if tutorial["staff"] != user_id:
-        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
-        return
-
+@_with_tutorial_auth
+def edit_timer(user_id, code, tutorial, data):
     new_time = math.ceil(float(data.get("time", 10))) * 60 or 600
     tutorial["timer"]["duration"] = new_time
     tutorial["timer"]["remaining"] = new_time
