@@ -3,7 +3,7 @@ import time
 import logging
 
 from app.sockets import utils
-from app.enums import get_availability_code, Day, TimePeriod
+from app.enums import get_availability_code, Day, TimePeriod, parse_availability
 from tests.helpers import set_session, get_last_received
 
 logger = logging.getLogger(__name__)
@@ -155,3 +155,43 @@ def test_student_unauthorised_staff_access(app, socketio_client):
     time.sleep(0.5)
 
     assert not student_sio.is_connected(namespace)
+
+def test_parse_availability_valid_single_code():
+    result = parse_availability("MONM")
+    assert result == ["MONM"]
+
+def test_parse_availability_valid_multiple_codes():
+    result = parse_availability("MONM TUEA WEDN")
+    assert sorted(result) == ["MONM", "TUEA", "WEDN"]
+
+def test_parse_availability_valid_comma_separated():
+    result = parse_availability("MONM,TUEA")
+    assert sorted(result) == ["MONM", "TUEA"]
+
+def test_parse_availability_valid_lower_case():
+    result = parse_availability("monm tuea")
+    assert sorted(result) == ["MONM", "TUEA"]
+
+def test_parse_availability_dedupes_codes():
+    result = parse_availability("MONM MONM TUEA")
+    assert result == ["MONM", "TUEA"]
+
+def test_parse_availability_empty_string():
+    result = parse_availability("")
+    assert result == []
+
+def test_parse_availability_only_whitespace():
+    result = parse_availability("   ")
+    assert result == []
+
+def test_parse_availability_partial_invalid_codes():
+    result = parse_availability("MONM FAKE TUEA")
+    assert sorted(result) == ["MONM", "TUEA"]
+
+def test_parse_availability_all_invalid_codes():
+    result = parse_availability("FAKE FAKE2 FAKE3")
+    assert result == []
+
+def test_parse_availability_valid_full_week():
+    result = parse_availability("MONM MONA MONN TUEM TUEA TUEN WEDM WEDA WEDN THUM THUA THUN FRIM FRIA FRIN SATM SATA SATN SUNM SUNA SUNN")
+    assert len(result) == 21
