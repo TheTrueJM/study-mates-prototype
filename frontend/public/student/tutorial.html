@@ -8,6 +8,7 @@
   <body>
     <h1 id="title">Tutorial</h1>
     <h3>State: <span id="state">lobby</span></h3>
+    <h2 id="timer-display" style="display:none;">00:00</h2>
 
     <div id="lobby">Waiting for the instructor to start...</div>
 
@@ -26,6 +27,8 @@
 
     <script>
       let uuid = localStorage.getItem("uuid");
+      let timerInterval = null;
+      let timerRemaining = 0;
 
       const socket = io("ws://127.0.0.1:5000/", {auth: { uuid: uuid }});
 
@@ -65,7 +68,58 @@
             p.innerText = question;
             questionsEl.appendChild(p);
         });
+
+        const timerDisplay = document.getElementById("timer-display");
+        if (tutorial.timer && tutorial.state === "discussion") {
+            timerRemaining = tutorial.timer.remaining;
+            timerDisplay.innerText = formatTime(timerRemaining);
+            timerDisplay.style.display = "block";
+
+            if (tutorial.timer.running) {
+                startCountdown();
+            } else {
+                stopCountdown();
+            }
+        } else {
+            timerDisplay.style.display = "none";
+            stopCountdown();
+        }
       });
+
+      socket.on("timer_sync", data => {
+        timerRemaining = data.remaining;
+        document.getElementById("timer-display").innerText = formatTime(timerRemaining);
+      });
+
+      socket.on("timer_notification", data => {
+        alert(data.message);
+      });
+
+      function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+      }
+
+      function startCountdown() {
+        stopCountdown();
+        timerInterval = setInterval(() => {
+            if (timerRemaining > 0) {
+                timerRemaining--;
+                document.getElementById("timer-display").innerText = formatTime(timerRemaining);
+                if (timerRemaining === 0) {
+                    stopCountdown();
+                }
+            }
+        }, 1000);
+      }
+
+      function stopCountdown() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+      }
     </script>
   </body>
 </html>
