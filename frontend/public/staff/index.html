@@ -21,6 +21,12 @@
       </label>
       <br><br>
 
+      <label>
+        Discussion Time (minutes):
+        <input type="number" id="discussion_time" min="1" value="10" required/>
+      </label>
+      <br><br>
+
       <button type="submit">Begin Tutorial</button>
     </form>
 
@@ -36,7 +42,8 @@
 
         socket.emit("create_tutorial", {
           name: document.getElementById("name").value,
-          group_size: document.getElementById("group_size").value
+          group_size: document.getElementById("group_size").value,
+          discussion_time: document.getElementById("discussion_time").value
         });
       });
 

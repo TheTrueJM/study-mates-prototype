@@ -21,7 +21,8 @@ tutorials = dict()
 #       group_size: size,
 #       students: { UUID, ... },
 #       groups: { id: [ UUID, ... ], ... },
-#       questions: [question, ...]
+#       questions: [question, ...],
+#       timer: { duration: int, remaining: int, running: bool }
 #   },
 #   ...
 # }
@@ -56,6 +57,7 @@ def _emit_tutorial_update(code):
             "group_number": group_number,
             "group_members": members,
             "questions": tutorial["questions"],
+            "timer": tutorial.get("timer"),
             "tutorial_code": code
         }
         emit("student_update", payload, room=student_id, namespace="/")

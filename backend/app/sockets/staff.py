@@ -4,7 +4,7 @@ import random
 
 from flask import request, session
 from flask_socketio import emit, join_room
-from .. import socketio
+from .. import socketio, _start_timer_thread, _stop_timer_thread
 from . import utils
 
 logger = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ def create_tutorial(data):
 
     name = data.get("name")
     group_size = int(data.get("group_size")) or None
-    # TODO: Discussion Questions, Discussion Time
+    discussion_time = int(data.get("discussion_time", 10)) * 60 or 600
 
     if not group_size or group_size < 2:
         emit("error", {"message": "Invalid group size"}, to=request.sid, namespace="/staff")
@@ -74,6 +74,11 @@ def create_tutorial(data):
         "students": dict(),
         "groups": dict(),
         "questions": list(),
+        "timer": {
+            "duration": discussion_time,
+            "remaining": discussion_time,
+            "running": False
+        }
     }
 
     logger.info(f"Created tutorial {code} for {user_id}")
@@ -174,8 +179,86 @@ def start_discussion():
         return
 
     tutorial["state"] = "discussion"
+    tutorial["timer"]["remaining"] = tutorial["timer"]["duration"]
+    tutorial["timer"]["running"] = True
+    _start_timer_thread(code)
 
     questions = ["Question Test1", "Question Test2", "Question Test3"]
     tutorial["questions"] = questions
+
+    utils._emit_tutorial_update(code)
+
+
+@socketio.on("start_timer", namespace="/staff")
+def start_timer():
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
+        return
+
+    if not (code := utils.users.get(user_id, {}).get("tutorial")):
+        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
+        return
+
+    if not (tutorial := utils.tutorials.get(code)):
+        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
+        return
+
+    if tutorial["staff"] != user_id:
+        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
+        return
+
+    tutorial["timer"]["running"] = True
+    _start_timer_thread(code)
+    utils._emit_tutorial_update(code)
+
+
+@socketio.on("stop_timer", namespace="/staff")
+def stop_timer():
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
+        return
+
+    if not (code := utils.users.get(user_id, {}).get("tutorial")):
+        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
+        return
+
+    if not (tutorial := utils.tutorials.get(code)):
+        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
+        return
+
+    if tutorial["staff"] != user_id:
+        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
+        return
+
+    tutorial["timer"]["running"] = False
+    _stop_timer_thread(code)
+    utils._emit_tutorial_update(code)
+
+
+@socketio.on("edit_timer", namespace="/staff")
+def edit_timer(data):
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
+        return
+
+    if not (code := utils.users.get(user_id, {}).get("tutorial")):
+        emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
+        return
+
+    if not (tutorial := utils.tutorials.get(code)):
+        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
+        return
+
+    if tutorial["staff"] != user_id:
+        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
+        return
+
+    new_time = int(data.get("time", 10)) * 60 or 600
+    tutorial["timer"]["duration"] = new_time
+    tutorial["timer"]["remaining"] = new_time
+
+    if tutorial["timer"]["running"]:
+        _stop_timer_thread(code)
+        _start_timer_thread(code)
 
     utils._emit_tutorial_update(code)
