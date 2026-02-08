@@ -5,7 +5,7 @@
 
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
   </head>
-  
+
   <body>
     <h1 id="title">Tutorial</h1>
     <h3>State: <span id="state">lobby</span></h3>
@@ -124,8 +124,8 @@
         const stopBtn = document.getElementById("timer-stop-btn");
 
         if (tutorial.timer) {
+            timerRemaining = tutorial.timer.remaining;
             if (tutorial.timer.running) {
-                timerRemaining = tutorial.timer.remaining;
                 timerDisplay.innerText = formatTime(timerRemaining);
             } else {
                 timerDisplay.innerText = formatTime(timerRemaining);
@@ -191,8 +191,10 @@
     };
 
     document.getElementById("timer-edit-btn").onclick = () => {
-      const newTime = document.getElementById("new-time").value;
-      socket.emit("edit_timer", { time: newTime });
+      const newTimeM = document.getElementById("new-time").value;
+      const newTimeS = newTimeM * 60;
+      document.getElementById("timer-display").innerText = formatTime(newTimeS);
+      socket.emit("edit_timer", { time: newTimeM });
     };
 
     function formatTime(seconds) {
