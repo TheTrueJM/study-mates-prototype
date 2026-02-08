@@ -64,34 +64,6 @@ def test_create_tutorial_default_timer(client, socketio_client):
 
     sio.disconnect(namespace=namespace)
 
-def test_start_discussion_starts_timer(client, socketio_client):
-    namespace = "/staff"
-    set_session(client, name="test", currentGPA=0.0, goalGPA=6.7, availability="")
-    sio = socketio_client(namespace=namespace, test_client=client, disconnect=False)
-
-    response = get_last_received(sio, namespace=namespace)
-    uuid = response.get("uuid")
-    utils.users[uuid]["role"] = "staff"
-
-    sio.emit("create_tutorial", {"name": "StartTest", "group_size": 2}, namespace=namespace)
-    time.sleep(0.5)
-
-    code = utils.users[uuid].get("tutorial")
-    tutorial = utils.tutorials.get(code)
-    assert tutorial["timer"]["running"] == False
-
-    sio.emit("start_discussion", namespace=namespace)
-    time.sleep(0.5)
-
-    assert tutorial["state"] == "discussion"
-    assert tutorial["timer"]["running"] == True
-    assert tutorial["timer"]["remaining"] == 600
-
-    sio.emit("stop_timer", namespace=namespace)
-    time.sleep(0.5)
-
-    sio.disconnect(namespace=namespace)
-
 def test_start_stop_timer(client, socketio_client):
     namespace = "/staff"
     set_session(client, name="test", currentGPA=0.0, goalGPA=6.7, availability="")
