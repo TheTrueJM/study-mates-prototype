@@ -29,7 +29,7 @@ def details():
         session["goalGPA"] = float(request.form.get("goalGPA", 4.0))
         # e.g form output: ['MONM', 'WEDA', 'THUA', 'FRIA', 'SUNN']
         availability_list = request.form.getlist("availability")
-        session["availability"] = parse_availability(availability_list)
+        session["availability"] = list(parse_availability(availability_list))
         return redirect(url_for("student.tutorial", code=session["tutorial_code"]))
 
     client_path = os.path.join(os.getcwd(), "../frontend/public/student/details.html")
