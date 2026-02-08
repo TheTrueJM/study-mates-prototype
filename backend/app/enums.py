@@ -27,8 +27,6 @@ VALID_CODES = [
     "SUNM", "SUNA", "SUNN"
 ]
 
-MAX_AVAILABILITY = 21
-
 
 def get_availability_code(day: Day, period: TimePeriod) -> str:
     return f"{day.value}{period.value}"
@@ -43,7 +41,7 @@ def parse_availability(availability_raw) -> list[str]:
     else:
         return []
 
-    valid_codes = [code for code in codes if code in VALID_CODES]
-    unique_codes = list(dict.fromkeys(valid_codes))
 
-    return unique_codes[:MAX_AVAILABILITY]
+    valid_codes = set({code for code in codes if code in VALID_CODES})
+
+    return valid_codes

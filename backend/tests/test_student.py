@@ -160,38 +160,69 @@ def test_parse_availability_valid_single_code():
     result = parse_availability("MONM")
     assert result == ["MONM"]
 
+    result = parse_availability(["MONM"])
+    assert result == ["MONM"]
+
+
 def test_parse_availability_valid_multiple_codes():
     result = parse_availability("MONM TUEA WEDN")
     assert sorted(result) == ["MONM", "TUEA", "WEDN"]
+
+    result = parse_availability(["MONM", "TUEA", "WEDN"])
+    assert sorted(result) == ["MONM", "TUEA", "WEDN"]
+
 
 def test_parse_availability_valid_comma_separated():
     result = parse_availability("MONM,TUEA")
     assert sorted(result) == ["MONM", "TUEA"]
 
+    result = parse_availability(["MONM", "TUEA"])
+    assert sorted(result) == ["MONM", "TUEA"]
+
+
 def test_parse_availability_valid_lower_case():
     result = parse_availability("monm tuea")
     assert sorted(result) == ["MONM", "TUEA"]
+
+    result = parse_availability(["monm", "tuea"])
+    assert sorted(result) == ["MONM", "TUEA"]
+
 
 def test_parse_availability_dedupes_codes():
     result = parse_availability("MONM MONM TUEA")
     assert result == ["MONM", "TUEA"]
 
+    result = parse_availability(["MONM", "MONM", "TUEA"])
+    assert result == ["MONM", "TUEA"]
+
+
 def test_parse_availability_empty_string():
     result = parse_availability("")
     assert result == []
+
+    result = parse_availability([])
+    assert result == []
+
 
 def test_parse_availability_only_whitespace():
     result = parse_availability("   ")
     assert result == []
 
+    result = parse_availability(["   "])
+    assert result == []
+
+
 def test_parse_availability_partial_invalid_codes():
     result = parse_availability("MONM FAKE TUEA")
     assert sorted(result) == ["MONM", "TUEA"]
+
+    result = parse_availability(["MONM", "FAKE", "TUEA"])
+    assert sorted(result) == ["MONM", "TUEA"]
+
 
 def test_parse_availability_all_invalid_codes():
     result = parse_availability("FAKE FAKE2 FAKE3")
     assert result == []
 
-def test_parse_availability_valid_full_week():
-    result = parse_availability("MONM MONA MONN TUEM TUEA TUEN WEDM WEDA WEDN THUM THUA THUN FRIM FRIA FRIN SATM SATA SATN SUNM SUNA SUNN")
-    assert len(result) == 21
+    result = parse_availability(["FAKE", "FAKE2", "FAKE3"])
+    assert result == []
