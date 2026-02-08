@@ -124,8 +124,12 @@
         const stopBtn = document.getElementById("timer-stop-btn");
 
         if (tutorial.timer) {
-            timerRemaining = tutorial.timer.remaining;
-            timerDisplay.innerText = formatTime(timerRemaining);
+            if (tutorial.timer.running) {
+                timerRemaining = tutorial.timer.remaining;
+                timerDisplay.innerText = formatTime(timerRemaining);
+            } else {
+                timerDisplay.innerText = formatTime(timerRemaining);
+            }
 
             if (tutorial.state === "discussion") {
                 timerControls.style.display = "block";

@@ -21,42 +21,49 @@ app_context_holder = None
 
 
 def _start_timer_thread(code):
-    if code not in timer_locks:
-        timer_locks[code] = Lock()
+    if code in timer_threads and timer_threads[code].is_alive():
+        return
+
+    timer_locks.setdefault(code, Lock())
 
     def timer_loop():
-        while True:
-            threading.Event().wait(10)
+        from time import sleep
 
-            if app_context_holder:
-                with app_context_holder.app_context():
-                    from .sockets import utils
+        while True:
+            sleep(10)
+
+            if not app_context_holder:
+                continue
+
+            with app_context_holder.app_context():
+                from .sockets import utils
+
+                lock = timer_locks.get(code)
+                if not lock:
+                    return
+
+                with lock:
                     tutorial = utils.tutorials.get(code)
-                    if not tutorial:
+                    if not tutorial or not tutorial.get("timer", {}).get("running", False):
                         return
 
-                    with timer_locks[code]:
-                        tutorial = utils.tutorials.get(code)
-                        if not tutorial or not tutorial.get("timer", {}).get("running", False):
-                            return
+                    timer = tutorial["timer"]
+                    timer["remaining"] = max(0, timer["remaining"] - 10)
 
-                        timer = tutorial["timer"]
-                        timer["remaining"] = max(0, timer["remaining"] - 10)
-
-                        if timer["remaining"] == 0:
-                            timer["running"] = False
-                            socketio.emit("timer_notification", {"message": "Time's up!"}, room=code, namespace="/")
-                            socketio.emit("timer_notification", {"message": "Time's up!"}, room=code, namespace="/staff")
-                        else:
-                            utils._emit_tutorial_update(code)
+                    if timer["remaining"] == 0:
+                        timer["running"] = False
+                        message = {"message": "Time's up!"}
+                        socketio.emit("timer_notification", message, room=code, namespace="/")
+                        socketio.emit("timer_notification", message, room=code, namespace="/staff")
+                    else:
+                        utils._emit_tutorial_update(code)
 
     timer_threads[code] = threading.Thread(target=timer_loop, daemon=True)
     timer_threads[code].start()
 
 
 def _stop_timer_thread(code):
-    if code in timer_threads:
-        timer_threads.pop(code, None)
+    timer_threads.pop(code, None)
     timer_locks.pop(code, None)
 
 

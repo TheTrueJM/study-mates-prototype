@@ -172,3 +172,41 @@ def test_timer_included_in_update(app, socketio_client):
 
     staff_sio.disconnect(namespace="/staff")
     student_sio.disconnect()
+
+def test_timer_decrements_over_time(client, socketio_client):
+    namespace = "/staff"
+    set_session(client, name="test", currentGPA=0.0, goalGPA=6.7, availability="")
+    sio = socketio_client(namespace=namespace, test_client=client, disconnect=False)
+
+    response = get_last_received(sio, namespace=namespace)
+    uuid = response.get("uuid")
+    utils.users[uuid]["role"] = "staff"
+
+    sio.emit("create_tutorial", {"name": "DecrementTest", "group_size": 2, "discussion_time": 5}, namespace=namespace)
+    time.sleep(0.5)
+
+    code = utils.users[uuid].get("tutorial")
+    tutorial = utils.tutorials.get(code)
+    initial_remaining = tutorial["timer"]["remaining"]
+    assert initial_remaining == 300
+
+    sio.emit("start_discussion", namespace=namespace)
+    time.sleep(0.5)
+    assert tutorial["timer"]["running"] == True
+
+    time.sleep(15)
+
+    remaining_after_15 = tutorial["timer"]["remaining"]
+    assert remaining_after_15 < initial_remaining, f"Timer did not decrease: {remaining_after_15} vs {initial_remaining}"
+    assert remaining_after_15 >= 0, f"Timer went negative: {remaining_after_15}"
+
+    sio.emit("stop_timer", namespace=namespace)
+    time.sleep(0.5)
+    assert tutorial["timer"]["running"] == False
+
+    remaining_after_stop = tutorial["timer"]["remaining"]
+    time.sleep(5)
+
+    assert tutorial["timer"]["remaining"] == remaining_after_stop, "Timer continued after stopping"
+
+    sio.disconnect(namespace=namespace)

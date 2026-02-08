@@ -182,7 +182,6 @@ def start_timer(user_id, code, tutorial):
 @_with_tutorial_auth
 def stop_timer(user_id, code, tutorial):
     tutorial["timer"]["running"] = False
-    _stop_timer_thread(code)
     utils._emit_tutorial_update(code)
 
 
@@ -192,9 +191,4 @@ def edit_timer(user_id, code, tutorial, data):
     new_time = math.ceil(float(data.get("time", 10))) * 60 or 600
     tutorial["timer"]["duration"] = new_time
     tutorial["timer"]["remaining"] = new_time
-
-    if tutorial["timer"]["running"]:
-        _stop_timer_thread(code)
-        _start_timer_thread(code)
-
     utils._emit_tutorial_update(code)
