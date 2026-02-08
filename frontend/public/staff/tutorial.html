@@ -38,11 +38,11 @@
     <div id="discussion">
       <h2 id="timer-display">00:00</h2>
       <div id="timer-controls">
-        <button id="timer-start-btn">Start Timer</button>
-        <button id="timer-stop-btn">Stop Timer</button>
-        <div id="edit-timer">
+        <button id="timer-start-btn">Resume Timer</button>
+        <button id="timer-stop-btn">Pause Timer</button>
+        <div id="reset-timer">
           <input type="number" id="new-time" min="1" value="10"/>
-          <button id="timer-edit-btn">Edit Time</button>
+          <button id="timer-reset-btn">Reset Timer</button>
         </div>
       </div>
       <button id="discussion-end-btn">End Discussion</button>
@@ -190,11 +190,11 @@
       socket.emit("stop_timer");
     };
 
-    document.getElementById("timer-edit-btn").onclick = () => {
+    document.getElementById("timer-reset-btn").onclick = () => {
       const newTimeM = document.getElementById("new-time").value;
       const newTimeS = newTimeM * 60;
       document.getElementById("timer-display").innerText = formatTime(newTimeS);
-      socket.emit("edit_timer", { time: newTimeM });
+      socket.emit("reset_timer", { time: newTimeM });
     };
 
     function formatTime(seconds) {
