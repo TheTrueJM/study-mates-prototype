@@ -5,7 +5,7 @@
 
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
   </head>
-  
+
   <body>
     <h1 id="title">Tutorial</h1>
     <h3>State: <span id="state">lobby</span></h3>
@@ -38,11 +38,11 @@
     <div id="discussion">
       <h2 id="timer-display">00:00</h2>
       <div id="timer-controls">
-        <button id="timer-start-btn">Start Timer</button>
-        <button id="timer-stop-btn">Stop Timer</button>
-        <div id="edit-timer">
+        <button id="timer-start-btn">Resume Timer</button>
+        <button id="timer-stop-btn">Pause Timer</button>
+        <div id="reset-timer">
           <input type="number" id="new-time" min="1" value="10"/>
-          <button id="timer-edit-btn">Edit Time</button>
+          <button id="timer-reset-btn">Reset Timer</button>
         </div>
       </div>
       <button id="discussion-end-btn">End Discussion</button>
@@ -124,8 +124,8 @@
         const stopBtn = document.getElementById("timer-stop-btn");
 
         if (tutorial.timer) {
+            timerRemaining = tutorial.timer.remaining;
             if (tutorial.timer.running) {
-                timerRemaining = tutorial.timer.remaining;
                 timerDisplay.innerText = formatTime(timerRemaining);
             } else {
                 timerDisplay.innerText = formatTime(timerRemaining);
@@ -190,9 +190,11 @@
       socket.emit("stop_timer");
     };
 
-    document.getElementById("timer-edit-btn").onclick = () => {
-      const newTime = document.getElementById("new-time").value;
-      socket.emit("edit_timer", { time: newTime });
+    document.getElementById("timer-reset-btn").onclick = () => {
+      const newTimeM = document.getElementById("new-time").value;
+      const newTimeS = newTimeM * 60;
+      document.getElementById("timer-display").innerText = formatTime(newTimeS);
+      socket.emit("reset_timer", { time: newTimeM });
     };
 
     function formatTime(seconds) {

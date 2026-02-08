@@ -185,10 +185,12 @@ def stop_timer(user_id, code, tutorial):
     utils._emit_tutorial_update(code)
 
 
-@socketio.on("edit_timer", namespace="/staff")
+@socketio.on("reset_timer", namespace="/staff")
 @_with_tutorial_auth
-def edit_timer(user_id, code, tutorial, data):
+def reset_timer(user_id, code, tutorial, data):
     new_time = math.ceil(float(data.get("time", 10))) * 60 or 600
     tutorial["timer"]["duration"] = new_time
     tutorial["timer"]["remaining"] = new_time
+    tutorial["timer"]["running"] = True
+    _start_timer_thread(code)
     utils._emit_tutorial_update(code)

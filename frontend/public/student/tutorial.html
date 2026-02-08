@@ -37,7 +37,7 @@
         localStorage.setItem("uuid", uuid);
       });
 
-      
+
       socket.on("student_update", tutorial => {
         console.log(tutorial)
         document.getElementById("title").innerText = tutorial.name;
@@ -74,12 +74,6 @@
             timerRemaining = tutorial.timer.remaining;
             timerDisplay.innerText = formatTime(timerRemaining);
             timerDisplay.style.display = "block";
-
-            if (tutorial.timer.running) {
-                startCountdown();
-            } else {
-                stopCountdown();
-            }
         } else {
             timerDisplay.style.display = "none";
             stopCountdown();
@@ -91,7 +85,8 @@
         document.getElementById("timer-display").innerText = formatTime(timerRemaining);
       });
 
-      socket.on("timer_notification", data => {
+      socket.on("timer_notification", data => { // (essentially means timer is finished)
+        document.getElementById("timer-display").innerText = formatTime(0);
         alert(data.message);
       });
 
@@ -101,25 +96,6 @@
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
       }
 
-      function startCountdown() {
-        stopCountdown();
-        timerInterval = setInterval(() => {
-            if (timerRemaining > 0) {
-                timerRemaining--;
-                document.getElementById("timer-display").innerText = formatTime(timerRemaining);
-                if (timerRemaining === 0) {
-                    stopCountdown();
-                }
-            }
-        }, 1000);
-      }
-
-      function stopCountdown() {
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-      }
     </script>
   </body>
 </html>

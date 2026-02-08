@@ -30,7 +30,7 @@ def _start_timer_thread(code):
         from time import sleep
 
         while True:
-            sleep(10)
+            sleep(1)
 
             if not app_context_holder:
                 continue
@@ -48,7 +48,7 @@ def _start_timer_thread(code):
                         return
 
                     timer = tutorial["timer"]
-                    timer["remaining"] = max(0, timer["remaining"] - 10)
+                    timer["remaining"] = max(0, timer["remaining"] - 1)
 
                     if timer["remaining"] == 0:
                         timer["running"] = False
