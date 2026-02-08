@@ -3,6 +3,7 @@ import time
 import logging
 
 from app.sockets import utils
+from app.enums import get_availability_code, Day, TimePeriod
 from tests.helpers import set_session, get_last_received
 
 logger = logging.getLogger(__name__)
@@ -87,6 +88,52 @@ def test_join_invalid_code(app, client, socketio_client):
             break
 
     assert found is False
+
+def test_student_availability(app, client, socketio_client):
+    staff_client = app.test_client()
+    set_session(staff_client, name="Staff", currentGPA=0.0, goalGPA=0.0, availability="")
+
+    staff_sio = socketio_client(namespace="/staff", test_client=staff_client, disconnect=False)
+    response = get_last_received(staff_sio, name="session", namespace="/staff")
+    assert response.get("uuid", False)
+    staff_uuid = response.get("uuid")
+    utils.users[staff_uuid]["role"] = "staff"
+
+    staff_sio.emit("create_tutorial", {"name": "AvailabilityTest", "group_size": 2}, namespace="/staff")
+    time.sleep(0.5)
+    code = utils.users[staff_uuid].get("tutorial")
+
+    availability_set = ["MONM", "TUEA", "WEDN"]
+    student_client = app.test_client()
+    set_session(student_client,
+                name="AvailabilityStudent",
+                currentGPA=4.0,
+                goalGPA=4.5,
+                availability=availability_set,
+                tutorial_code=code)
+
+    student_sio = socketio_client(test_client=student_client, disconnect=False)
+
+    response = get_last_received(student_sio, all=True)
+    session_event = next((r for r in response if r["name"] == "session"), None)
+    assert session_event is not None
+
+    student_uuid = session_event["args"][0].get("uuid")
+    assert student_uuid
+
+    tutorial = utils.tutorials.get(code)
+    assert student_uuid in tutorial["students"]
+
+    student_data = tutorial["students"][student_uuid]
+    logger.info(f"Availability set in session: {availability_set}")
+    logger.info(f"Availability in tutorial state: {student_data['availability']}")
+
+    assert isinstance(student_data["availability"], list)
+    expected_availability = ["MONM", "TUEA", "WEDN"]
+    assert sorted(student_data["availability"]) == sorted(expected_availability)
+
+    staff_sio.disconnect(namespace="/staff")
+    student_sio.disconnect()
 
 @pytest.mark.skip("Not implemented yet")
 def test_student_unauthorised_staff_access(app, socketio_client):

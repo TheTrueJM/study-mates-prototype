@@ -76,7 +76,7 @@ def _join_tutorial(user_id, code, namespace):
                 "name": session.get("name"),
                 "currentGPA": session.get("currentGPA"),
                 "goalGPA": session.get("goalGPA"),
-                "availability": session.get("availability"),
+                "availability": session.get("availability", []),
                 "group": None
             }
             session.pop("student_details", None)
