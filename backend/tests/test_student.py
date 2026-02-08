@@ -165,7 +165,7 @@ def test_parse_availability_valid_single_code():
 
 
 def test_parse_availability_valid_multiple_codes():
-    result = parse_availability("MONM TUEA WEDN")
+    result = parse_availability("MONM,TUEA,WEDN")
     assert result == {"MONM", "TUEA", "WEDN"}
 
     result = parse_availability(["MONM", "TUEA", "WEDN"])
@@ -181,7 +181,7 @@ def test_parse_availability_valid_comma_separated():
 
 
 def test_parse_availability_valid_lower_case():
-    result = parse_availability("monm tuea")
+    result = parse_availability("monm,tuea")
     assert result == {"MONM", "TUEA"}
 
     result = parse_availability(["monm", "tuea"])
@@ -189,7 +189,7 @@ def test_parse_availability_valid_lower_case():
 
 
 def test_parse_availability_dedupes_codes():
-    result = parse_availability("MONM MONM TUEA")
+    result = parse_availability("MONM,MONM,TUEA")
     assert result == {"MONM", "TUEA"}
 
     result = parse_availability(["MONM", "MONM", "TUEA"])
@@ -213,7 +213,7 @@ def test_parse_availability_only_whitespace():
 
 
 def test_parse_availability_partial_invalid_codes():
-    result = parse_availability("MONM FAKE TUEA")
+    result = parse_availability("MONM,FAKE,TUEA")
     assert result == {"MONM", "TUEA"}
 
     result = parse_availability(["MONM", "FAKE", "TUEA"])
@@ -221,7 +221,7 @@ def test_parse_availability_partial_invalid_codes():
 
 
 def test_parse_availability_all_invalid_codes():
-    result = parse_availability("FAKE FAKE2 FAKE3")
+    result = parse_availability("FAKE,FAKE2,FAKE3")
     assert result == set()
 
     result = parse_availability(["FAKE", "FAKE2", "FAKE3"])

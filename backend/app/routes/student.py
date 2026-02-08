@@ -25,8 +25,8 @@ def details():
         return redirect(url_for("student.index"))
 
     if request.method == "POST":
-        session["currentGPA"] = float(request.form.get("currentGPA", 4.0))
-        session["goalGPA"] = float(request.form.get("goalGPA", 0.0))
+        session["currentGPA"] = float(request.form.get("currentGPA", 0.0))
+        session["goalGPA"] = float(request.form.get("goalGPA", 4.0))
         # e.g form output: ['MONM', 'WEDA', 'THUA', 'FRIA', 'SUNN']
         availability_list = request.form.getlist("availability")
         session["availability"] = parse_availability(availability_list)

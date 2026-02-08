@@ -36,8 +36,7 @@ def parse_availability(availability_raw) -> set[str]:
     if isinstance(availability_raw, list):
         codes = [code.strip().upper() for code in availability_raw if code and code.strip()]
     elif availability_raw and isinstance(availability_raw, str):
-        normalized = availability_raw.replace(",", " ")
-        codes = [code.strip().upper() for code in normalized.split() if code.strip()]
+        codes = [code.strip().upper() for code in availability_raw.split(",") if code.strip()]
     else:
         return set()
 
