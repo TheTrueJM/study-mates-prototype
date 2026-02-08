@@ -1,6 +1,7 @@
 import logging
 import uuid
 import random
+import math
 
 from flask import request, session
 from flask_socketio import emit, join_room
@@ -58,6 +59,7 @@ def create_tutorial(data):
 
     name = data.get("name")
     group_size = int(data.get("group_size")) or None
+    # TODO: Discussion Questions, Discussion Time
     discussion_time = int(data.get("discussion_time", 10)) * 60 or 600
 
     if not group_size or group_size < 2:
@@ -253,7 +255,7 @@ def edit_timer(data):
         emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
         return
 
-    new_time = int(data.get("time", 10)) * 60 or 600
+    new_time = math.ceil(float(data.get("time", 10))) * 60 or 600
     tutorial["timer"]["duration"] = new_time
     tutorial["timer"]["remaining"] = new_time
 

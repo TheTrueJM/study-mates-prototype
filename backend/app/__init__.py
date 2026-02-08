@@ -7,46 +7,64 @@ from .routes import staff_bp, student_bp
 
 import os
 import threading
+from threading import Lock
 
 socketio = SocketIO(
     logger=True,
-    cors_allows_origins = "*",
-    cors_credentials = False
+    cors_allows_origins="*",
+    cors_credentials=False
 )
 
 timer_threads = dict()
+timer_locks = dict()
+app_context_holder = None
 
 
 def _start_timer_thread(code):
+    if code not in timer_locks:
+        timer_locks[code] = Lock()
+
     def timer_loop():
         while True:
             threading.Event().wait(10)
 
-            from .sockets import utils
-            tutorial = utils.tutorials.get(code)
-            if not tutorial or not tutorial.get("timer", {}).get("running", False):
-                return
+            if app_context_holder:
+                with app_context_holder.app_context():
+                    from .sockets import utils
+                    tutorial = utils.tutorials.get(code)
+                    if not tutorial:
+                        return
 
-            timer = tutorial["timer"]
-            timer["remaining"] = max(0, timer["remaining"] - 10)
+                    with timer_locks[code]:
+                        tutorial = utils.tutorials.get(code)
+                        if not tutorial or not tutorial.get("timer", {}).get("running", False):
+                            return
 
-            if timer["remaining"] == 0:
-                timer["running"] = False
-                socketio.emit("timer_notification", {"message": "Time's up!"}, room=code, namespace="/")
-                socketio.emit("timer_notification", {"message": "Time's up!"}, room=code, namespace="/staff")
-            else:
-                utils._emit_tutorial_update(code)
+                        timer = tutorial["timer"]
+                        timer["remaining"] = max(0, timer["remaining"] - 10)
+
+                        if timer["remaining"] == 0:
+                            timer["running"] = False
+                            socketio.emit("timer_notification", {"message": "Time's up!"}, room=code, namespace="/")
+                            socketio.emit("timer_notification", {"message": "Time's up!"}, room=code, namespace="/staff")
+                        else:
+                            utils._emit_tutorial_update(code)
 
     timer_threads[code] = threading.Thread(target=timer_loop, daemon=True)
     timer_threads[code].start()
 
+
 def _stop_timer_thread(code):
     if code in timer_threads:
         timer_threads.pop(code, None)
+    timer_locks.pop(code, None)
 
 
 def create_app():
     app = Flask(__name__)
+
+    global app_context_holder
+    app_context_holder = app
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "insecure-key")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///study_mates.sqlite")
@@ -69,7 +87,7 @@ def create_app():
     login_manager.init_app(app)
 
     @login_manager.user_loader
-    def load_user(id_or_name):
+    def load_user(id_or_name): # Update if Identification changes
         return db.session.scalar(db.select(Staff).where(or_(Staff.id==id_or_name, Staff.username==id_or_name)))
 
     return app
