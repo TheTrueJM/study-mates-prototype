@@ -4,6 +4,8 @@ import random
 import math
 from functools import wraps
 
+import numpy as np # Used for Matrix grouping algorithm, can be removed if we switch to a simpler approach
+
 from flask import request, session
 from flask_socketio import emit, join_room
 from .. import socketio, _start_timer_thread, _stop_timer_thread
@@ -137,11 +139,37 @@ def reset_lobby(user_id, code, tutorial):
 def start_grouping(user_id, code, tutorial):
     tutorial["questions"].clear()
     group_size = tutorial["group_size"]
+    matrix_size = len(tutorial["students"].keys())
+    
+    matrix = np.zeros((matrix_size, matrix_size))
+
     students = list(tutorial["students"].keys())
+    num_students = len(students)
+
     random.shuffle(students)
+
+
+    matrix = [[0 for _ in range(num_students)] for _ in range(num_students)] # size of matrix is number of students by number of students
+
+    for i, s1 in enumerate(students):
+        for j, s2 in enumerate(students): # TO DO: We can optimize this by only calculating the upper triangle of the matrix since it's symmetric
+            if i == j:
+                matrix[i][j] = 0 # Waste of resources, but it ensures that there is no self comparison
+            else:
+                weight = tutorial["students"][s1]["currentGPA"] / tutorial["students"][s2]["currentGPA"] # Example weighting function
+                if weight < 1: weight = 1 / weight
+                matrix[i][j] = weight 
+
+
+    for i, s1 in enumerate(students): # Print the matrix for debugging purposes
+        for j, s2 in enumerate(students):
+            if i != j:  
+                print(f"{tutorial['students'][s1]['name']} vs {tutorial['students'][s2]['name']}: {matrix[i][j]:.2f}")
+
 
     tutorial["groups"].clear()
     tutorial["state"] = "groups"
+    
 
     for idx, student_id in enumerate(students):
         group_id = 1 + idx // group_size
