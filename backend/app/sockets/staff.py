@@ -101,6 +101,7 @@ def create_tutorial(data):
         "group_size": group_size,
         "students": dict(),
         "groups": dict(),
+        "previous_matches": dict(),
         "questions": list(),
         "timer": {
             "duration": discussion_time,
@@ -156,36 +157,42 @@ def start_grouping(user_id, code, tutorial):
     tutorial["state"] = "groups"
 
     group_id = 1
-    unmatched = set(range(len(students)))
+    unmatched = set(enumerate(students))
+    rematch_rate = (0.5 / group_size)
     while unmatched:
         # Pick a starting student
-        current = unmatched.pop()
-        group = [current]
+        group = [unmatched.pop()]
 
         # Fill group with most compatible students
         while len(group) < group_size and unmatched:
             best_student, best_score = None, -1
 
-            for candidate in unmatched:
+            for (candidate, c_id) in unmatched:
                 # Compatibility with entire group
-                score = sum(connections[candidate][member] for member in group)
+                score = sum(
+                    connections[candidate][member] for (member, m_id) in group
+                    # Penalise re-matchings: however this currently has bais towards students who share multiple previous matchings rather than only one previous matching
+                    if c_id not in tutorial["previous_matches"].get(m_id, ()) or random.random() < rematch_rate
+                )
 
                 if score > best_score:
                     best_score = score
-                    best_student = candidate
+                    best_student = (candidate, c_id)
 
             group.append(best_student)
             unmatched.remove(best_student)
 
         # Save group
         tutorial["groups"][group_id] = []
-        for idx in group:
-            student_id = students[idx]
-            tutorial["groups"][group_id].append(student_id)
-            tutorial["students"][student_id]["group"] = group_id
-
+        member_ids = set({id for (_, id) in group})
+        for id in member_ids:
+            tutorial["groups"][group_id].append(id)
+            tutorial["students"][id]["group"] = group_id
+            tutorial["previous_matches"].setdefault(id, set()).update(member_ids)
+            
         group_id += 1
 
+    print(tutorial["previous_matches"])
     utils._emit_tutorial_update(code)
 
 
