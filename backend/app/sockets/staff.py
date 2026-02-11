@@ -138,50 +138,22 @@ def reset_lobby(user_id, code, tutorial):
 @_with_tutorial_auth
 def start_grouping(user_id, code, tutorial):
     tutorial["questions"].clear()
-    group_size = tutorial["group_size"]
-    matrix_size = len(tutorial["students"].keys())
-    
-    matrix = np.zeros((matrix_size, matrix_size))
-    
+    group_size = tutorial["group_size"] 
 
     students = list(tutorial["students"].keys())
-    num_students = len(students)
+    students.sort(key=lambda s: tutorial["students"][s]["currentGPA"], reverse=True) # Adds priority bias twoards higher GPA students
 
-    students.sort(key=lambda s: tutorial["students"][s]["currentGPA"], reverse=True) # This adds bias for higher current GPA students, need to review if this is desirable..
+    connections: np.ndarray = _build_matrix(students, tutorial["students"])
 
-    print(list(tutorial["students"].values()))
-
-    matrix = [[0 for _ in range(num_students)] for _ in range(num_students)] # size of matrix is number of students by number of students
-
-    for i, s1 in enumerate(students):
-        for j, s2 in enumerate(students): # TO DO: We can optimize this by only calculating the upper triangle of the matrix since it's symmetric
-            if i == j:
-                matrix[i][j] = 0 # Waste of resources, but it ensures that there is no self comparison
-            else:
-                currentGPA_weight = tutorial["students"][s1]["currentGPA"] - tutorial["students"][s2]["currentGPA"] 
-                currentGPA_weight = 1 / (1 + abs(currentGPA_weight)) # Example weighting function
-                matrix[i][j] = currentGPA_weight
-                goalGPA_weight = tutorial["students"][s1]["goalGPA"] - tutorial["students"][s2]["goalGPA"]
-                goalGPA_weight = 1 / (1 + abs(goalGPA_weight))
-                matrix[i][j] += goalGPA_weight
-                for availability in tutorial["students"][s1]["availability"]:
-                    if availability in tutorial["students"][s2]["availability"]:
-                        matrix[i][j] += 0.2 
-
-
-
-
-    for i, s1 in enumerate(students): # Print the graph weights for debugging purposes
-        for j, s2 in enumerate(students):
-            if i != j:  
-                print(f"{tutorial['students'][s1]['name']} vs {tutorial['students'][s2]['name']}: {matrix[i][j]:.2f}")
-
+    # Print the graph weights for debugging purposes
+    # for i, s1 in enumerate(students):
+    #     for j, s2 in enumerate(students):
+    #         if i != j:  
+    #             print(f"{tutorial['students'][s1]['name']} vs {tutorial['students'][s2]['name']}: {matrix[i][j]:.2f}")
 
     tutorial["groups"].clear()
     tutorial["state"] = "groups"
-    
-    
-    similarity = np.array(matrix)
+
     unassigned = set(range(len(students)))
 
     group_id = 1
@@ -198,7 +170,7 @@ def start_grouping(user_id, code, tutorial):
 
             for candidate in unassigned:
                 # Compatibility with entire group
-                score = sum(similarity[candidate][member] for member in group)
+                score = sum(connections[candidate][member] for member in group)
 
                 if score > best_score:
                     best_score = score
@@ -219,6 +191,38 @@ def start_grouping(user_id, code, tutorial):
 
 
     utils._emit_tutorial_update(code)
+
+
+def _build_matrix(ids, students):
+    student_count = len(ids)
+    matrix = np.zeros((student_count, student_count))
+    min_weight, max_weight = float("inf"), 0
+
+    for i in range(student_count):
+        s1 = ids[i]
+        s1_availability= set(students[s1]["availability"])
+        for j in range(i + 1, student_count):
+            s2 = ids[j]
+
+            w_currentGPA = students[s1]["currentGPA"] - students[s2]["currentGPA"] 
+            w_currentGPA = 1 / (1 + abs(w_currentGPA))
+
+            w_goalGPA = students[s1]["goalGPA"] - students[s2]["goalGPA"]
+            w_goalGPA = 1 / (1 + abs(w_goalGPA))
+
+            w_availability = 0.2 * sum(1 for time in students[s2]["availability"] if time in s1_availability)
+
+            weight = w_currentGPA + w_goalGPA + w_availability
+            matrix[i][j] = matrix[j][i] = weight
+            min_weight = min(min_weight, weight)
+            max_weight = max(max_weight, weight)
+
+    # Normalise matrix weights
+    for i in range(len(ids)):
+        for j in range(i + 1, len(ids)):
+            matrix[i][j] = matrix[j][i] = (matrix[i][j] - min_weight) / (max_weight - min_weight)
+    
+    return matrix
 
 
 # -----------------------------
