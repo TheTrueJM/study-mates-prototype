@@ -141,7 +141,8 @@ def start_grouping(user_id, code, tutorial):
     group_size = tutorial["group_size"] 
 
     students = list(tutorial["students"].keys())
-    students.sort(key=lambda s: tutorial["students"][s]["currentGPA"], reverse=True) # Adds priority bias twoards higher GPA students
+    # I don't think this changes anything due to the random popping the in the matching process
+    # students.sort(key=lambda s: tutorial["students"][s]["currentGPA"], reverse=True) # Adds priority bias twoards higher GPA students
 
     connections: np.ndarray = _build_matrix(students, tutorial["students"])
 
@@ -154,21 +155,18 @@ def start_grouping(user_id, code, tutorial):
     tutorial["groups"].clear()
     tutorial["state"] = "groups"
 
-    unassigned = set(range(len(students)))
-
     group_id = 1
-
-    while unassigned:
+    unmatched = set(range(len(students)))
+    while unmatched:
         # Pick a starting student
-        current = unassigned.pop()
+        current = unmatched.pop()
         group = [current]
 
         # Fill group with most compatible students
-        while len(group) < group_size and unassigned:
-            best_student = None
-            best_score = -1
+        while len(group) < group_size and unmatched:
+            best_student, best_score = None, -1
 
-            for candidate in unassigned:
+            for candidate in unmatched:
                 # Compatibility with entire group
                 score = sum(connections[candidate][member] for member in group)
 
@@ -177,11 +175,10 @@ def start_grouping(user_id, code, tutorial):
                     best_student = candidate
 
             group.append(best_student)
-            unassigned.remove(best_student)
+            unmatched.remove(best_student)
 
         # Save group
         tutorial["groups"][group_id] = []
-
         for idx in group:
             student_id = students[idx]
             tutorial["groups"][group_id].append(student_id)
@@ -189,18 +186,17 @@ def start_grouping(user_id, code, tutorial):
 
         group_id += 1
 
-
     utils._emit_tutorial_update(code)
 
 
 def _build_matrix(ids, students):
     student_count = len(ids)
     matrix = np.zeros((student_count, student_count))
-    min_weight, max_weight = float("inf"), 0
+    max_weight = 0
 
     for i in range(student_count):
         s1 = ids[i]
-        s1_availability= set(students[s1]["availability"])
+        s1_availability = set(students[s1]["availability"])
         for j in range(i + 1, student_count):
             s2 = ids[j]
 
@@ -214,13 +210,13 @@ def _build_matrix(ids, students):
 
             weight = w_currentGPA + w_goalGPA + w_availability
             matrix[i][j] = matrix[j][i] = weight
-            min_weight = min(min_weight, weight)
             max_weight = max(max_weight, weight)
 
     # Normalise matrix weights
     for i in range(len(ids)):
         for j in range(i + 1, len(ids)):
-            matrix[i][j] = matrix[j][i] = (matrix[i][j] - min_weight) / (max_weight - min_weight)
+            matrix[i][j] = matrix[j][i] = matrix[i][j] / max_weight
+            print(matrix[i][j])
     
     return matrix
 
