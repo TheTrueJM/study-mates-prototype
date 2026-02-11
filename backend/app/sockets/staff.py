@@ -142,12 +142,14 @@ def start_grouping(user_id, code, tutorial):
     matrix_size = len(tutorial["students"].keys())
     
     matrix = np.zeros((matrix_size, matrix_size))
+    
 
     students = list(tutorial["students"].keys())
     num_students = len(students)
 
-    random.shuffle(students)
+    students.sort(key=lambda s: tutorial["students"][s]["currentGPA"], reverse=True) # This adds bias for higher current GPA students, need to review if this is desirable..
 
+    print(list(tutorial["students"].values()))
 
     matrix = [[0 for _ in range(num_students)] for _ in range(num_students)] # size of matrix is number of students by number of students
 
@@ -156,12 +158,20 @@ def start_grouping(user_id, code, tutorial):
             if i == j:
                 matrix[i][j] = 0 # Waste of resources, but it ensures that there is no self comparison
             else:
-                weight = tutorial["students"][s1]["currentGPA"] / tutorial["students"][s2]["currentGPA"] # Example weighting function
-                if weight < 1: weight = 1 / weight
-                matrix[i][j] = weight 
+                currentGPA_weight = tutorial["students"][s1]["currentGPA"] - tutorial["students"][s2]["currentGPA"] 
+                currentGPA_weight = 1 / (1 + abs(currentGPA_weight)) # Example weighting function
+                matrix[i][j] = currentGPA_weight
+                goalGPA_weight = tutorial["students"][s1]["goalGPA"] - tutorial["students"][s2]["goalGPA"]
+                goalGPA_weight = 1 / (1 + abs(goalGPA_weight))
+                matrix[i][j] += goalGPA_weight
+                for availability in tutorial["students"][s1]["availability"]:
+                    if availability in tutorial["students"][s2]["availability"]:
+                        matrix[i][j] += 0.2 
 
 
-    for i, s1 in enumerate(students): # Print the matrix for debugging purposes
+
+
+    for i, s1 in enumerate(students): # Print the graph weights for debugging purposes
         for j, s2 in enumerate(students):
             if i != j:  
                 print(f"{tutorial['students'][s1]['name']} vs {tutorial['students'][s2]['name']}: {matrix[i][j]:.2f}")
@@ -170,11 +180,43 @@ def start_grouping(user_id, code, tutorial):
     tutorial["groups"].clear()
     tutorial["state"] = "groups"
     
+    
+    similarity = np.array(matrix)
+    unassigned = set(range(len(students)))
 
-    for idx, student_id in enumerate(students):
-        group_id = 1 + idx // group_size
-        tutorial["groups"].setdefault(group_id, []).append(student_id)
-        tutorial["students"][student_id]["group"] = group_id
+    group_id = 1
+
+    while unassigned:
+        # Pick a starting student
+        current = unassigned.pop()
+        group = [current]
+
+        # Fill group with most compatible students
+        while len(group) < group_size and unassigned:
+            best_student = None
+            best_score = -1
+
+            for candidate in unassigned:
+                # Compatibility with entire group
+                score = sum(similarity[candidate][member] for member in group)
+
+                if score > best_score:
+                    best_score = score
+                    best_student = candidate
+
+            group.append(best_student)
+            unassigned.remove(best_student)
+
+        # Save group
+        tutorial["groups"][group_id] = []
+
+        for idx in group:
+            student_id = students[idx]
+            tutorial["groups"][group_id].append(student_id)
+            tutorial["students"][student_id]["group"] = group_id
+
+        group_id += 1
+
 
     utils._emit_tutorial_update(code)
 
