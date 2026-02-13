@@ -142,23 +142,20 @@ def start_grouping(user_id, code, tutorial):
     group_size = tutorial["group_size"] 
 
     students = list(tutorial["students"].keys())
-    # I don't think this changes anything due to the random popping the in the matching process
-    # students.sort(key=lambda s: tutorial["students"][s]["currentGPA"], reverse=True) # Adds priority bias twoards higher GPA students
 
     connections: np.ndarray = _build_matrix(students, tutorial["students"])
 
     # Print the graph weights for debugging purposes
     # for i, s1 in enumerate(students):
     #     for j, s2 in enumerate(students):
-    #         if i != j:  
-    #             print(f"{tutorial['students'][s1]['name']} vs {tutorial['students'][s2]['name']}: {matrix[i][j]:.2f}")
+    #         if i != j: print(f"{tutorial['students'][s1]['name']} vs {tutorial['students'][s2]['name']}: {matrix[i][j]:.2f}")
 
     tutorial["groups"].clear()
     tutorial["state"] = "groups"
 
     group_id = 1
     unmatched = set(enumerate(students))
-    rematch_rate = (0.5 / group_size)
+    rematch_rate = (0.5 / (group_size ** 1.1))
     while unmatched:
         # Pick a starting student
         group = [unmatched.pop()]
@@ -169,11 +166,15 @@ def start_grouping(user_id, code, tutorial):
 
             for (candidate, c_id) in unmatched:
                 # Compatibility with entire group
-                score = sum(
-                    connections[candidate][member] for (member, m_id) in group
-                    # Penalise re-matchings: however this currently has bais towards students who share multiple previous matchings rather than only one previous matching
-                    if c_id not in tutorial["previous_matches"].get(m_id, ()) or random.random() < rematch_rate
-                )
+                score = rematches = 0
+                for (member, m_id) in group:
+                    # Track rematches between students in the group, with a slight chance to allow rematches through uncounted
+                    if c_id in tutorial["previous_matches"].get(m_id, ()) and random.random() > rematch_rate:
+                        rematches += 1
+                    score += connections[candidate][member]
+
+                # Penalise score from student rematches 
+                if rematches: score *=  0.4 - (0.4 * (rematches / group_size))
 
                 if score > best_score:
                     best_score = score
@@ -192,7 +193,6 @@ def start_grouping(user_id, code, tutorial):
             
         group_id += 1
 
-    print(tutorial["previous_matches"])
     utils._emit_tutorial_update(code)
 
 
@@ -223,7 +223,6 @@ def _build_matrix(ids, students):
     for i in range(len(ids)):
         for j in range(i + 1, len(ids)):
             matrix[i][j] = matrix[j][i] = matrix[i][j] / max_weight
-            print(matrix[i][j])
     
     return matrix
 
