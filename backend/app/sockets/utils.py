@@ -45,7 +45,16 @@ def _emit_tutorial_update(code):
     if not tutorial:
         return
 
-    emit("tutorial_update", tutorial, room=code, namespace="/staff")
+    staff_payload = {
+        "tutorial_code": code,
+        "name": tutorial["name"],
+        "state": tutorial["state"],
+        "students": tutorial["students"],
+        "groups": tutorial["groups"],
+        "questions": tutorial["questions"],
+        "timer": tutorial.get("timer"),
+    }
+    emit("tutorial_update", staff_payload, room=code, namespace="/staff")
 
     for student_id, data in tutorial["students"].items():
         group_number = data.get("group")

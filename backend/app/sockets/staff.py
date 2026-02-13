@@ -4,6 +4,8 @@ import random
 import math
 from functools import wraps
 
+import numpy as np # Used for Matrix grouping algorithm, can be removed if we switch to a simpler approach
+
 from flask import request, session
 from flask_socketio import emit, join_room
 from .. import socketio, _start_timer_thread, _stop_timer_thread
@@ -99,6 +101,7 @@ def create_tutorial(data):
         "group_size": group_size,
         "students": dict(),
         "groups": dict(),
+        "previous_matches": dict(),
         "questions": list(),
         "timer": {
             "duration": discussion_time,
@@ -136,19 +139,92 @@ def reset_lobby(user_id, code, tutorial):
 @_with_tutorial_auth
 def start_grouping(user_id, code, tutorial):
     tutorial["questions"].clear()
-    group_size = tutorial["group_size"]
+    group_size = tutorial["group_size"] 
+
     students = list(tutorial["students"].keys())
-    random.shuffle(students)
+
+    connections: np.ndarray = _build_matrix(students, tutorial["students"])
+
+    # Print the graph weights for debugging purposes
+    # for i, s1 in enumerate(students):
+    #     for j, s2 in enumerate(students):
+    #         if i != j: print(f"{tutorial['students'][s1]['name']} vs {tutorial['students'][s2]['name']}: {matrix[i][j]:.2f}")
 
     tutorial["groups"].clear()
     tutorial["state"] = "groups"
 
-    for idx, student_id in enumerate(students):
-        group_id = 1 + idx // group_size
-        tutorial["groups"].setdefault(group_id, []).append(student_id)
-        tutorial["students"][student_id]["group"] = group_id
+    group_id = 1
+    unmatched = set(enumerate(students))
+    rematch_rate = (0.5 / (group_size ** 1.1))
+    while unmatched:
+        # Pick a starting student
+        group = [unmatched.pop()]
+
+        # Fill group with most compatible students
+        while len(group) < group_size and unmatched:
+            best_student, best_score = None, -1
+
+            for (candidate, c_id) in unmatched:
+                # Compatibility with entire group
+                score = rematches = 0
+                for (member, m_id) in group:
+                    # Track rematches between students in the group, with a slight chance to allow rematches through uncounted
+                    if c_id in tutorial["previous_matches"].get(m_id, ()) and random.random() > rematch_rate:
+                        rematches += 1
+                    score += connections[candidate][member]
+
+                # Penalise score from student rematches 
+                if rematches: score *=  0.4 - (0.4 * (rematches / group_size))
+
+                if score > best_score:
+                    best_score = score
+                    best_student = (candidate, c_id)
+
+            group.append(best_student)
+            unmatched.remove(best_student)
+
+        # Save group
+        tutorial["groups"][group_id] = []
+        member_ids = set({id for (_, id) in group})
+        for id in member_ids:
+            tutorial["groups"][group_id].append(id)
+            tutorial["students"][id]["group"] = group_id
+            tutorial["previous_matches"].setdefault(id, set()).update(member_ids)
+            
+        group_id += 1
 
     utils._emit_tutorial_update(code)
+
+
+def _build_matrix(ids, students):
+    student_count = len(ids)
+    matrix = np.zeros((student_count, student_count))
+    max_weight = 0
+
+    for i in range(student_count):
+        s1 = ids[i]
+        s1_availability = set(students[s1]["availability"])
+        for j in range(i + 1, student_count):
+            s2 = ids[j]
+
+            w_currentGPA = students[s1]["currentGPA"] - students[s2]["currentGPA"] 
+            w_currentGPA = 1 / (1 + abs(w_currentGPA))
+
+            w_goalGPA = students[s1]["goalGPA"] - students[s2]["goalGPA"]
+            w_goalGPA = 1 / (1 + abs(w_goalGPA))
+
+            w_availability = 0.2 * sum(1 for time in students[s2]["availability"] if time in s1_availability)
+
+            weight = w_currentGPA + w_goalGPA + w_availability
+            matrix[i][j] = matrix[j][i] = weight
+            max_weight = max(max_weight, weight)
+
+    # Normalise matrix weights
+    for i in range(len(ids)):
+        for j in range(i + 1, len(ids)):
+            matrix[i][j] = matrix[j][i] = matrix[i][j] / max_weight
+    
+    return matrix
 
 
 # -----------------------------
