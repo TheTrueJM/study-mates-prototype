@@ -124,6 +124,7 @@ def reset_lobby(user_id, code, tutorial):
     tutorial["state"] = "lobby"
     tutorial["groups"].clear()
     tutorial["questions"].clear()
+    tutorial["timer"]["running"] = False
 
     for student in tutorial["students"].values():
         student["group"] = None
@@ -139,6 +140,7 @@ def reset_lobby(user_id, code, tutorial):
 @_with_tutorial_auth
 def start_grouping(user_id, code, tutorial):
     tutorial["questions"].clear()
+    tutorial["timer"]["running"] = False
     group_size = tutorial["group_size"] 
 
     students = list(tutorial["students"].keys())
@@ -267,6 +269,5 @@ def reset_timer(user_id, code, tutorial, data):
     new_time = math.ceil(float(data.get("time", 10))) * 60 or 600
     tutorial["timer"]["duration"] = new_time
     tutorial["timer"]["remaining"] = new_time
-    tutorial["timer"]["running"] = True
-    _start_timer_thread(code)
+    tutorial["timer"]["running"] = False
     utils._emit_tutorial_update(code)
