@@ -60,7 +60,6 @@ def test_student_auto_join(app, client, socketio_client):
 
     tutorial = utils.tutorials.get(code)
     assert student_uuid in tutorial["students"]
-    assert tutorial["students"][student_uuid]["name"] == "AutoStudent"
 
     staff_sio.disconnect(namespace="/staff")
     student_sio.disconnect()

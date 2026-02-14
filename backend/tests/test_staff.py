@@ -115,7 +115,6 @@ def test_staff_creates_student_joins(app, client, socketio_client):
 
     tutorial = utils.tutorials.get(code)
     assert student_uuid in tutorial["students"]
-    assert tutorial["students"][student_uuid]["name"] == "Student1"
     assert tutorial["students"][student_uuid]["currentGPA"] == 5.0
 
     

@@ -1,0 +1,1989 @@
+--- Grouping Round 1 ---
+
+Group 1: Glowing-Hedgehog, Mighty-Meerkat, Lively-Sloth, Cheerful-Otter, Cosmic-Leopard
+Group 2: Joyful-Sloth, Sneaky-Snake, Vibrant-Walrus, Vibrant-Crow, Epic-Raccoon
+Group 3: Vibrant-Wallaby, Powerful-Squirrel, Friendly-Otter, Rapid-Penguin, Stellar-Salamander
+Group 4: Valiant-Flamingo, Stellar-Fox, Jolly-Lion, Anonymous-Seal, Kind-Seal
+Group 5: Mythic-Tortoise, Bold-Jackal, Graceful-Shark, Shiny-Horse, Heroic-Fish
+Group 6: Mythic-Horse, Sneaky-Cheetah, Powerful-Salamander, Agile-Rabbit, Vibrant-Parrot
+
+--- Grouping Round 2 ---
+
+Group 1: Vibrant-Wallaby, Bold-Jackal, Cheerful-Otter, Cosmic-Leopard, Epic-Raccoon
+Group 2: Powerful-Squirrel, Friendly-Otter, Vibrant-Crow, Jolly-Lion, Heroic-Fish
+Group 3: Glowing-Hedgehog, Sneaky-Snake, Graceful-Shark, Vibrant-Walrus, Stellar-Salamander
+Group 4: Mighty-Meerkat, Shiny-Horse, Kind-Seal, Anonymous-Seal, Powerful-Salamander
+Group 5: Mythic-Tortoise, Valiant-Flamingo, Lively-Sloth, Sneaky-Cheetah, Vibrant-Parrot
+Group 6: Joyful-Sloth, Mythic-Horse, Stellar-Fox, Rapid-Penguin, Agile-Rabbit
+
+--- Grouping Round 3 ---
+
+Group 1: Glowing-Hedgehog, Shiny-Horse, Cheerful-Otter, Kind-Seal, Vibrant-Parrot
+Group 2: Graceful-Shark, Cosmic-Leopard, Rapid-Penguin, Vibrant-Crow, Anonymous-Seal
+Group 3: Vibrant-Wallaby, Mighty-Meerkat, Stellar-Fox, Vibrant-Walrus, Heroic-Fish
+Group 4: Mythic-Tortoise, Jolly-Lion, Stellar-Salamander, Epic-Raccoon, Powerful-Salamander
+Group 5: Joyful-Sloth, Valiant-Flamingo, Powerful-Squirrel, Bold-Jackal, Friendly-Otter
+Group 6: Sneaky-Snake, Mythic-Horse, Lively-Sloth, Sneaky-Cheetah, Agile-Rabbit
+
+--- Grouping Round 1 ---
+
+Group 1: Lunar-Hedgehog, Legendary-Swan, Silent-Koala, Graceful-Horse
+Group 2: Dazzling-Swan, Shiny-Jackal, Strong-Beaver, Blissful-Flamingo
+Group 3: Friendly-Panda, Midnight-Horse, Bold-Meerkat, Silver-Bear
+Group 4: Stellar-Tortoise, Calm-Lion, Valiant-Penguin, Mysterious-Salamander
+Group 5: Gentle-Lizard, Rapid-Tiger, Legendary-Jellyfish, Frosty-Jellyfish
+Group 6: Legendary-Fish, Noble-Chameleon, Stellar-Koala, Daring-Badger
+Group 7: Brave-Seal, Kind-Squirrel, Brave-Zebra, Lunar-Koala
+Group 8: Swift-Meerkat, Valiant-Falcon
+
+--- Grouping Round 2 ---
+
+Group 1: Stellar-Koala, Graceful-Horse, Lunar-Koala, Strong-Beaver
+Group 2: Dazzling-Swan, Legendary-Fish, Lunar-Hedgehog, Shiny-Jackal
+Group 3: Stellar-Tortoise, Silver-Bear, Swift-Meerkat, Frosty-Jellyfish
+Group 4: Gentle-Lizard, Legendary-Jellyfish, Mysterious-Salamander, Midnight-Horse
+Group 5: Daring-Badger, Legendary-Swan, Kind-Squirrel, Blissful-Flamingo
+Group 6: Bold-Meerkat, Silent-Koala, Valiant-Penguin, Valiant-Falcon
+Group 7: Calm-Lion, Noble-Chameleon, Friendly-Panda, Rapid-Tiger
+Group 8: Brave-Seal, Brave-Zebra
+
+--- Grouping Round 3 ---
+
+Group 1: Brave-Seal, Noble-Chameleon, Graceful-Horse, Blissful-Flamingo
+Group 2: Lunar-Koala, Silent-Koala, Daring-Badger, Shiny-Jackal
+Group 3: Friendly-Panda, Silver-Bear, Legendary-Swan, Valiant-Falcon
+Group 4: Stellar-Tortoise, Calm-Lion, Midnight-Horse, Strong-Beaver
+Group 5: Gentle-Lizard, Legendary-Jellyfish, Bold-Meerkat, Valiant-Penguin
+Group 6: Lunar-Hedgehog, Legendary-Fish, Stellar-Koala, Kind-Squirrel
+Group 7: Dazzling-Swan, Rapid-Tiger, Mysterious-Salamander, Frosty-Jellyfish
+Group 8: Brave-Zebra, Swift-Meerkat
+
+--- Grouping Round 1 ---
+
+Group 1: Resilient-Coyote, Mysterious-Penguin, Golden-Beaver
+Group 2: Lively-Cat, Jolly-Seal, Graceful-Fox
+Group 3: Wise-Salamander, Wise-Horse, Stellar-Tortoise
+Group 4: Sneaky-Armadillo, Wise-Tortoise, Gentle-Leopard
+Group 5: Royal-Jaguar, Royal-Beaver, Frosty-Falcon
+Group 6: Golden-Lion, Glowing-Swan, Blissful-Wallaby
+Group 7: Shiny-Coyote, Vibrant-Beaver, Calm-Squirrel
+Group 8: Glowing-Jellyfish, Powerful-Owl, Agile-Hedgehog
+Group 9: Gentle-Duck, Shiny-Parrot, Heroic-Snake
+
+--- Grouping Round 2 ---
+
+Group 1: Glowing-Jellyfish, Heroic-Snake, Resilient-Coyote
+Group 2: Shiny-Coyote, Lively-Cat, Graceful-Fox
+Group 3: Golden-Lion, Mysterious-Penguin, Vibrant-Beaver
+Group 4: Wise-Salamander, Stellar-Tortoise, Jolly-Seal
+Group 5: Sneaky-Armadillo, Calm-Squirrel, Golden-Beaver
+Group 6: Royal-Jaguar, Gentle-Leopard, Frosty-Falcon
+Group 7: Royal-Beaver, Shiny-Parrot, Blissful-Wallaby
+Group 8: Powerful-Owl, Wise-Horse, Wise-Tortoise
+Group 9: Glowing-Swan, Agile-Hedgehog, Gentle-Duck
+
+--- Grouping Round 3 ---
+
+Group 1: Calm-Squirrel, Gentle-Duck, Resilient-Coyote
+Group 2: Lively-Cat, Stellar-Tortoise, Graceful-Fox
+Group 3: Mysterious-Penguin, Glowing-Jellyfish, Vibrant-Beaver
+Group 4: Golden-Lion, Royal-Jaguar, Sneaky-Armadillo
+Group 5: Blissful-Wallaby, Wise-Tortoise, Frosty-Falcon
+Group 6: Shiny-Coyote, Wise-Salamander, Agile-Hedgehog
+Group 7: Powerful-Owl, Jolly-Seal, Golden-Beaver
+Group 8: Royal-Beaver, Wise-Horse, Gentle-Leopard
+Group 9: Glowing-Swan, Shiny-Parrot, Heroic-Snake
+
+--- Grouping Round 1 ---
+
+Group 1: Vibrant-Owl, Graceful-Fish, Rapid-Snake
+Group 2: Bold-Dog, Sneaky-Penguin, Calm-Meerkat
+Group 3: Noble-Fox, Joyful-Lion, Friendly-Falcon
+Group 4: Stealthy-Lion, Silver-Otter, Friendly-Serpent
+Group 5: Stealthy-Jaguar, Blazing-Kangaroo, Legendary-Panther
+Group 6: Swift-Duck, Vibrant-Panther, Smart-Squirrel
+Group 7: Calm-Squirrel, Strong-Horse, Rapid-Wolf
+Group 8: Jolly-Serpent, Valiant-Wombat, Golden-Dog
+Group 9: Bold-Jaguar, Nimble-Panda
+
+--- Grouping Round 2 ---
+
+Group 1: Vibrant-Owl, Bold-Dog, Friendly-Falcon
+Group 2: Noble-Fox, Bold-Jaguar, Rapid-Snake
+Group 3: Swift-Duck, Sneaky-Penguin, Friendly-Serpent
+Group 4: Stealthy-Jaguar, Blazing-Kangaroo, Smart-Squirrel
+Group 5: Jolly-Serpent, Stealthy-Lion, Silver-Otter
+Group 6: Calm-Squirrel, Nimble-Panda, Legendary-Panther
+Group 7: Golden-Dog, Graceful-Fish, Calm-Meerkat
+Group 8: Joyful-Lion, Valiant-Wombat, Vibrant-Panther
+Group 9: Strong-Horse, Rapid-Wolf
+
+--- Grouping Round 3 ---
+
+Group 1: Vibrant-Owl, Friendly-Falcon, Calm-Meerkat
+Group 2: Bold-Dog, Rapid-Snake, Vibrant-Panther
+Group 3: Noble-Fox, Valiant-Wombat, Sneaky-Penguin
+Group 4: Swift-Duck, Legendary-Panther, Friendly-Serpent
+Group 5: Blazing-Kangaroo, Jolly-Serpent, Silver-Otter
+Group 6: Calm-Squirrel, Stealthy-Lion, Rapid-Wolf
+Group 7: Joyful-Lion, Smart-Squirrel, Golden-Dog
+Group 8: Stealthy-Jaguar, Graceful-Fish, Bold-Jaguar
+Group 9: Strong-Horse, Nimble-Panda
+
+--- Grouping Round 1 ---
+
+Group 1: Mighty-Jaguar, Vibrant-Parrot, Bright-Dolphin, Agile-Penguin
+Group 2: Sneaky-Chameleon, Midnight-Hedgehog, Silver-Cockatoo, Golden-Jellyfish
+Group 3: Cosmic-Parrot, Daring-Cheetah, Cheerful-Cat
+
+--- Grouping Round 2 ---
+
+Group 1: Vibrant-Parrot, Midnight-Hedgehog, Cheerful-Cat, Mighty-Jaguar
+Group 2: Cosmic-Parrot, Sneaky-Chameleon, Silver-Cockatoo, Bright-Dolphin
+Group 3: Daring-Cheetah, Agile-Penguin, Golden-Jellyfish
+
+--- Grouping Round 3 ---
+
+Group 1: Sneaky-Chameleon, Vibrant-Parrot, Daring-Cheetah, Mighty-Jaguar
+Group 2: Cosmic-Parrot, Midnight-Hedgehog, Silver-Cockatoo, Agile-Penguin
+Group 3: Bright-Dolphin, Cheerful-Cat, Golden-Jellyfish
+
+--- Grouping Round 1 ---
+
+Group 1: Rapid-Panda, Silver-Sloth, Bright-Otter
+Group 2: Colorful-Flamingo, Rapid-Flamingo, Hidden-Coyote
+Group 3: Midnight-Turtle
+
+--- Grouping Round 2 ---
+
+Group 1: Rapid-Panda, Silver-Sloth, Midnight-Turtle
+Group 2: Colorful-Flamingo, Bright-Otter, Hidden-Coyote
+Group 3: Rapid-Flamingo
+
+--- Grouping Round 3 ---
+
+Group 1: Rapid-Panda, Bright-Otter, Midnight-Turtle
+Group 2: Silver-Sloth, Rapid-Flamingo, Hidden-Coyote
+Group 3: Colorful-Flamingo
+
+--- Grouping Round 1 ---
+
+Group 1: Hasty-Owl, Hidden-Seal, Legendary-Fish
+Group 2: Strong-Jaguar, Friendly-Badger, Stealthy-Eagle
+
+--- Grouping Round 2 ---
+
+Group 1: Strong-Jaguar, Friendly-Badger, Legendary-Fish
+Group 2: Hasty-Owl, Hidden-Seal, Stealthy-Eagle
+
+--- Grouping Round 3 ---
+
+Group 1: Hidden-Seal, Legendary-Fish, Stealthy-Eagle
+Group 2: Hasty-Owl, Strong-Jaguar, Friendly-Badger
+
+--- Grouping Round 1 ---
+
+Group 1: Silver-Lizard, Legendary-Badger
+Group 2: Lunar-Chameleon, Brave-Swan
+Group 3: Curious-Jellyfish
+
+--- Grouping Round 2 ---
+
+Group 1: Silver-Lizard, Brave-Swan
+Group 2: Lunar-Chameleon, Legendary-Badger
+Group 3: Curious-Jellyfish
+
+--- Grouping Round 3 ---
+
+Group 1: Silver-Lizard, Legendary-Badger
+Group 2: Curious-Jellyfish, Brave-Swan
+Group 3: Lunar-Chameleon
+
+--- Grouping Round 1 ---
+
+Group 1: Anonymous-Shark, Peaceful-Hedgehog
+
+--- Grouping Round 2 ---
+
+Group 1: Anonymous-Shark, Peaceful-Hedgehog
+
+--- Grouping Round 3 ---
+
+Group 1: Anonymous-Shark, Peaceful-Hedgehog
+
+--- Grouping Round 1 ---
+
+Group 1: Kind-Tiger
+
+--- Grouping Round 2 ---
+
+Group 1: Kind-Tiger
+
+--- Grouping Round 3 ---
+
+Group 1: Kind-Tiger
+
+--- Grouping Round 1 ---
+
+Group 1: Kind-Jellyfish, Wild-Dog, Swift-Snake, Dazzling-Panda, Wild-Raccoon
+Group 2: Powerful-Lizard, Calm-Wolf, Hasty-Flamingo, Dazzling-Lion, Strong-Swan
+Group 3: Hasty-Zebra, Jolly-Koala, Friendly-Jellyfish, Hidden-Shark, Agile-Beaver
+Group 4: Silver-Jackal, Lively-Hawk, Legendary-Seal, Clever-Leopard, Royal-Penguin
+Group 5: Kind-Beaver, Lively-Shark, Vibrant-Rabbit, Calm-Tiger, Blazing-Cheetah
+Group 6: Bold-Cheetah, Peaceful-Salamander, Rapid-Chameleon, Curious-Penguin, Stealthy-Penguin
+
+--- Grouping Round 2 ---
+
+Group 1: Hasty-Zebra, Peaceful-Salamander, Kind-Beaver, Kind-Jellyfish, Dazzling-Panda
+Group 2: Agile-Beaver, Jolly-Koala, Calm-Wolf, Wild-Raccoon, Stealthy-Penguin
+Group 3: Bold-Cheetah, Lively-Shark, Swift-Snake, Vibrant-Rabbit, Friendly-Jellyfish
+Group 4: Wild-Dog, Dazzling-Lion, Clever-Leopard, Hidden-Shark, Blazing-Cheetah
+Group 5: Powerful-Lizard, Lively-Hawk, Calm-Tiger, Strong-Swan, Curious-Penguin
+Group 6: Silver-Jackal, Hasty-Flamingo, Rapid-Chameleon, Legendary-Seal, Royal-Penguin
+
+--- Grouping Round 3 ---
+
+Group 1: Kind-Jellyfish, Lively-Shark, Hasty-Flamingo, Dazzling-Panda, Agile-Beaver
+Group 2: Calm-Wolf, Swift-Snake, Rapid-Chameleon, Calm-Tiger, Hidden-Shark
+Group 3: Powerful-Lizard, Kind-Beaver, Wild-Dog, Friendly-Jellyfish, Stealthy-Penguin
+Group 4: Hasty-Zebra, Clever-Leopard, Strong-Swan, Royal-Penguin, Wild-Raccoon
+Group 5: Peaceful-Salamander, Jolly-Koala, Dazzling-Lion, Legendary-Seal, Vibrant-Rabbit
+Group 6: Bold-Cheetah, Silver-Jackal, Lively-Hawk, Curious-Penguin, Blazing-Cheetah
+
+--- Grouping Round 1 ---
+
+Group 1: Epic-Shark, Shiny-Snake, Midnight-Zebra, Epic-Horse
+Group 2: Silver-Fish, Mysterious-Fox, Midnight-Serpent, Silent-Jellyfish
+Group 3: Brave-Squirrel, Rapid-Dog, Blissful-Snake, Mighty-Beaver
+Group 4: Golden-Raccoon, Clever-Raccoon, Friendly-Kangaroo, Hasty-Serpent
+Group 5: Agile-Jackal, Sneaky-Badger, Bright-Chameleon, Heroic-Meerkat
+Group 6: Golden-Walrus, Colorful-Cheetah, Royal-Hawk, Bold-Duck
+Group 7: Hidden-Seal, Silver-Kangaroo, Heroic-Shark, Lunar-Kangaroo
+Group 8: Glowing-Bear, Powerful-Serpent
+
+--- Grouping Round 2 ---
+
+Group 1: Epic-Shark, Hidden-Seal, Royal-Hawk, Epic-Horse
+Group 2: Mysterious-Fox, Powerful-Serpent, Mighty-Beaver, Hasty-Serpent
+Group 3: Rapid-Dog, Lunar-Kangaroo, Friendly-Kangaroo, Silent-Jellyfish
+Group 4: Silver-Fish, Clever-Raccoon, Midnight-Serpent, Blissful-Snake
+Group 5: Silver-Kangaroo, Colorful-Cheetah, Bright-Chameleon, Heroic-Meerkat
+Group 6: Brave-Squirrel, Bold-Duck, Midnight-Zebra, Sneaky-Badger
+Group 7: Golden-Raccoon, Shiny-Snake, Glowing-Bear, Heroic-Shark
+Group 8: Agile-Jackal, Golden-Walrus
+
+--- Grouping Round 3 ---
+
+Group 1: Golden-Walrus, Silver-Kangaroo, Midnight-Zebra, Epic-Horse
+Group 2: Silver-Fish, Brave-Squirrel, Mysterious-Fox, Friendly-Kangaroo
+Group 3: Golden-Raccoon, Rapid-Dog, Powerful-Serpent, Mighty-Beaver
+Group 4: Glowing-Bear, Midnight-Serpent, Lunar-Kangaroo, Hasty-Serpent
+Group 5: Hidden-Seal, Bold-Duck, Sneaky-Badger, Bright-Chameleon
+Group 6: Agile-Jackal, Royal-Hawk, Blissful-Snake, Silent-Jellyfish
+Group 7: Epic-Shark, Colorful-Cheetah, Heroic-Shark, Heroic-Meerkat
+Group 8: Shiny-Snake, Clever-Raccoon
+
+--- Grouping Round 1 ---
+
+Group 1: Sneaky-Hawk, Mighty-Coyote, Powerful-Otter
+Group 2: Shiny-Armadillo, Wise-Serpent, Quick-Otter
+Group 3: Silent-Cheetah, Silver-Chameleon, Peaceful-Chicken
+Group 4: Mighty-Walrus, Witty-Parrot, Happy-Panda
+Group 5: Kind-Horse, Powerful-Bear, Frosty-Rabbit
+Group 6: Bold-Meerkat, Golden-Rabbit, Strong-Fox
+Group 7: Silver-Chicken, Legendary-Sloth, Powerful-Panther
+Group 8: Peaceful-Fox, Cheerful-Koala, Stellar-Beaver
+Group 9: Lunar-Dolphin, Valiant-Hedgehog, Epic-Bear
+
+--- Grouping Round 2 ---
+
+Group 1: Sneaky-Hawk, Golden-Rabbit, Strong-Fox
+Group 2: Wise-Serpent, Powerful-Bear, Silver-Chameleon
+Group 3: Silent-Cheetah, Frosty-Rabbit, Quick-Otter
+Group 4: Shiny-Armadillo, Mighty-Walrus, Legendary-Sloth
+Group 5: Kind-Horse, Silver-Chicken, Peaceful-Chicken
+Group 6: Powerful-Otter, Mighty-Coyote, Stellar-Beaver
+Group 7: Peaceful-Fox, Cheerful-Koala, Epic-Bear
+Group 8: Bold-Meerkat, Lunar-Dolphin, Valiant-Hedgehog
+Group 9: Witty-Parrot, Powerful-Panther, Happy-Panda
+
+--- Grouping Round 3 ---
+
+Group 1: Sneaky-Hawk, Valiant-Hedgehog, Mighty-Coyote
+Group 2: Wise-Serpent, Silver-Chameleon, Frosty-Rabbit
+Group 3: Kind-Horse, Powerful-Bear, Silent-Cheetah
+Group 4: Shiny-Armadillo, Mighty-Walrus, Quick-Otter
+Group 5: Silver-Chicken, Legendary-Sloth, Peaceful-Chicken
+Group 6: Golden-Rabbit, Peaceful-Fox, Powerful-Otter
+Group 7: Lunar-Dolphin, Cheerful-Koala, Epic-Bear
+Group 8: Bold-Meerkat, Stellar-Beaver, Strong-Fox
+Group 9: Witty-Parrot, Powerful-Panther, Happy-Panda
+
+--- Grouping Round 1 ---
+
+Group 1: Curious-Panther, Friendly-Sloth, Shiny-Leopard
+Group 2: Dazzling-Lizard, Friendly-Shark, Noble-Duck
+Group 3: Witty-Beaver, Golden-Hedgehog, Clever-Salamander
+Group 4: Hasty-Cat, Jolly-Panther, Energetic-Falcon
+Group 5: Powerful-Zebra, Resilient-Badger, Happy-Jellyfish
+Group 6: Daring-Horse, Golden-Wallaby, Quick-Chameleon
+Group 7: Joyful-Jellyfish, Sneaky-Panther, Radiant-Otter
+Group 8: Stealthy-Chicken, Wild-Zebra, Kind-Crow
+Group 9: Friendly-Dolphin, Blissful-Fox
+
+--- Grouping Round 2 ---
+
+Group 1: Curious-Panther, Wild-Zebra, Shiny-Leopard
+Group 2: Hasty-Cat, Friendly-Shark, Noble-Duck
+Group 3: Friendly-Sloth, Kind-Crow, Clever-Salamander
+Group 4: Joyful-Jellyfish, Powerful-Zebra, Jolly-Panther
+Group 5: Dazzling-Lizard, Quick-Chameleon, Energetic-Falcon
+Group 6: Stealthy-Chicken, Golden-Hedgehog, Resilient-Badger
+Group 7: Daring-Horse, Sneaky-Panther, Friendly-Dolphin
+Group 8: Golden-Wallaby, Radiant-Otter, Happy-Jellyfish
+Group 9: Witty-Beaver, Blissful-Fox
+
+--- Grouping Round 3 ---
+
+Group 1: Shiny-Leopard, Golden-Hedgehog, Kind-Crow
+Group 2: Golden-Wallaby, Friendly-Shark, Energetic-Falcon
+Group 3: Curious-Panther, Wild-Zebra, Clever-Salamander
+Group 4: Hasty-Cat, Dazzling-Lizard, Blissful-Fox
+Group 5: Joyful-Jellyfish, Daring-Horse, Powerful-Zebra
+Group 6: Sneaky-Panther, Quick-Chameleon, Jolly-Panther
+Group 7: Stealthy-Chicken, Friendly-Sloth, Happy-Jellyfish
+Group 8: Radiant-Otter, Resilient-Badger, Noble-Duck
+Group 9: Friendly-Dolphin, Witty-Beaver
+
+--- Grouping Round 1 ---
+
+Group 1: Sneaky-Armadillo, Playful-Cheetah, Vibrant-Badger, Epic-Armadillo
+Group 2: Colorful-Coyote, Legendary-Swan, Midnight-Lizard, Agile-Chicken
+Group 3: Heroic-Wolf, Energetic-Walrus, Radiant-Serpent
+
+--- Grouping Round 2 ---
+
+Group 1: Legendary-Swan, Playful-Cheetah, Vibrant-Badger, Heroic-Wolf
+Group 2: Colorful-Coyote, Sneaky-Armadillo, Midnight-Lizard, Radiant-Serpent
+Group 3: Agile-Chicken, Epic-Armadillo, Energetic-Walrus
+
+--- Grouping Round 3 ---
+
+Group 1: Colorful-Coyote, Playful-Cheetah, Vibrant-Badger, Energetic-Walrus
+Group 2: Agile-Chicken, Sneaky-Armadillo, Heroic-Wolf, Radiant-Serpent
+Group 3: Epic-Armadillo, Midnight-Lizard, Legendary-Swan
+
+--- Grouping Round 1 ---
+
+Group 1: Lively-Koala, Hasty-Walrus, Jolly-Wombat
+Group 2: Radiant-Cheetah, Nimble-Wolf, Midnight-Sheep
+Group 3: Resilient-Jellyfish
+
+--- Grouping Round 2 ---
+
+Group 1: Hasty-Walrus, Midnight-Sheep, Lively-Koala
+Group 2: Radiant-Cheetah, Nimble-Wolf, Resilient-Jellyfish
+Group 3: Jolly-Wombat
+
+--- Grouping Round 3 ---
+
+Group 1: Hasty-Walrus, Nimble-Wolf, Resilient-Jellyfish
+Group 2: Radiant-Cheetah, Lively-Koala, Jolly-Wombat
+Group 3: Midnight-Sheep
+
+--- Grouping Round 1 ---
+
+Group 1: Bold-Coyote, Lively-Jellyfish, Cosmic-Hawk
+Group 2: Stealthy-Coyote, Kind-Wolf, Mysterious-Hedgehog
+
+--- Grouping Round 2 ---
+
+Group 1: Stealthy-Coyote, Cosmic-Hawk, Mysterious-Hedgehog
+Group 2: Kind-Wolf, Bold-Coyote, Lively-Jellyfish
+
+--- Grouping Round 3 ---
+
+Group 1: Stealthy-Coyote, Bold-Coyote, Cosmic-Hawk
+Group 2: Kind-Wolf, Lively-Jellyfish, Mysterious-Hedgehog
+
+--- Grouping Round 1 ---
+
+Group 1: Blissful-Penguin, Happy-Zebra
+Group 2: Peaceful-Sloth, Blissful-Horse
+Group 3: Resilient-Duck
+
+--- Grouping Round 2 ---
+
+Group 1: Blissful-Penguin, Blissful-Horse
+Group 2: Happy-Zebra, Peaceful-Sloth
+Group 3: Resilient-Duck
+
+--- Grouping Round 3 ---
+
+Group 1: Blissful-Penguin, Peaceful-Sloth
+Group 2: Happy-Zebra, Resilient-Duck
+Group 3: Blissful-Horse
+
+--- Grouping Round 1 ---
+
+Group 1: Silent-Beaver, Stealthy-Cheetah, Strong-Walrus, Epic-Lizard, Sneaky-Hawk
+Group 2: Mysterious-Otter, Daring-Tiger, Strong-Wombat, Radiant-Cat, Peaceful-Eagle
+Group 3: Stellar-Armadillo, Valiant-Hedgehog, Shiny-Jellyfish, Vibrant-Leopard, Vibrant-Seal
+Group 4: Hasty-Dolphin, Frosty-Badger, Gentle-Jackal, Midnight-Raven, Agile-Coyote
+Group 5: Friendly-Tiger, Gentle-Rabbit, Hidden-Serpent, Gentle-Flamingo, Peaceful-Meerkat
+Group 6: Lunar-Hawk, Lively-Beaver, Silent-Dog, Mighty-Hawk, Mighty-Jackal
+
+--- Grouping Round 2 ---
+
+Group 1: Silent-Beaver, Stealthy-Cheetah, Strong-Walrus, Shiny-Jellyfish, Valiant-Hedgehog
+Group 2: Silent-Dog, Gentle-Jackal, Radiant-Cat, Agile-Coyote, Peaceful-Eagle
+Group 3: Mysterious-Otter, Friendly-Tiger, Frosty-Badger, Mighty-Hawk, Hidden-Serpent
+Group 4: Stellar-Armadillo, Lively-Beaver, Gentle-Rabbit, Strong-Wombat, Midnight-Raven
+Group 5: Hasty-Dolphin, Daring-Tiger, Epic-Lizard, Vibrant-Leopard, Sneaky-Hawk
+Group 6: Lunar-Hawk, Gentle-Flamingo, Mighty-Jackal, Vibrant-Seal, Peaceful-Meerkat
+
+--- Grouping Round 3 ---
+
+Group 1: Strong-Wombat, Mighty-Hawk, Strong-Walrus, Radiant-Cat, Vibrant-Leopard
+Group 2: Mysterious-Otter, Silent-Dog, Hidden-Serpent, Midnight-Raven, Peaceful-Eagle
+Group 3: Silent-Beaver, Friendly-Tiger, Lively-Beaver, Gentle-Jackal, Epic-Lizard
+Group 4: Stellar-Armadillo, Stealthy-Cheetah, Valiant-Hedgehog, Agile-Coyote, Sneaky-Hawk
+Group 5: Gentle-Rabbit, Frosty-Badger, Daring-Tiger, Mighty-Jackal, Shiny-Jellyfish
+Group 6: Hasty-Dolphin, Lunar-Hawk, Gentle-Flamingo, Vibrant-Seal, Peaceful-Meerkat
+
+--- Grouping Round 1 ---
+
+Group 1: Wise-Serpent, Playful-Lizard, Quick-Koala, Joyful-Panda
+Group 2: Glowing-Koala, Vibrant-Swan, Powerful-Zebra, Mythic-Dog
+Group 3: Anonymous-Swan, Hidden-Penguin, Swift-Shark, Sneaky-Jackal
+Group 4: Calm-Shark, Epic-Zebra, Blazing-Cheetah, Mysterious-Snake
+Group 5: Bright-Coyote, Silent-Flamingo, Rapid-Meerkat, Bold-Bear
+Group 6: Resilient-Dolphin, Shiny-Bear, Jolly-Squirrel, Vibrant-Crow
+Group 7: Calm-Owl, Daring-Sheep, Blissful-Fox, Dazzling-Fish
+Group 8: Royal-Tortoise, Anonymous-Koala
+
+--- Grouping Round 2 ---
+
+Group 1: Hidden-Penguin, Daring-Sheep, Playful-Lizard, Wise-Serpent
+Group 2: Anonymous-Swan, Powerful-Zebra, Rapid-Meerkat, Bold-Bear
+Group 3: Epic-Zebra, Sneaky-Jackal, Quick-Koala, Dazzling-Fish
+Group 4: Bright-Coyote, Mythic-Dog, Anonymous-Koala, Jolly-Squirrel
+Group 5: Vibrant-Swan, Resilient-Dolphin, Swift-Shark, Joyful-Panda
+Group 6: Silent-Flamingo, Royal-Tortoise, Calm-Shark, Vibrant-Crow
+Group 7: Glowing-Koala, Blazing-Cheetah, Blissful-Fox, Shiny-Bear
+Group 8: Calm-Owl, Mysterious-Snake
+
+--- Grouping Round 3 ---
+
+Group 1: Epic-Zebra, Blissful-Fox, Swift-Shark, Playful-Lizard
+Group 2: Mythic-Dog, Sneaky-Jackal, Powerful-Zebra, Wise-Serpent
+Group 3: Glowing-Koala, Vibrant-Swan, Bright-Coyote, Royal-Tortoise
+Group 4: Anonymous-Koala, Resilient-Dolphin, Quick-Koala, Bold-Bear
+Group 5: Silent-Flamingo, Anonymous-Swan, Jolly-Squirrel, Dazzling-Fish
+Group 6: Hidden-Penguin, Blazing-Cheetah, Shiny-Bear, Joyful-Panda
+Group 7: Mysterious-Snake, Daring-Sheep, Rapid-Meerkat, Vibrant-Crow
+Group 8: Calm-Shark, Calm-Owl
+
+--- Grouping Round 1 ---
+
+Group 1: Mythic-Dog, Blazing-Crow, Royal-Koala
+Group 2: Nimble-Serpent, Bold-Hawk, Agile-Penguin
+Group 3: Silver-Squirrel, Radiant-Sloth, Royal-Salamander
+Group 4: Silent-Rabbit, Shiny-Rabbit, Valiant-Duck
+Group 5: Playful-Swan, Legendary-Cat, Witty-Leopard
+Group 6: Kind-Sloth, Mythic-Kangaroo, Bright-Squirrel
+Group 7: Hasty-Horse, Friendly-Jellyfish, Bright-Chameleon
+Group 8: Kind-Turtle, Daring-Wolf, Frosty-Leopard
+Group 9: Strong-Horse, Hasty-Flamingo, Dazzling-Snake
+
+--- Grouping Round 2 ---
+
+Group 1: Mythic-Dog, Kind-Sloth, Agile-Penguin
+Group 2: Silver-Squirrel, Royal-Salamander, Legendary-Cat
+Group 3: Nimble-Serpent, Blazing-Crow, Bright-Squirrel
+Group 4: Hasty-Flamingo, Valiant-Duck, Royal-Koala
+Group 5: Playful-Swan, Witty-Leopard, Bright-Chameleon
+Group 6: Silent-Rabbit, Mythic-Kangaroo, Bold-Hawk
+Group 7: Friendly-Jellyfish, Dazzling-Snake, Frosty-Leopard
+Group 8: Strong-Horse, Kind-Turtle, Hasty-Horse
+Group 9: Shiny-Rabbit, Radiant-Sloth, Daring-Wolf
+
+--- Grouping Round 3 ---
+
+Group 1: Mythic-Dog, Silent-Rabbit, Bright-Squirrel
+Group 2: Mythic-Kangaroo, Agile-Penguin, Royal-Koala
+Group 3: Silver-Squirrel, Radiant-Sloth, Witty-Leopard
+Group 4: Nimble-Serpent, Kind-Sloth, Shiny-Rabbit
+Group 5: Blazing-Crow, Bold-Hawk, Valiant-Duck
+Group 6: Playful-Swan, Royal-Salamander, Friendly-Jellyfish
+Group 7: Hasty-Horse, Dazzling-Snake, Daring-Wolf
+Group 8: Kind-Turtle, Hasty-Flamingo, Legendary-Cat
+Group 9: Strong-Horse, Frosty-Leopard, Bright-Chameleon
+
+--- Grouping Round 1 ---
+
+Group 1: Anonymous-Dolphin, Calm-Armadillo, Colorful-Swan
+Group 2: Legendary-Horse, Lively-Parrot, Noble-Tortoise
+Group 3: Agile-Tiger, Kind-Coyote, Silver-Kangaroo
+Group 4: Heroic-Panda, Daring-Shark, Bright-Chameleon
+Group 5: Swift-Dolphin, Brave-Horse, Energetic-Eagle
+Group 6: Powerful-Lion, Gentle-Sloth, Happy-Coyote
+Group 7: Hidden-Lizard, Cosmic-Cockatoo, Playful-Tiger
+Group 8: Hasty-Swan, Energetic-Hawk, Valiant-Walrus
+Group 9: Valiant-Leopard, Hasty-Parrot
+
+--- Grouping Round 2 ---
+
+Group 1: Anonymous-Dolphin, Calm-Armadillo, Valiant-Walrus
+Group 2: Gentle-Sloth, Lively-Parrot, Noble-Tortoise
+Group 3: Kind-Coyote, Legendary-Horse, Hasty-Swan
+Group 4: Heroic-Panda, Playful-Tiger, Energetic-Eagle
+Group 5: Powerful-Lion, Energetic-Hawk, Colorful-Swan
+Group 6: Brave-Horse, Cosmic-Cockatoo, Daring-Shark
+Group 7: Agile-Tiger, Hasty-Parrot, Happy-Coyote
+Group 8: Valiant-Leopard, Silver-Kangaroo, Bright-Chameleon
+Group 9: Hidden-Lizard, Swift-Dolphin
+
+--- Grouping Round 3 ---
+
+Group 1: Anonymous-Dolphin, Calm-Armadillo, Hasty-Parrot
+Group 2: Silver-Kangaroo, Hasty-Swan, Lively-Parrot
+Group 3: Agile-Tiger, Kind-Coyote, Noble-Tortoise
+Group 4: Valiant-Leopard, Brave-Horse, Heroic-Panda
+Group 5: Hidden-Lizard, Daring-Shark, Energetic-Eagle
+Group 6: Powerful-Lion, Legendary-Horse, Bright-Chameleon
+Group 7: Swift-Dolphin, Gentle-Sloth, Cosmic-Cockatoo
+Group 8: Happy-Coyote, Valiant-Walrus, Colorful-Swan
+Group 9: Playful-Tiger, Energetic-Hawk
+
+--- Grouping Round 1 ---
+
+Group 1: Vibrant-Horse, Legendary-Dolphin, Cosmic-Fish, Cosmic-Fox
+Group 2: Royal-Fish, Happy-Raccoon, Daring-Parrot, Quick-Horse
+Group 3: Midnight-Tortoise, Vibrant-Swan, Cheerful-Otter
+
+--- Grouping Round 2 ---
+
+Group 1: Legendary-Dolphin, Cosmic-Fish, Happy-Raccoon, Cheerful-Otter
+Group 2: Vibrant-Horse, Vibrant-Swan, Daring-Parrot, Cosmic-Fox
+Group 3: Royal-Fish, Midnight-Tortoise, Quick-Horse
+
+--- Grouping Round 3 ---
+
+Group 1: Legendary-Dolphin, Midnight-Tortoise, Daring-Parrot, Cosmic-Fish
+Group 2: Vibrant-Horse, Happy-Raccoon, Quick-Horse, Cosmic-Fox
+Group 3: Royal-Fish, Vibrant-Swan, Cheerful-Otter
+
+--- Grouping Round 1 ---
+
+Group 1: Stellar-Dolphin, Mythic-Meerkat, Dazzling-Armadillo
+Group 2: Bold-Lizard, Daring-Tiger, Blissful-Tortoise
+Group 3: Agile-Cat
+
+--- Grouping Round 2 ---
+
+Group 1: Agile-Cat, Dazzling-Armadillo, Daring-Tiger
+Group 2: Bold-Lizard, Mythic-Meerkat, Blissful-Tortoise
+Group 3: Stellar-Dolphin
+
+--- Grouping Round 3 ---
+
+Group 1: Agile-Cat, Mythic-Meerkat, Dazzling-Armadillo
+Group 2: Stellar-Dolphin, Daring-Tiger, Blissful-Tortoise
+Group 3: Bold-Lizard
+
+--- Grouping Round 1 ---
+
+Group 1: Gentle-Serpent, Stealthy-Hawk, Calm-Leopard
+Group 2: Hasty-Swan, Shiny-Dolphin, Shiny-Cockatoo
+
+--- Grouping Round 2 ---
+
+Group 1: Stealthy-Hawk, Calm-Leopard, Shiny-Cockatoo
+Group 2: Gentle-Serpent, Hasty-Swan, Shiny-Dolphin
+
+--- Grouping Round 3 ---
+
+Group 1: Gentle-Serpent, Hasty-Swan, Calm-Leopard
+Group 2: Stealthy-Hawk, Shiny-Dolphin, Shiny-Cockatoo
+
+--- Grouping Round 1 ---
+
+Group 1: Strong-Armadillo, Midnight-Badger
+Group 2: Strong-Squirrel, Glowing-Duck
+Group 3: Hidden-Dog
+
+--- Grouping Round 2 ---
+
+Group 1: Strong-Armadillo, Strong-Squirrel
+Group 2: Glowing-Duck, Midnight-Badger
+Group 3: Hidden-Dog
+
+--- Grouping Round 3 ---
+
+Group 1: Strong-Armadillo, Glowing-Duck
+Group 2: Strong-Squirrel, Midnight-Badger
+Group 3: Hidden-Dog
+
+--- Grouping Round 1 ---
+
+Group 1: Stellar-Penguin, Nimble-Dog, Jolly-Panther, Hasty-Lizard, Stealthy-Kangaroo
+Group 2: Shiny-Panda, Valiant-Otter, Friendly-Snake, Sneaky-Panda, Anonymous-Badger
+Group 3: Lunar-Wallaby, Cosmic-Beaver, Happy-Cheetah, Anonymous-Fish, Strong-Dolphin
+Group 4: Quick-Zebra, Lunar-Sheep, Hidden-Badger, Wise-Dolphin, Vibrant-Fox
+Group 5: Stealthy-Cheetah, Smart-Penguin, Stealthy-Horse, Stealthy-Hawk, Rapid-Cheetah
+Group 6: Mysterious-Horse, Wise-Crow, Witty-Leopard, Curious-Zebra, Sneaky-Turtle
+
+--- Grouping Round 2 ---
+
+Group 1: Anonymous-Badger, Stealthy-Horse, Hasty-Lizard, Anonymous-Fish, Sneaky-Turtle
+Group 2: Stellar-Penguin, Friendly-Snake, Sneaky-Panda, Cosmic-Beaver, Jolly-Panther
+Group 3: Wise-Crow, Stealthy-Cheetah, Lunar-Sheep, Hidden-Badger, Curious-Zebra
+Group 4: Quick-Zebra, Witty-Leopard, Happy-Cheetah, Rapid-Cheetah, Stealthy-Kangaroo
+Group 5: Shiny-Panda, Nimble-Dog, Smart-Penguin, Stealthy-Hawk, Strong-Dolphin
+Group 6: Lunar-Wallaby, Mysterious-Horse, Valiant-Otter, Wise-Dolphin, Vibrant-Fox
+
+--- Grouping Round 3 ---
+
+Group 1: Valiant-Otter, Hidden-Badger, Hasty-Lizard, Stealthy-Kangaroo, Strong-Dolphin
+Group 2: Friendly-Snake, Wise-Crow, Nimble-Dog, Rapid-Cheetah, Anonymous-Fish
+Group 3: Quick-Zebra, Mysterious-Horse, Cosmic-Beaver, Anonymous-Badger, Stealthy-Hawk
+Group 4: Lunar-Sheep, Smart-Penguin, Witty-Leopard, Jolly-Panther, Vibrant-Fox
+Group 5: Stellar-Penguin, Wise-Dolphin, Curious-Zebra, Stealthy-Horse, Happy-Cheetah
+Group 6: Shiny-Panda, Lunar-Wallaby, Stealthy-Cheetah, Sneaky-Panda, Sneaky-Turtle
+
+--- Grouping Round 1 ---
+
+Group 1: Silver-Seal, Dazzling-Tortoise, Quick-Jackal, Playful-Raccoon
+Group 2: Witty-Wallaby, Swift-Snake, Strong-Falcon, Wild-Squirrel
+Group 3: Vibrant-Flamingo, Jolly-Serpent, Energetic-Raven, Stealthy-Shark
+Group 4: Wise-Tiger, Gentle-Tortoise, Calm-Tortoise, Sneaky-Walrus
+Group 5: Wise-Jaguar, Hidden-Cheetah, Smart-Wallaby, Happy-Lizard
+Group 6: Golden-Seal, Peaceful-Bear, Mythic-Squirrel, Nimble-Coyote
+Group 7: Legendary-Lion, Hasty-Raccoon, Silent-Koala, Dazzling-Coyote
+Group 8: Witty-Snake, Clever-Meerkat
+
+--- Grouping Round 2 ---
+
+Group 1: Quick-Jackal, Dazzling-Tortoise, Peaceful-Bear, Dazzling-Coyote
+Group 2: Witty-Snake, Gentle-Tortoise, Calm-Tortoise, Swift-Snake
+Group 3: Vibrant-Flamingo, Wise-Jaguar, Silent-Koala, Stealthy-Shark
+Group 4: Mythic-Squirrel, Wise-Tiger, Playful-Raccoon, Wild-Squirrel
+Group 5: Happy-Lizard, Jolly-Serpent, Clever-Meerkat, Hidden-Cheetah
+Group 6: Silver-Seal, Golden-Seal, Strong-Falcon, Sneaky-Walrus
+Group 7: Legendary-Lion, Witty-Wallaby, Energetic-Raven, Smart-Wallaby
+Group 8: Hasty-Raccoon, Nimble-Coyote
+
+--- Grouping Round 3 ---
+
+Group 1: Vibrant-Flamingo, Hasty-Raccoon, Dazzling-Tortoise, Clever-Meerkat
+Group 2: Swift-Snake, Golden-Seal, Wild-Squirrel, Sneaky-Walrus
+Group 3: Jolly-Serpent, Energetic-Raven, Peaceful-Bear, Playful-Raccoon
+Group 4: Happy-Lizard, Stealthy-Shark, Quick-Jackal, Legendary-Lion
+Group 5: Witty-Snake, Witty-Wallaby, Wise-Tiger, Mythic-Squirrel
+Group 6: Silver-Seal, Hidden-Cheetah, Silent-Koala, Nimble-Coyote
+Group 7: Wise-Jaguar, Strong-Falcon, Calm-Tortoise, Dazzling-Coyote
+Group 8: Gentle-Tortoise, Smart-Wallaby
+
+--- Grouping Round 1 ---
+
+Group 1: Friendly-Otter, Swift-Meerkat, Lunar-Bear
+Group 2: Curious-Owl, Playful-Lizard, Stellar-Hawk
+Group 3: Peaceful-Raccoon, Colorful-Beaver, Curious-Jackal
+Group 4: Colorful-Seal, Witty-Eagle, Lunar-Lizard
+Group 5: Brave-Salamander, Shiny-Sloth, Friendly-Jellyfish
+Group 6: Quick-Tiger, Joyful-Shark, Graceful-Bear
+Group 7: Stealthy-Jackal, Sneaky-Cat, Legendary-Fox
+Group 8: Calm-Wallaby, Kind-Flamingo, Silver-Panda
+Group 9: Kind-Snake, Noble-Zebra, Strong-Jackal
+
+--- Grouping Round 2 ---
+
+Group 1: Colorful-Seal, Swift-Meerkat, Graceful-Bear
+Group 2: Friendly-Jellyfish, Shiny-Sloth, Stellar-Hawk
+Group 3: Curious-Owl, Playful-Lizard, Peaceful-Raccoon
+Group 4: Colorful-Beaver, Brave-Salamander, Legendary-Fox
+Group 5: Friendly-Otter, Witty-Eagle, Silver-Panda
+Group 6: Joyful-Shark, Lunar-Bear, Lunar-Lizard
+Group 7: Quick-Tiger, Calm-Wallaby, Strong-Jackal
+Group 8: Kind-Snake, Sneaky-Cat, Curious-Jackal
+Group 9: Noble-Zebra, Stealthy-Jackal, Kind-Flamingo
+
+--- Grouping Round 3 ---
+
+Group 1: Swift-Meerkat, Lunar-Bear, Graceful-Bear
+Group 2: Friendly-Jellyfish, Peaceful-Raccoon, Stellar-Hawk
+Group 3: Colorful-Beaver, Curious-Owl, Legendary-Fox
+Group 4: Shiny-Sloth, Playful-Lizard, Curious-Jackal
+Group 5: Friendly-Otter, Colorful-Seal, Kind-Flamingo
+Group 6: Brave-Salamander, Stealthy-Jackal, Kind-Snake
+Group 7: Calm-Wallaby, Joyful-Shark, Witty-Eagle
+Group 8: Quick-Tiger, Silver-Panda, Lunar-Lizard
+Group 9: Noble-Zebra, Sneaky-Cat, Strong-Jackal
+
+--- Grouping Round 1 ---
+
+Group 1: Friendly-Salamander, Quick-Koala, Heroic-Swan
+Group 2: Playful-Hedgehog, Wild-Panda, Swift-Hawk
+Group 3: Glowing-Otter, Clever-Owl, Vibrant-Serpent
+Group 4: Strong-Chameleon, Smart-Parrot, Playful-Serpent
+Group 5: Noble-Horse, Mighty-Sloth, Daring-Seal
+Group 6: Golden-Rabbit, Gentle-Cheetah, Cheerful-Sheep
+Group 7: Nimble-Sloth, Cheerful-Armadillo, Wild-Wombat
+Group 8: Brave-Salamander, Sneaky-Shark, Swift-Bear
+Group 9: Playful-Chameleon, Mighty-Salamander
+
+--- Grouping Round 2 ---
+
+Group 1: Strong-Chameleon, Brave-Salamander, Heroic-Swan
+Group 2: Mighty-Sloth, Wild-Panda, Glowing-Otter
+Group 3: Quick-Koala, Playful-Serpent, Swift-Bear
+Group 4: Playful-Hedgehog, Daring-Seal, Vibrant-Serpent
+Group 5: Noble-Horse, Swift-Hawk, Golden-Rabbit
+Group 6: Nimble-Sloth, Cheerful-Armadillo, Sneaky-Shark
+Group 7: Smart-Parrot, Friendly-Salamander, Playful-Chameleon
+Group 8: Mighty-Salamander, Clever-Owl, Cheerful-Sheep
+Group 9: Gentle-Cheetah, Wild-Wombat
+
+--- Grouping Round 3 ---
+
+Group 1: Playful-Chameleon, Heroic-Swan, Playful-Serpent
+Group 2: Playful-Hedgehog, Wild-Panda, Glowing-Otter
+Group 3: Daring-Seal, Swift-Hawk, Clever-Owl
+Group 4: Mighty-Sloth, Gentle-Cheetah, Golden-Rabbit
+Group 5: Nimble-Sloth, Quick-Koala, Smart-Parrot
+Group 6: Strong-Chameleon, Friendly-Salamander, Swift-Bear
+Group 7: Noble-Horse, Vibrant-Serpent, Cheerful-Sheep
+Group 8: Brave-Salamander, Wild-Wombat, Mighty-Salamander
+Group 9: Cheerful-Armadillo, Sneaky-Shark
+
+--- Grouping Round 1 ---
+
+Group 1: Wild-Cockatoo, Sneaky-Dog, Resilient-Walrus, Daring-Falcon
+Group 2: Friendly-Shark, Rapid-Swan, Mythic-Rabbit, Clever-Chameleon
+Group 3: Noble-Eagle, Radiant-Horse, Noble-Otter
+
+--- Grouping Round 2 ---
+
+Group 1: Noble-Eagle, Rapid-Swan, Sneaky-Dog, Daring-Falcon
+Group 2: Friendly-Shark, Mythic-Rabbit, Resilient-Walrus, Noble-Otter
+Group 3: Clever-Chameleon, Wild-Cockatoo, Radiant-Horse
+
+--- Grouping Round 3 ---
+
+Group 1: Clever-Chameleon, Mythic-Rabbit, Sneaky-Dog, Resilient-Walrus
+Group 2: Friendly-Shark, Wild-Cockatoo, Noble-Otter, Daring-Falcon
+Group 3: Noble-Eagle, Rapid-Swan, Radiant-Horse
+
+--- Grouping Round 1 ---
+
+Group 1: Radiant-Fox, Radiant-Owl, Frosty-Salamander
+Group 2: Vibrant-Panda, Stellar-Leopard, Hasty-Crow
+Group 3: Noble-Hawk
+
+--- Grouping Round 2 ---
+
+Group 1: Stellar-Leopard, Noble-Hawk, Radiant-Fox
+Group 2: Vibrant-Panda, Frosty-Salamander, Hasty-Crow
+Group 3: Radiant-Owl
+
+--- Grouping Round 3 ---
+
+Group 1: Vibrant-Panda, Radiant-Fox, Hasty-Crow
+Group 2: Frosty-Salamander, Stellar-Leopard, Noble-Hawk
+Group 3: Radiant-Owl
+
+--- Grouping Round 1 ---
+
+Group 1: Kind-Meerkat, Anonymous-Jaguar, Playful-Wombat
+Group 2: Legendary-Jackal, Happy-Serpent, Sneaky-Koala
+
+--- Grouping Round 2 ---
+
+Group 1: Kind-Meerkat, Sneaky-Koala, Anonymous-Jaguar
+Group 2: Legendary-Jackal, Happy-Serpent, Playful-Wombat
+
+--- Grouping Round 3 ---
+
+Group 1: Sneaky-Koala, Anonymous-Jaguar, Playful-Wombat
+Group 2: Kind-Meerkat, Legendary-Jackal, Happy-Serpent
+
+--- Grouping Round 1 ---
+
+Group 1: Frosty-Chicken, Cosmic-Sheep
+Group 2: Nimble-Dog, Gentle-Eagle
+Group 3: Curious-Dolphin
+
+--- Grouping Round 2 ---
+
+Group 1: Frosty-Chicken, Curious-Dolphin
+Group 2: Nimble-Dog, Cosmic-Sheep
+Group 3: Gentle-Eagle
+
+--- Grouping Round 3 ---
+
+Group 1: Frosty-Chicken, Gentle-Eagle
+Group 2: Nimble-Dog, Curious-Dolphin
+Group 3: Cosmic-Sheep
+
+--- Grouping Round 1 ---
+
+Group 1: Wise-Flamingo, Agile-Leopard, Agile-Tiger, Anonymous-Hawk, Dazzling-Wolf
+Group 2: Calm-Hedgehog, Royal-Lion, Wise-Hedgehog, Gentle-Coyote, Shiny-Sloth
+Group 3: Hasty-Sheep, Bright-Jaguar, Witty-Owl, Epic-Flamingo, Valiant-Cheetah
+Group 4: Sneaky-Chicken, Daring-Tortoise, Colorful-Wombat, Colorful-Coyote, Hasty-Wombat
+Group 5: Clever-Snake, Agile-Lizard, Curious-Turtle, Sneaky-Wombat, Hidden-Flamingo
+Group 6: Legendary-Zebra, Blazing-Beaver, Royal-Panther, Vibrant-Raven, Jolly-Shark
+
+--- Grouping Round 2 ---
+
+Group 1: Clever-Snake, Agile-Leopard, Daring-Tortoise, Sneaky-Wombat, Colorful-Wombat
+Group 2: Wise-Flamingo, Vibrant-Raven, Shiny-Sloth, Hidden-Flamingo, Dazzling-Wolf
+Group 3: Witty-Owl, Gentle-Coyote, Colorful-Coyote, Jolly-Shark, Anonymous-Hawk
+Group 4: Calm-Hedgehog, Hasty-Sheep, Royal-Lion, Blazing-Beaver, Agile-Tiger
+Group 5: Legendary-Zebra, Wise-Hedgehog, Curious-Turtle, Valiant-Cheetah, Hasty-Wombat
+Group 6: Bright-Jaguar, Agile-Lizard, Sneaky-Chicken, Royal-Panther, Epic-Flamingo
+
+--- Grouping Round 3 ---
+
+Group 1: Hasty-Sheep, Agile-Leopard, Shiny-Sloth, Epic-Flamingo, Hasty-Wombat
+Group 2: Royal-Lion, Royal-Panther, Sneaky-Wombat, Colorful-Coyote, Dazzling-Wolf
+Group 3: Bright-Jaguar, Legendary-Zebra, Clever-Snake, Gentle-Coyote, Vibrant-Raven
+Group 4: Calm-Hedgehog, Curious-Turtle, Daring-Tortoise, Colorful-Wombat, Anonymous-Hawk
+Group 5: Wise-Flamingo, Blazing-Beaver, Sneaky-Chicken, Wise-Hedgehog, Valiant-Cheetah
+Group 6: Witty-Owl, Agile-Lizard, Agile-Tiger, Jolly-Shark, Hidden-Flamingo
+
+--- Grouping Round 1 ---
+
+Group 1: Sneaky-Serpent, Colorful-Seal, Lunar-Panda, Quick-Owl
+Group 2: Resilient-Salamander, Glowing-Otter, Colorful-Raven, Mighty-Chicken
+Group 3: Mighty-Otter, Dazzling-Meerkat, Stellar-Owl, Mysterious-Dolphin
+Group 4: Playful-Dolphin, Stellar-Coyote, Lively-Jaguar, Stealthy-Salamander
+Group 5: Dazzling-Sloth, Calm-Koala, Friendly-Flamingo, Agile-Duck
+Group 6: Lunar-Eagle, Gentle-Snake, Wise-Armadillo, Playful-Lizard
+Group 7: Silent-Kangaroo, Dazzling-Wolf, Energetic-Jellyfish, Wise-Coyote
+Group 8: Mighty-Salamander, Cheerful-Turtle
+
+--- Grouping Round 2 ---
+
+Group 1: Colorful-Seal, Wise-Coyote, Lunar-Panda, Agile-Duck
+Group 2: Glowing-Otter, Colorful-Raven, Mysterious-Dolphin, Lively-Jaguar
+Group 3: Stellar-Owl, Stellar-Coyote, Mighty-Otter, Resilient-Salamander
+Group 4: Dazzling-Sloth, Calm-Koala, Sneaky-Serpent, Silent-Kangaroo
+Group 5: Playful-Dolphin, Playful-Lizard, Mighty-Chicken, Dazzling-Meerkat
+Group 6: Energetic-Jellyfish, Dazzling-Wolf, Quick-Owl, Cheerful-Turtle
+Group 7: Lunar-Eagle, Gentle-Snake, Friendly-Flamingo, Stealthy-Salamander
+Group 8: Mighty-Salamander, Wise-Armadillo
+
+--- Grouping Round 3 ---
+
+Group 1: Silent-Kangaroo, Mighty-Salamander, Dazzling-Wolf, Lunar-Panda
+Group 2: Playful-Dolphin, Glowing-Otter, Mysterious-Dolphin, Resilient-Salamander
+Group 3: Gentle-Snake, Stellar-Coyote, Mighty-Otter, Colorful-Raven
+Group 4: Colorful-Seal, Friendly-Flamingo, Mighty-Chicken, Calm-Koala
+Group 5: Dazzling-Sloth, Stellar-Owl, Playful-Lizard, Lively-Jaguar
+Group 6: Sneaky-Serpent, Dazzling-Meerkat, Wise-Coyote, Energetic-Jellyfish
+Group 7: Lunar-Eagle, Wise-Armadillo, Quick-Owl, Agile-Duck
+Group 8: Cheerful-Turtle, Stealthy-Salamander
+
+--- Grouping Round 1 ---
+
+Group 1: Heroic-Dolphin, Friendly-Walrus, Cheerful-Cat
+Group 2: Bright-Wombat, Hasty-Koala, Peaceful-Walrus
+Group 3: Resilient-Chameleon, Quick-Leopard, Cheerful-Hawk
+Group 4: Joyful-Wombat, Graceful-Penguin, Clever-Parrot
+Group 5: Nimble-Koala, Mysterious-Swan, Hasty-Zebra
+Group 6: Curious-Zebra, Friendly-Serpent, Hasty-Squirrel
+Group 7: Playful-Cat, Glowing-Cat, Hasty-Jackal
+Group 8: Rapid-Salamander, Nimble-Seal, Gentle-Wombat
+Group 9: Agile-Panther, Cheerful-Owl, Lunar-Lion
+
+--- Grouping Round 2 ---
+
+Group 1: Agile-Panther, Heroic-Dolphin, Friendly-Walrus
+Group 2: Quick-Leopard, Lunar-Lion, Peaceful-Walrus
+Group 3: Bright-Wombat, Cheerful-Cat, Cheerful-Hawk
+Group 4: Joyful-Wombat, Rapid-Salamander, Hasty-Squirrel
+Group 5: Mysterious-Swan, Hasty-Jackal, Hasty-Zebra
+Group 6: Resilient-Chameleon, Hasty-Koala, Curious-Zebra
+Group 7: Friendly-Serpent, Clever-Parrot, Gentle-Wombat
+Group 8: Playful-Cat, Cheerful-Owl, Glowing-Cat
+Group 9: Nimble-Seal, Nimble-Koala, Graceful-Penguin
+
+--- Grouping Round 3 ---
+
+Group 1: Resilient-Chameleon, Heroic-Dolphin, Lunar-Lion
+Group 2: Cheerful-Hawk, Friendly-Walrus, Peaceful-Walrus
+Group 3: Bright-Wombat, Hasty-Koala, Hasty-Squirrel
+Group 4: Joyful-Wombat, Nimble-Seal, Clever-Parrot
+Group 5: Cheerful-Owl, Mysterious-Swan, Cheerful-Cat
+Group 6: Quick-Leopard, Friendly-Serpent, Gentle-Wombat
+Group 7: Playful-Cat, Nimble-Koala, Glowing-Cat
+Group 8: Rapid-Salamander, Graceful-Penguin, Curious-Zebra
+Group 9: Agile-Panther, Hasty-Jackal, Hasty-Zebra
+
+--- Grouping Round 1 ---
+
+Group 1: Blissful-Coyote, Resilient-Snake, Legendary-Rabbit
+Group 2: Graceful-Hedgehog, Lively-Wombat, Witty-Walrus
+Group 3: Nimble-Chicken, Peaceful-Wolf, Agile-Dolphin
+Group 4: Rapid-Tortoise, Agile-Fish, Lunar-Beaver
+Group 5: Lively-Squirrel, Sneaky-Dolphin, Playful-Fish
+Group 6: Radiant-Squirrel, Blissful-Jaguar, Radiant-Shark
+Group 7: Daring-Chameleon, Smart-Wolf, Swift-Cat
+Group 8: Joyful-Owl, Strong-Raccoon, Rapid-Crow
+Group 9: Valiant-Walrus, Blissful-Cat
+
+--- Grouping Round 2 ---
+
+Group 1: Playful-Fish, Blissful-Coyote, Witty-Walrus
+Group 2: Resilient-Snake, Graceful-Hedgehog, Blissful-Jaguar
+Group 3: Rapid-Tortoise, Smart-Wolf, Agile-Dolphin
+Group 4: Nimble-Chicken, Swift-Cat, Lunar-Beaver
+Group 5: Lively-Squirrel, Lively-Wombat, Radiant-Squirrel
+Group 6: Sneaky-Dolphin, Legendary-Rabbit, Radiant-Shark
+Group 7: Joyful-Owl, Peaceful-Wolf, Blissful-Cat
+Group 8: Daring-Chameleon, Strong-Raccoon, Agile-Fish
+Group 9: Valiant-Walrus, Rapid-Crow
+
+--- Grouping Round 3 ---
+
+Group 1: Playful-Fish, Blissful-Coyote, Lively-Wombat
+Group 2: Resilient-Snake, Graceful-Hedgehog, Radiant-Squirrel
+Group 3: Daring-Chameleon, Blissful-Cat, Agile-Dolphin
+Group 4: Smart-Wolf, Nimble-Chicken, Lunar-Beaver
+Group 5: Lively-Squirrel, Witty-Walrus, Rapid-Crow
+Group 6: Strong-Raccoon, Legendary-Rabbit, Radiant-Shark
+Group 7: Swift-Cat, Valiant-Walrus, Peaceful-Wolf
+Group 8: Sneaky-Dolphin, Blissful-Jaguar, Rapid-Tortoise
+Group 9: Joyful-Owl, Agile-Fish
+
+--- Grouping Round 1 ---
+
+Group 1: Energetic-Dolphin, Agile-Otter, Midnight-Jellyfish, Rapid-Raccoon
+Group 2: Swift-Jaguar, Valiant-Salamander, Nimble-Seal, Sneaky-Owl
+Group 3: Energetic-Falcon, Colorful-Sheep, Golden-Turtle
+
+--- Grouping Round 2 ---
+
+Group 1: Agile-Otter, Valiant-Salamander, Sneaky-Owl, Golden-Turtle
+Group 2: Swift-Jaguar, Energetic-Dolphin, Colorful-Sheep, Nimble-Seal
+Group 3: Midnight-Jellyfish, Energetic-Falcon, Rapid-Raccoon
+
+--- Grouping Round 3 ---
+
+Group 1: Agile-Otter, Midnight-Jellyfish, Valiant-Salamander, Colorful-Sheep
+Group 2: Swift-Jaguar, Energetic-Falcon, Energetic-Dolphin, Golden-Turtle
+Group 3: Rapid-Raccoon, Nimble-Seal, Sneaky-Owl
+
+--- Grouping Round 1 ---
+
+Group 1: Anonymous-Jackal, Hasty-Swan, Quick-Horse
+Group 2: Playful-Shark, Blazing-Lion, Blissful-Coyote
+Group 3: Wise-Armadillo
+
+--- Grouping Round 2 ---
+
+Group 1: Hasty-Swan, Blissful-Coyote, Quick-Horse
+Group 2: Wise-Armadillo, Anonymous-Jackal, Blazing-Lion
+Group 3: Playful-Shark
+
+--- Grouping Round 3 ---
+
+Group 1: Playful-Shark, Anonymous-Jackal, Quick-Horse
+Group 2: Wise-Armadillo, Hasty-Swan, Blissful-Coyote
+Group 3: Blazing-Lion
+
+--- Grouping Round 1 ---
+
+Group 1: Radiant-Panda, Lunar-Serpent, Midnight-Leopard
+Group 2: Powerful-Serpent, Smart-Chameleon, Gentle-Armadillo
+
+--- Grouping Round 2 ---
+
+Group 1: Lunar-Serpent, Midnight-Leopard, Smart-Chameleon
+Group 2: Powerful-Serpent, Radiant-Panda, Gentle-Armadillo
+
+--- Grouping Round 3 ---
+
+Group 1: Radiant-Panda, Lunar-Serpent, Smart-Chameleon
+Group 2: Powerful-Serpent, Midnight-Leopard, Gentle-Armadillo
+
+--- Grouping Round 1 ---
+
+Group 1: Glowing-Sheep, Sneaky-Otter
+Group 2: Sneaky-Leopard, Royal-Panther
+Group 3: Shiny-Otter
+
+--- Grouping Round 2 ---
+
+Group 1: Glowing-Sheep, Sneaky-Leopard
+Group 2: Sneaky-Otter, Royal-Panther
+Group 3: Shiny-Otter
+
+--- Grouping Round 3 ---
+
+Group 1: Glowing-Sheep, Sneaky-Leopard
+Group 2: Shiny-Otter, Royal-Panther
+Group 3: Sneaky-Otter
+
+--- Grouping Round 1 ---
+
+Group 1: Bright-Horse, Bright-Jellyfish, Radiant-Zebra, Dazzling-Chameleon, Rapid-Wombat
+Group 2: Noble-Chameleon, Valiant-Kangaroo, Graceful-Otter, Sneaky-Jellyfish, Sneaky-Cat
+Group 3: Cosmic-Lion, Nimble-Panda, Lunar-Seal, Nimble-Swan, Clever-Zebra
+Group 4: Bold-Penguin, Curious-Bear, Kind-Koala, Jolly-Penguin, Peaceful-Crow
+Group 5: Heroic-Crow, Resilient-Raccoon, Bold-Hawk, Gentle-Wolf, Legendary-Squirrel
+Group 6: Legendary-Otter, Quick-Wallaby, Swift-Coyote, Curious-Fox, Valiant-Owl
+
+--- Grouping Round 2 ---
+
+Group 1: Cosmic-Lion, Valiant-Kangaroo, Bright-Jellyfish, Curious-Fox, Rapid-Wombat
+Group 2: Lunar-Seal, Graceful-Otter, Clever-Zebra, Dazzling-Chameleon, Peaceful-Crow
+Group 3: Resilient-Raccoon, Kind-Koala, Nimble-Panda, Radiant-Zebra, Jolly-Penguin
+Group 4: Legendary-Otter, Quick-Wallaby, Heroic-Crow, Bold-Penguin, Legendary-Squirrel
+Group 5: Noble-Chameleon, Curious-Bear, Gentle-Wolf, Bright-Horse, Valiant-Owl
+Group 6: Nimble-Swan, Swift-Coyote, Bold-Hawk, Sneaky-Jellyfish, Sneaky-Cat
+
+--- Grouping Round 3 ---
+
+Group 1: Curious-Bear, Bright-Jellyfish, Curious-Fox, Dazzling-Chameleon, Nimble-Swan
+Group 2: Swift-Coyote, Bright-Horse, Graceful-Otter, Jolly-Penguin, Clever-Zebra
+Group 3: Sneaky-Cat, Resilient-Raccoon, Nimble-Panda, Rapid-Wombat, Peaceful-Crow
+Group 4: Quick-Wallaby, Bold-Penguin, Kind-Koala, Gentle-Wolf, Sneaky-Jellyfish
+Group 5: Valiant-Kangaroo, Lunar-Seal, Legendary-Squirrel, Radiant-Zebra, Valiant-Owl
+Group 6: Cosmic-Lion, Legendary-Otter, Noble-Chameleon, Heroic-Crow, Bold-Hawk
+
+--- Grouping Round 1 ---
+
+Group 1: Lunar-Panda, Cosmic-Walrus, Vibrant-Leopard, Mythic-Fish
+Group 2: Joyful-Fox, Nimble-Koala, Glowing-Sloth, Sneaky-Chicken
+Group 3: Mysterious-Raccoon, Wild-Raven, Shiny-Wallaby, Mysterious-Tiger
+Group 4: Blissful-Chicken, Strong-Turtle, Hasty-Lizard, Gentle-Bear
+Group 5: Cheerful-Wombat, Wild-Chicken, Legendary-Flamingo, Witty-Rabbit
+Group 6: Stellar-Meerkat, Brave-Wombat, Brave-Otter, Clever-Chicken
+Group 7: Royal-Fish, Bright-Zebra, Mysterious-Horse, Silver-Seal
+Group 8: Mighty-Serpent, Peaceful-Eagle
+
+--- Grouping Round 2 ---
+
+Group 1: Mighty-Serpent, Brave-Wombat, Cosmic-Walrus, Vibrant-Leopard
+Group 2: Glowing-Sloth, Strong-Turtle, Sneaky-Chicken, Shiny-Wallaby
+Group 3: Mysterious-Raccoon, Blissful-Chicken, Peaceful-Eagle, Cheerful-Wombat
+Group 4: Wild-Raven, Legendary-Flamingo, Silver-Seal, Hasty-Lizard
+Group 5: Lunar-Panda, Mythic-Fish, Mysterious-Horse, Gentle-Bear
+Group 6: Nimble-Koala, Wild-Chicken, Clever-Chicken, Mysterious-Tiger
+Group 7: Joyful-Fox, Brave-Otter, Bright-Zebra, Witty-Rabbit
+Group 8: Stellar-Meerkat, Royal-Fish
+
+--- Grouping Round 3 ---
+
+Group 1: Brave-Otter, Cosmic-Walrus, Mysterious-Horse, Vibrant-Leopard
+Group 2: Mysterious-Tiger, Lunar-Panda, Glowing-Sloth, Witty-Rabbit
+Group 3: Stellar-Meerkat, Wild-Raven, Sneaky-Chicken, Gentle-Bear
+Group 4: Mysterious-Raccoon, Wild-Chicken, Silver-Seal, Shiny-Wallaby
+Group 5: Peaceful-Eagle, Bright-Zebra, Legendary-Flamingo, Hasty-Lizard
+Group 6: Cheerful-Wombat, Strong-Turtle, Royal-Fish, Mythic-Fish
+Group 7: Joyful-Fox, Blissful-Chicken, Mighty-Serpent, Clever-Chicken
+Group 8: Brave-Wombat, Nimble-Koala
+
+--- Grouping Round 1 ---
+
+Group 1: Nimble-Hedgehog, Happy-Hawk, Vibrant-Flamingo
+Group 2: Strong-Dog, Bold-Salamander, Playful-Chicken
+Group 3: Hasty-Lion, Glowing-Raccoon, Mighty-Fox
+Group 4: Silent-Sloth, Colorful-Dog, Calm-Fish
+Group 5: Silver-Kangaroo, Swift-Coyote, Valiant-Chicken
+Group 6: Quick-Leopard, Bold-Squirrel, Stealthy-Sheep
+Group 7: Rapid-Owl, Brave-Dolphin, Hidden-Cheetah
+Group 8: Golden-Serpent, Calm-Lizard, Sneaky-Lion
+Group 9: Lunar-Walrus, Lively-Eagle, Graceful-Dog
+
+--- Grouping Round 2 ---
+
+Group 1: Silver-Kangaroo, Nimble-Hedgehog, Playful-Chicken
+Group 2: Bold-Salamander, Brave-Dolphin, Strong-Dog
+Group 3: Glowing-Raccoon, Lively-Eagle, Colorful-Dog
+Group 4: Bold-Squirrel, Calm-Fish, Sneaky-Lion
+Group 5: Swift-Coyote, Vibrant-Flamingo, Hidden-Cheetah
+Group 6: Quick-Leopard, Silent-Sloth, Calm-Lizard
+Group 7: Rapid-Owl, Happy-Hawk, Valiant-Chicken
+Group 8: Golden-Serpent, Mighty-Fox, Graceful-Dog
+Group 9: Hasty-Lion, Lunar-Walrus, Stealthy-Sheep
+
+--- Grouping Round 3 ---
+
+Group 1: Swift-Coyote, Happy-Hawk, Nimble-Hedgehog
+Group 2: Vibrant-Flamingo, Bold-Salamander, Playful-Chicken
+Group 3: Lunar-Walrus, Glowing-Raccoon, Silent-Sloth
+Group 4: Bold-Squirrel, Calm-Lizard, Calm-Fish
+Group 5: Quick-Leopard, Colorful-Dog, Stealthy-Sheep
+Group 6: Silver-Kangaroo, Rapid-Owl, Strong-Dog
+Group 7: Hidden-Cheetah, Valiant-Chicken, Sneaky-Lion
+Group 8: Golden-Serpent, Lively-Eagle, Hasty-Lion
+Group 9: Mighty-Fox, Brave-Dolphin, Graceful-Dog
+
+--- Grouping Round 1 ---
+
+Group 1: Nimble-Parrot, Glowing-Jaguar, Heroic-Raccoon
+Group 2: Nimble-Tortoise, Swift-Horse, Daring-Coyote
+Group 3: Sneaky-Armadillo, Friendly-Parrot, Nimble-Panther
+Group 4: Mysterious-Duck, Frosty-Turtle, Friendly-Eagle
+Group 5: Agile-Snake, Vibrant-Squirrel, Swift-Fish
+Group 6: Rapid-Rabbit, Smart-Wallaby, Bright-Badger
+Group 7: Hidden-Eagle, Sneaky-Koala, Radiant-Eagle
+Group 8: Dazzling-Zebra, Daring-Cockatoo, Mythic-Parrot
+Group 9: Blissful-Tiger, Calm-Sheep
+
+--- Grouping Round 2 ---
+
+Group 1: Swift-Horse, Nimble-Parrot, Calm-Sheep
+Group 2: Blissful-Tiger, Glowing-Jaguar, Daring-Coyote
+Group 3: Nimble-Tortoise, Sneaky-Armadillo, Heroic-Raccoon
+Group 4: Friendly-Eagle, Radiant-Eagle, Friendly-Parrot
+Group 5: Dazzling-Zebra, Vibrant-Squirrel, Frosty-Turtle
+Group 6: Rapid-Rabbit, Mysterious-Duck, Bright-Badger
+Group 7: Hidden-Eagle, Mythic-Parrot, Nimble-Panther
+Group 8: Agile-Snake, Smart-Wallaby, Daring-Cockatoo
+Group 9: Swift-Fish, Sneaky-Koala
+
+--- Grouping Round 3 ---
+
+Group 1: Nimble-Tortoise, Nimble-Parrot, Glowing-Jaguar
+Group 2: Daring-Coyote, Calm-Sheep, Heroic-Raccoon
+Group 3: Sneaky-Armadillo, Blissful-Tiger, Nimble-Panther
+Group 4: Sneaky-Koala, Friendly-Eagle, Bright-Badger
+Group 5: Vibrant-Squirrel, Mysterious-Duck, Daring-Cockatoo
+Group 6: Swift-Horse, Friendly-Parrot, Hidden-Eagle
+Group 7: Swift-Fish, Frosty-Turtle, Smart-Wallaby
+Group 8: Dazzling-Zebra, Agile-Snake, Rapid-Rabbit
+Group 9: Radiant-Eagle, Mythic-Parrot
+
+--- Grouping Round 1 ---
+
+Group 1: Radiant-Sloth, Clever-Coyote, Joyful-Falcon, Silent-Eagle
+Group 2: Valiant-Serpent, Midnight-Wallaby, Stealthy-Jellyfish, Mighty-Cat
+Group 3: Golden-Owl, Vibrant-Kangaroo, Powerful-Swan
+
+--- Grouping Round 2 ---
+
+Group 1: Golden-Owl, Valiant-Serpent, Joyful-Falcon, Silent-Eagle
+Group 2: Radiant-Sloth, Vibrant-Kangaroo, Midnight-Wallaby, Powerful-Swan
+Group 3: Mighty-Cat, Clever-Coyote, Stealthy-Jellyfish
+
+--- Grouping Round 3 ---
+
+Group 1: Radiant-Sloth, Valiant-Serpent, Stealthy-Jellyfish, Joyful-Falcon
+Group 2: Golden-Owl, Midnight-Wallaby, Clever-Coyote, Silent-Eagle
+Group 3: Powerful-Swan, Vibrant-Kangaroo, Mighty-Cat
+
+--- Grouping Round 1 ---
+
+Group 1: Agile-Walrus, Mythic-Bear, Stellar-Chameleon
+Group 2: Midnight-Zebra, Wild-Cockatoo, Quick-Flamingo
+Group 3: Valiant-Raven
+
+--- Grouping Round 2 ---
+
+Group 1: Agile-Walrus, Mythic-Bear, Valiant-Raven
+Group 2: Midnight-Zebra, Quick-Flamingo, Stellar-Chameleon
+Group 3: Wild-Cockatoo
+
+--- Grouping Round 3 ---
+
+Group 1: Agile-Walrus, Midnight-Zebra, Quick-Flamingo
+Group 2: Wild-Cockatoo, Stellar-Chameleon, Valiant-Raven
+Group 3: Mythic-Bear
+
+--- Grouping Round 1 ---
+
+Group 1: Silent-Fox, Legendary-Snake, Agile-Squirrel
+Group 2: Dazzling-Koala, Silver-Raven, Bright-Otter
+
+--- Grouping Round 2 ---
+
+Group 1: Dazzling-Koala, Legendary-Snake, Agile-Squirrel
+Group 2: Silent-Fox, Silver-Raven, Bright-Otter
+
+--- Grouping Round 3 ---
+
+Group 1: Legendary-Snake, Bright-Otter, Agile-Squirrel
+Group 2: Dazzling-Koala, Silent-Fox, Silver-Raven
+
+--- Grouping Round 1 ---
+
+Group 1: Midnight-Lion, Shiny-Hawk
+Group 2: Brave-Falcon, Calm-Snake
+Group 3: Strong-Wolf
+
+--- Grouping Round 2 ---
+
+Group 1: Shiny-Hawk, Calm-Snake
+Group 2: Brave-Falcon, Midnight-Lion
+Group 3: Strong-Wolf
+
+--- Grouping Round 3 ---
+
+Group 1: Midnight-Lion, Shiny-Hawk
+Group 2: Brave-Falcon, Strong-Wolf
+Group 3: Calm-Snake
+
+--- Grouping Round 1 ---
+
+Group 1: Colorful-Rabbit, Lunar-Hedgehog
+
+--- Grouping Round 2 ---
+
+Group 1: Colorful-Rabbit, Lunar-Hedgehog
+
+--- Grouping Round 3 ---
+
+Group 1: Colorful-Rabbit, Lunar-Hedgehog
+
+--- Grouping Round 1 ---
+
+Group 1: Blissful-Squirrel
+
+--- Grouping Round 2 ---
+
+Group 1: Blissful-Squirrel
+
+--- Grouping Round 3 ---
+
+Group 1: Blissful-Squirrel
+
+--- Grouping Round 1 ---
+
+Group 1: Joyful-Salamander, Resilient-Tiger, Midnight-Cat, Peaceful-Sloth, Gentle-Lion
+Group 2: Daring-Tiger, Mighty-Chameleon, Stealthy-Beaver, Legendary-Falcon, Lunar-Chameleon
+Group 3: Smart-Squirrel, Powerful-Fish, Nimble-Jellyfish, Radiant-Kangaroo, Heroic-Raven
+Group 4: Wild-Zebra, Calm-Eagle, Witty-Jaguar, Joyful-Beaver, Wild-Tortoise
+Group 5: Mighty-Lizard, Quick-Swan, Friendly-Kangaroo, Resilient-Fish, Joyful-Horse
+Group 6: Frosty-Eagle, Golden-Otter, Silver-Dog, Cosmic-Eagle, Peaceful-Owl
+
+--- Grouping Round 2 ---
+
+Group 1: Joyful-Salamander, Peaceful-Sloth, Witty-Jaguar, Legendary-Falcon, Lunar-Chameleon
+Group 2: Powerful-Fish, Friendly-Kangaroo, Frosty-Eagle, Stealthy-Beaver, Radiant-Kangaroo
+Group 3: Mighty-Lizard, Wild-Zebra, Calm-Eagle, Resilient-Fish, Cosmic-Eagle
+Group 4: Smart-Squirrel, Silver-Dog, Nimble-Jellyfish, Joyful-Horse, Gentle-Lion
+Group 5: Quick-Swan, Midnight-Cat, Golden-Otter, Daring-Tiger, Wild-Tortoise
+Group 6: Resilient-Tiger, Mighty-Chameleon, Peaceful-Owl, Joyful-Beaver, Heroic-Raven
+
+--- Grouping Round 3 ---
+
+Group 1: Mighty-Lizard, Golden-Otter, Peaceful-Sloth, Stealthy-Beaver, Nimble-Jellyfish
+Group 2: Midnight-Cat, Cosmic-Eagle, Joyful-Beaver, Legendary-Falcon, Gentle-Lion
+Group 3: Powerful-Fish, Joyful-Salamander, Mighty-Chameleon, Wild-Tortoise, Joyful-Horse
+Group 4: Wild-Zebra, Quick-Swan, Daring-Tiger, Witty-Jaguar, Peaceful-Owl
+Group 5: Smart-Squirrel, Calm-Eagle, Friendly-Kangaroo, Lunar-Chameleon, Heroic-Raven
+Group 6: Frosty-Eagle, Resilient-Tiger, Silver-Dog, Resilient-Fish, Radiant-Kangaroo
+
+--- Grouping Round 1 ---
+
+Group 1: Calm-Lizard, Bright-Cat, Wild-Jackal, Stealthy-Bear
+Group 2: Frosty-Wombat, Radiant-Raccoon, Gentle-Otter, Clever-Koala
+Group 3: Witty-Dog, Strong-Owl, Mythic-Cat, Graceful-Hawk
+Group 4: Witty-Fish, Cosmic-Panda, Golden-Squirrel, Gentle-Swan
+Group 5: Powerful-Leopard, Bright-Zebra, Swift-Panther, Quick-Bear
+Group 6: Blissful-Zebra, Friendly-Sloth, Colorful-Koala, Graceful-Koala
+Group 7: Epic-Serpent, Shiny-Tortoise, Hidden-Crow, Graceful-Seal
+Group 8: Mythic-Shark, Epic-Swan
+
+--- Grouping Round 2 ---
+
+Group 1: Calm-Lizard, Bright-Cat, Mythic-Cat, Graceful-Koala
+Group 2: Stealthy-Bear, Bright-Zebra, Shiny-Tortoise, Gentle-Otter
+Group 3: Witty-Dog, Blissful-Zebra, Golden-Squirrel, Wild-Jackal
+Group 4: Witty-Fish, Mythic-Shark, Friendly-Sloth, Graceful-Hawk
+Group 5: Swift-Panther, Colorful-Koala, Cosmic-Panda, Strong-Owl
+Group 6: Epic-Swan, Epic-Serpent, Frosty-Wombat, Quick-Bear
+Group 7: Powerful-Leopard, Gentle-Swan, Clever-Koala, Graceful-Seal
+Group 8: Hidden-Crow, Radiant-Raccoon
+
+--- Grouping Round 3 ---
+
+Group 1: Witty-Fish, Bright-Cat, Mythic-Shark, Blissful-Zebra
+Group 2: Powerful-Leopard, Epic-Serpent, Gentle-Otter, Radiant-Raccoon
+Group 3: Witty-Dog, Stealthy-Bear, Gentle-Swan, Colorful-Koala
+Group 4: Graceful-Koala, Cosmic-Panda, Golden-Squirrel, Graceful-Hawk
+Group 5: Bright-Zebra, Frosty-Wombat, Hidden-Crow, Clever-Koala
+Group 6: Epic-Swan, Friendly-Sloth, Mythic-Cat, Wild-Jackal
+Group 7: Calm-Lizard, Strong-Owl, Quick-Bear, Graceful-Seal
+Group 8: Swift-Panther, Shiny-Tortoise
+
+--- Grouping Round 1 ---
+
+Group 1: Graceful-Crow, Epic-Wombat, Calm-Fox
+Group 2: Bold-Zebra, Happy-Lion, Vibrant-Walrus
+Group 3: Smart-Cockatoo, Heroic-Raven, Jolly-Bear
+Group 4: Silent-Chicken, Lunar-Cat, Bright-Cheetah
+Group 5: Hidden-Panther, Noble-Fish, Peaceful-Swan
+Group 6: Blazing-Penguin, Blazing-Hedgehog, Powerful-Salamander
+Group 7: Blissful-Squirrel, Mysterious-Raccoon, Gentle-Otter
+Group 8: Joyful-Turtle, Stellar-Jellyfish, Daring-Jackal
+Group 9: Epic-Walrus, Nimble-Dog, Royal-Raven
+
+--- Grouping Round 2 ---
+
+Group 1: Royal-Raven, Mysterious-Raccoon, Calm-Fox
+Group 2: Bold-Zebra, Happy-Lion, Nimble-Dog
+Group 3: Hidden-Panther, Jolly-Bear, Vibrant-Walrus
+Group 4: Blazing-Penguin, Blazing-Hedgehog, Bright-Cheetah
+Group 5: Silent-Chicken, Powerful-Salamander, Stellar-Jellyfish
+Group 6: Smart-Cockatoo, Epic-Walrus, Peaceful-Swan
+Group 7: Epic-Wombat, Noble-Fish, Gentle-Otter
+Group 8: Graceful-Crow, Heroic-Raven, Blissful-Squirrel
+Group 9: Joyful-Turtle, Lunar-Cat, Daring-Jackal
+
+--- Grouping Round 3 ---
+
+Group 1: Mysterious-Raccoon, Bright-Cheetah, Calm-Fox
+Group 2: Bold-Zebra, Heroic-Raven, Peaceful-Swan
+Group 3: Hidden-Panther, Happy-Lion, Smart-Cockatoo
+Group 4: Epic-Walrus, Jolly-Bear, Vibrant-Walrus
+Group 5: Silent-Chicken, Blazing-Hedgehog, Joyful-Turtle
+Group 6: Royal-Raven, Blissful-Squirrel, Epic-Wombat
+Group 7: Graceful-Crow, Noble-Fish, Nimble-Dog
+Group 8: Powerful-Salamander, Stellar-Jellyfish, Lunar-Cat
+Group 9: Daring-Jackal, Blazing-Penguin, Gentle-Otter
+
+--- Grouping Round 1 ---
+
+Group 1: Nimble-Kangaroo, Mysterious-Crow, Bright-Duck
+Group 2: Mythic-Dolphin, Blazing-Coyote, Mysterious-Rabbit
+Group 3: Dazzling-Snake, Sneaky-Otter, Blissful-Wombat
+Group 4: Gentle-Chicken, Resilient-Fish, Resilient-Meerkat
+Group 5: Quick-Jaguar, Smart-Chicken, Agile-Eagle
+Group 6: Colorful-Squirrel, Strong-Salamander, Wild-Dolphin
+Group 7: Clever-Meerkat, Brave-Duck, Hidden-Raven
+Group 8: Clever-Armadillo, Dazzling-Wallaby, Happy-Falcon
+Group 9: Smart-Raven, Quick-Sheep
+
+--- Grouping Round 2 ---
+
+Group 1: Mythic-Dolphin, Mysterious-Crow, Smart-Chicken
+Group 2: Nimble-Kangaroo, Bright-Duck, Blazing-Coyote
+Group 3: Clever-Armadillo, Dazzling-Snake, Dazzling-Wallaby
+Group 4: Gentle-Chicken, Hidden-Raven, Resilient-Meerkat
+Group 5: Sneaky-Otter, Resilient-Fish, Wild-Dolphin
+Group 6: Quick-Jaguar, Clever-Meerkat, Mysterious-Rabbit
+Group 7: Brave-Duck, Colorful-Squirrel, Quick-Sheep
+Group 8: Smart-Raven, Blissful-Wombat, Happy-Falcon
+Group 9: Agile-Eagle, Strong-Salamander
+
+--- Grouping Round 3 ---
+
+Group 1: Mysterious-Crow, Smart-Chicken, Mysterious-Rabbit
+Group 2: Nimble-Kangaroo, Mythic-Dolphin, Clever-Meerkat
+Group 3: Agile-Eagle, Hidden-Raven, Blazing-Coyote
+Group 4: Dazzling-Snake, Brave-Duck, Happy-Falcon
+Group 5: Gentle-Chicken, Bright-Duck, Wild-Dolphin
+Group 6: Sneaky-Otter, Colorful-Squirrel, Resilient-Meerkat
+Group 7: Dazzling-Wallaby, Blissful-Wombat, Quick-Sheep
+Group 8: Quick-Jaguar, Resilient-Fish, Strong-Salamander
+Group 9: Clever-Armadillo, Smart-Raven
+
+--- Grouping Round 1 ---
+
+Group 1: Valiant-Lion, Colorful-Badger, Joyful-Cockatoo, Vibrant-Armadillo
+Group 2: Quick-Fox, Shiny-Coyote, Energetic-Armadillo, Gentle-Panther
+Group 3: Lively-Dolphin, Valiant-Eagle, Wild-Rabbit
+
+--- Grouping Round 2 ---
+
+Group 1: Valiant-Lion, Colorful-Badger, Wild-Rabbit, Valiant-Eagle
+Group 2: Lively-Dolphin, Joyful-Cockatoo, Vibrant-Armadillo, Shiny-Coyote
+Group 3: Quick-Fox, Energetic-Armadillo, Gentle-Panther
+
+--- Grouping Round 3 ---
+
+Group 1: Lively-Dolphin, Valiant-Lion, Colorful-Badger, Quick-Fox
+Group 2: Joyful-Cockatoo, Valiant-Eagle, Energetic-Armadillo, Vibrant-Armadillo
+Group 3: Shiny-Coyote, Wild-Rabbit, Gentle-Panther
+
+--- Grouping Round 1 ---
+
+Group 1: Cheerful-Wolf, Brave-Chicken, Valiant-Badger
+Group 2: Graceful-Dolphin, Epic-Armadillo, Legendary-Swan
+Group 3: Curious-Falcon
+
+--- Grouping Round 2 ---
+
+Group 1: Curious-Falcon, Legendary-Swan, Valiant-Badger
+Group 2: Graceful-Dolphin, Epic-Armadillo, Cheerful-Wolf
+Group 3: Brave-Chicken
+
+--- Grouping Round 3 ---
+
+Group 1: Cheerful-Wolf, Legendary-Swan, Valiant-Badger
+Group 2: Curious-Falcon, Epic-Armadillo, Brave-Chicken
+Group 3: Graceful-Dolphin
+
+--- Grouping Round 1 ---
+
+Group 1: Nimble-Seal, Wise-Flamingo, Epic-Wolf
+Group 2: Wild-Bear, Hasty-Hedgehog, Quick-Cockatoo
+
+--- Grouping Round 2 ---
+
+Group 1: Nimble-Seal, Hasty-Hedgehog, Epic-Wolf
+Group 2: Wild-Bear, Wise-Flamingo, Quick-Cockatoo
+
+--- Grouping Round 3 ---
+
+Group 1: Wild-Bear, Nimble-Seal, Epic-Wolf
+Group 2: Hasty-Hedgehog, Wise-Flamingo, Quick-Cockatoo
+
+--- Grouping Round 1 ---
+
+Group 1: Stealthy-Squirrel, Brave-Jellyfish
+Group 2: Brave-Zebra, Radiant-Raven
+Group 3: Midnight-Penguin
+
+--- Grouping Round 2 ---
+
+Group 1: Stealthy-Squirrel, Brave-Jellyfish
+Group 2: Midnight-Penguin, Brave-Zebra
+Group 3: Radiant-Raven
+
+--- Grouping Round 3 ---
+
+Group 1: Stealthy-Squirrel, Brave-Jellyfish
+Group 2: Brave-Zebra, Radiant-Raven
+Group 3: Midnight-Penguin
+
+--- Grouping Round 1 ---
+
+Group 1: Calm-Jellyfish, Peaceful-Jellyfish
+
+--- Grouping Round 2 ---
+
+Group 1: Calm-Jellyfish, Peaceful-Jellyfish
+
+--- Grouping Round 3 ---
+
+Group 1: Calm-Jellyfish, Peaceful-Jellyfish
+
+--- Grouping Round 1 ---
+
+Group 1: Blazing-Koala
+
+--- Grouping Round 2 ---
+
+Group 1: Blazing-Koala
+
+--- Grouping Round 3 ---
+
+Group 1: Blazing-Koala
+
+--- Grouping Round 1 ---
+
+Group 1: Kind-Jaguar, Kind-Turtle, Bright-Sloth, Happy-Panda, Clever-Cockatoo
+Group 2: Energetic-Penguin, Kind-Horse, Silver-Chameleon, Sneaky-Sheep, Graceful-Swan
+Group 3: Agile-Serpent, Cosmic-Chameleon, Heroic-Chicken, Resilient-Cat, Epic-Crow
+Group 4: Energetic-Tortoise, Noble-Wombat, Mythic-Tiger, Golden-Hedgehog, Wise-Dog
+Group 5: Vibrant-Shark, Mysterious-Squirrel, Anonymous-Horse, Lively-Otter, Golden-Swan
+Group 6: Peaceful-Zebra, Dazzling-Bear, Silver-Duck, Calm-Tortoise, Strong-Parrot
+
+--- Grouping Round 2 ---
+
+Group 1: Kind-Turtle, Energetic-Penguin, Kind-Horse, Heroic-Chicken, Clever-Cockatoo
+Group 2: Mysterious-Squirrel, Peaceful-Zebra, Happy-Panda, Graceful-Swan, Golden-Swan
+Group 3: Energetic-Tortoise, Cosmic-Chameleon, Resilient-Cat, Strong-Parrot, Mythic-Tiger
+Group 4: Vibrant-Shark, Lively-Otter, Silver-Duck, Calm-Tortoise, Bright-Sloth
+Group 5: Kind-Jaguar, Anonymous-Horse, Sneaky-Sheep, Wise-Dog, Epic-Crow
+Group 6: Agile-Serpent, Silver-Chameleon, Dazzling-Bear, Noble-Wombat, Golden-Hedgehog
+
+--- Grouping Round 3 ---
+
+Group 1: Kind-Turtle, Energetic-Penguin, Dazzling-Bear, Silver-Duck, Golden-Swan
+Group 2: Anonymous-Horse, Lively-Otter, Peaceful-Zebra, Cosmic-Chameleon, Clever-Cockatoo
+Group 3: Kind-Horse, Resilient-Cat, Happy-Panda, Golden-Hedgehog, Epic-Crow
+Group 4: Kind-Jaguar, Energetic-Tortoise, Heroic-Chicken, Bright-Sloth, Graceful-Swan
+Group 5: Vibrant-Shark, Agile-Serpent, Sneaky-Sheep, Strong-Parrot, Mythic-Tiger
+Group 6: Mysterious-Squirrel, Silver-Chameleon, Calm-Tortoise, Noble-Wombat, Wise-Dog
+
+--- Grouping Round 1 ---
+
+Group 1: Stellar-Wallaby, Smart-Duck, Valiant-Tiger, Bright-Dog
+Group 2: Valiant-Jackal, Blazing-Lizard, Powerful-Hawk, Playful-Otter
+Group 3: Playful-Koala, Stealthy-Otter, Lunar-Tortoise, Royal-Penguin
+Group 4: Mighty-Zebra, Blazing-Kangaroo, Bold-Owl, Lunar-Dog
+Group 5: Colorful-Meerkat, Peaceful-Otter, Curious-Owl, Swift-Hawk
+Group 6: Jolly-Snake, Vibrant-Rabbit, Hidden-Jellyfish, Legendary-Badger
+Group 7: Lively-Coyote, Midnight-Shark, Midnight-Meerkat, Glowing-Rabbit
+Group 8: Nimble-Horse, Daring-Leopard
+
+--- Grouping Round 2 ---
+
+Group 1: Bold-Owl, Peaceful-Otter, Bright-Dog, Swift-Hawk
+Group 2: Valiant-Jackal, Mighty-Zebra, Stellar-Wallaby, Playful-Otter
+Group 3: Stealthy-Otter, Royal-Penguin, Midnight-Meerkat, Glowing-Rabbit
+Group 4: Valiant-Tiger, Jolly-Snake, Hidden-Jellyfish, Blazing-Kangaroo
+Group 5: Smart-Duck, Vibrant-Rabbit, Curious-Owl, Lunar-Dog
+Group 6: Playful-Koala, Blazing-Lizard, Lunar-Tortoise, Lively-Coyote
+Group 7: Powerful-Hawk, Colorful-Meerkat, Nimble-Horse, Legendary-Badger
+Group 8: Midnight-Shark, Daring-Leopard
+
+--- Grouping Round 3 ---
+
+Group 1: Stellar-Wallaby, Blazing-Kangaroo, Bright-Dog, Curious-Owl
+Group 2: Valiant-Jackal, Lunar-Tortoise, Powerful-Hawk, Royal-Penguin
+Group 3: Stealthy-Otter, Lively-Coyote, Smart-Duck, Playful-Otter
+Group 4: Mighty-Zebra, Blazing-Lizard, Valiant-Tiger, Swift-Hawk
+Group 5: Colorful-Meerkat, Bold-Owl, Hidden-Jellyfish, Daring-Leopard
+Group 6: Jolly-Snake, Vibrant-Rabbit, Peaceful-Otter, Nimble-Horse
+Group 7: Playful-Koala, Midnight-Shark, Legendary-Badger, Lunar-Dog
+Group 8: Midnight-Meerkat, Glowing-Rabbit
+
+--- Grouping Round 1 ---
+
+Group 1: Midnight-Cheetah, Epic-Jellyfish, Anonymous-Panther, Silent-Coyote, Valiant-Turtle
+Group 2: Mysterious-Coyote, Epic-Dolphin, Gentle-Wombat, Lunar-Owl, Swift-Hedgehog
+Group 3: Peaceful-Armadillo, Bright-Parrot, Blazing-Dolphin, Nimble-Otter, Stealthy-Fish
+Group 4: Shiny-Hawk, Nimble-Zebra, Hidden-Owl, Peaceful-Panther, Quick-Hawk
+Group 5: Powerful-Owl, Happy-Chameleon, Witty-Raven, Smart-Salamander, Cosmic-Eagle
+Group 6: Energetic-Crow, Lunar-Leopard, Friendly-Raccoon, Legendary-Tiger, Golden-Snake
+
+--- Grouping Round 2 ---
+
+Group 1: Midnight-Cheetah, Peaceful-Panther, Golden-Snake, Lunar-Owl, Valiant-Turtle
+Group 2: Mysterious-Coyote, Peaceful-Armadillo, Hidden-Owl, Anonymous-Panther, Swift-Hedgehog
+Group 3: Lunar-Leopard, Bright-Parrot, Cosmic-Eagle, Gentle-Wombat, Stealthy-Fish
+Group 4: Shiny-Hawk, Epic-Dolphin, Quick-Hawk, Nimble-Otter, Silent-Coyote
+Group 5: Powerful-Owl, Epic-Jellyfish, Witty-Raven, Friendly-Raccoon, Blazing-Dolphin
+Group 6: Energetic-Crow, Happy-Chameleon, Nimble-Zebra, Legendary-Tiger, Smart-Salamander
+
+--- Grouping Round 3 ---
+
+Group 1: Midnight-Cheetah, Peaceful-Armadillo, Witty-Raven, Nimble-Zebra, Gentle-Wombat
+Group 2: Mysterious-Coyote, Nimble-Otter, Blazing-Dolphin, Golden-Snake, Swift-Hedgehog
+Group 3: Energetic-Crow, Happy-Chameleon, Bright-Parrot, Lunar-Owl, Stealthy-Fish
+Group 4: Shiny-Hawk, Epic-Jellyfish, Peaceful-Panther, Cosmic-Eagle, Anonymous-Panther
+Group 5: Friendly-Raccoon, Hidden-Owl, Smart-Salamander, Silent-Coyote, Valiant-Turtle
+Group 6: Powerful-Owl, Lunar-Leopard, Epic-Dolphin, Legendary-Tiger, Quick-Hawk
+
+--- Grouping Round 1 ---
+
+Group 1: Radiant-Jellyfish, Wise-Koala, Valiant-Rabbit, Gentle-Lizard
+Group 2: Gentle-Serpent, Hasty-Parrot, Glowing-Seal, Rapid-Meerkat
+Group 3: Smart-Lion, Wise-Badger, Rapid-Walrus, Royal-Sloth
+Group 4: Stellar-Parrot, Silent-Cockatoo, Bright-Hawk, Clever-Penguin
+Group 5: Swift-Sheep, Royal-Sheep, Cheerful-Kangaroo, Powerful-Owl
+Group 6: Peaceful-Serpent, Mysterious-Parrot, Swift-Shark, Noble-Bear
+Group 7: Lunar-Cheetah, Strong-Wombat, Rapid-Bear, Stellar-Snake
+Group 8: Strong-Beaver, Powerful-Shark
+
+--- Grouping Round 2 ---
+
+Group 1: Gentle-Serpent, Powerful-Shark, Strong-Wombat, Valiant-Rabbit
+Group 2: Wise-Koala, Silent-Cockatoo, Glowing-Seal, Royal-Sloth
+Group 3: Stellar-Parrot, Cheerful-Kangaroo, Peaceful-Serpent, Bright-Hawk
+Group 4: Swift-Sheep, Royal-Sheep, Swift-Shark, Clever-Penguin
+Group 5: Rapid-Walrus, Mysterious-Parrot, Rapid-Bear, Powerful-Owl
+Group 6: Hasty-Parrot, Lunar-Cheetah, Wise-Badger, Gentle-Lizard
+Group 7: Radiant-Jellyfish, Rapid-Meerkat, Smart-Lion, Stellar-Snake
+Group 8: Strong-Beaver, Noble-Bear
+
+--- Grouping Round 3 ---
+
+Group 1: Wise-Koala, Hasty-Parrot, Strong-Wombat, Valiant-Rabbit
+Group 2: Gentle-Serpent, Radiant-Jellyfish, Gentle-Lizard, Bright-Hawk
+Group 3: Lunar-Cheetah, Powerful-Shark, Royal-Sloth, Rapid-Meerkat
+Group 4: Rapid-Bear, Stellar-Parrot, Swift-Shark, Royal-Sheep
+Group 5: Silent-Cockatoo, Peaceful-Serpent, Powerful-Owl, Clever-Penguin
+Group 6: Swift-Sheep, Rapid-Walrus, Stellar-Snake, Noble-Bear
+Group 7: Smart-Lion, Cheerful-Kangaroo, Glowing-Seal, Mysterious-Parrot
+Group 8: Strong-Beaver, Wise-Badger
+
+--- Grouping Round 1 ---
+
+Group 1: Frosty-Rabbit, Vibrant-Dolphin, Brave-Coyote
+Group 2: Curious-Falcon, Cheerful-Jellyfish, Smart-Tiger
+Group 3: Midnight-Cat, Stealthy-Zebra, Calm-Squirrel
+Group 4: Sneaky-Lizard, Golden-Koala, Cosmic-Coyote
+Group 5: Daring-Panda, Mythic-Wallaby, Daring-Cockatoo
+Group 6: Witty-Sheep, Legendary-Squirrel, Swift-Swan
+Group 7: Bold-Fish, Daring-Horse, Frosty-Lion
+Group 8: Silver-Beaver, Epic-Koala, Hidden-Jellyfish
+Group 9: Happy-Lizard, Sneaky-Flamingo, Happy-Cheetah
+
+--- Grouping Round 2 ---
+
+Group 1: Happy-Lizard, Frosty-Rabbit, Vibrant-Dolphin
+Group 2: Curious-Falcon, Happy-Cheetah, Brave-Coyote
+Group 3: Cheerful-Jellyfish, Daring-Cockatoo, Calm-Squirrel
+Group 4: Daring-Panda, Witty-Sheep, Stealthy-Zebra
+Group 5: Bold-Fish, Epic-Koala, Sneaky-Lizard
+Group 6: Legendary-Squirrel, Mythic-Wallaby, Golden-Koala
+Group 7: Sneaky-Flamingo, Cosmic-Coyote, Midnight-Cat
+Group 8: Silver-Beaver, Daring-Horse, Hidden-Jellyfish
+Group 9: Smart-Tiger, Frosty-Lion, Swift-Swan
+
+--- Grouping Round 3 ---
+
+Group 1: Happy-Cheetah, Frosty-Rabbit, Vibrant-Dolphin
+Group 2: Curious-Falcon, Happy-Lizard, Daring-Cockatoo
+Group 3: Cheerful-Jellyfish, Sneaky-Flamingo, Brave-Coyote
+Group 4: Daring-Panda, Stealthy-Zebra, Swift-Swan
+Group 5: Silver-Beaver, Sneaky-Lizard, Golden-Koala
+Group 6: Epic-Koala, Legendary-Squirrel, Calm-Squirrel
+Group 7: Bold-Fish, Cosmic-Coyote, Midnight-Cat
+Group 8: Daring-Horse, Mythic-Wallaby, Frosty-Lion
+Group 9: Witty-Sheep, Smart-Tiger, Hidden-Jellyfish
+
+--- Grouping Round 1 ---
+
+Group 1: Silver-Panda, Jolly-Flamingo, Sneaky-Hedgehog
+Group 2: Rapid-Cat, Resilient-Zebra, Quick-Penguin
+Group 3: Sneaky-Cat, Agile-Tiger, Strong-Meerkat
+Group 4: Brave-Hawk, Silent-Panther, Valiant-Shark
+Group 5: Frosty-Zebra, Mythic-Beaver, Cheerful-Hedgehog
+Group 6: Happy-Shark, Silent-Flamingo, Blissful-Swan
+Group 7: Cosmic-Cat, Hasty-Hedgehog, Jolly-Squirrel
+Group 8: Happy-Leopard, Swift-Snake, Friendly-Shark
+Group 9: Curious-Panther, Midnight-Cheetah
+
+--- Grouping Round 2 ---
+
+Group 1: Cosmic-Cat, Silver-Panda, Blissful-Swan
+Group 2: Valiant-Shark, Quick-Penguin, Brave-Hawk
+Group 3: Sneaky-Cat, Swift-Snake, Resilient-Zebra
+Group 4: Jolly-Flamingo, Silent-Flamingo, Hasty-Hedgehog
+Group 5: Rapid-Cat, Silent-Panther, Strong-Meerkat
+Group 6: Happy-Leopard, Agile-Tiger, Cheerful-Hedgehog
+Group 7: Friendly-Shark, Frosty-Zebra, Midnight-Cheetah
+Group 8: Happy-Shark, Sneaky-Hedgehog, Jolly-Squirrel
+Group 9: Mythic-Beaver, Curious-Panther
+
+--- Grouping Round 3 ---
+
+Group 1: Happy-Shark, Silver-Panda, Hasty-Hedgehog
+Group 2: Agile-Tiger, Quick-Penguin, Strong-Meerkat
+Group 3: Sneaky-Cat, Rapid-Cat, Brave-Hawk
+Group 4: Jolly-Flamingo, Sneaky-Hedgehog, Blissful-Swan
+Group 5: Resilient-Zebra, Silent-Panther, Friendly-Shark
+Group 6: Swift-Snake, Mythic-Beaver, Cheerful-Hedgehog
+Group 7: Silent-Flamingo, Curious-Panther, Jolly-Squirrel
+Group 8: Happy-Leopard, Frosty-Zebra, Valiant-Shark
+Group 9: Cosmic-Cat, Midnight-Cheetah
+
+--- Grouping Round 1 ---
+
+Group 1: Colorful-Serpent, Silver-Cheetah, Peaceful-Duck, Bold-Raccoon
+Group 2: Frosty-Armadillo, Mythic-Lion, Calm-Serpent, Nimble-Tortoise
+Group 3: Golden-Sloth, Resilient-Dolphin, Witty-Zebra
+
+--- Grouping Round 2 ---
+
+Group 1: Mythic-Lion, Witty-Zebra, Peaceful-Duck, Calm-Serpent
+Group 2: Frosty-Armadillo, Golden-Sloth, Silver-Cheetah, Nimble-Tortoise
+Group 3: Colorful-Serpent, Resilient-Dolphin, Bold-Raccoon
+
+--- Grouping Round 3 ---
+
+Group 1: Frosty-Armadillo, Mythic-Lion, Resilient-Dolphin, Peaceful-Duck
+Group 2: Colorful-Serpent, Silver-Cheetah, Calm-Serpent, Nimble-Tortoise
+Group 3: Golden-Sloth, Witty-Zebra, Bold-Raccoon
+
+--- Grouping Round 1 ---
+
+Group 1: Golden-Badger, Frosty-Duck, Mighty-Wolf
+Group 2: Golden-Owl, Jolly-Duck, Calm-Raccoon
+Group 3: Valiant-Panda
+
+--- Grouping Round 2 ---
+
+Group 1: Valiant-Panda, Golden-Badger, Calm-Raccoon
+Group 2: Frosty-Duck, Mighty-Wolf, Jolly-Duck
+Group 3: Golden-Owl
+
+--- Grouping Round 3 ---
+
+Group 1: Golden-Badger, Golden-Owl, Frosty-Duck
+Group 2: Valiant-Panda, Mighty-Wolf, Calm-Raccoon
+Group 3: Jolly-Duck
+
+--- Grouping Round 1 ---
+
+Group 1: Silent-Panther, Rapid-Koala, Energetic-Raccoon
+Group 2: Kind-Koala, Mythic-Raven, Glowing-Armadillo
+
+--- Grouping Round 2 ---
+
+Group 1: Silent-Panther, Rapid-Koala, Glowing-Armadillo
+Group 2: Kind-Koala, Mythic-Raven, Energetic-Raccoon
+
+--- Grouping Round 3 ---
+
+Group 1: Silent-Panther, Rapid-Koala, Mythic-Raven
+Group 2: Kind-Koala, Energetic-Raccoon, Glowing-Armadillo
+
+--- Grouping Round 1 ---
+
+Group 1: Blissful-Hawk, Swift-Raccoon
+Group 2: Bold-Lion, Anonymous-Zebra
+Group 3: Silver-Crow
+
+--- Grouping Round 2 ---
+
+Group 1: Blissful-Hawk, Swift-Raccoon
+Group 2: Silver-Crow, Anonymous-Zebra
+Group 3: Bold-Lion
+
+--- Grouping Round 3 ---
+
+Group 1: Blissful-Hawk, Swift-Raccoon
+Group 2: Bold-Lion, Anonymous-Zebra
+Group 3: Silver-Crow
+
+--- Grouping Round 1 ---
+
+Group 1: Curious-Kangaroo, Mighty-Turtle
+
+--- Grouping Round 2 ---
+
+Group 1: Curious-Kangaroo, Mighty-Turtle
+
+--- Grouping Round 3 ---
+
+Group 1: Curious-Kangaroo, Mighty-Turtle
+
+--- Grouping Round 1 ---
+
+Group 1: Golden-Hawk
+
+--- Grouping Round 2 ---
+
+Group 1: Golden-Hawk
+
+--- Grouping Round 3 ---
+
+Group 1: Golden-Hawk
+
+--- Grouping Round 1 ---
+
+Group 1: Stellar-Otter, Dazzling-Hawk, Stealthy-Eagle, Heroic-Beaver, Sneaky-Badger
+Group 2: Radiant-Jaguar, Anonymous-Parrot, Jolly-Parrot, Midnight-Serpent, Golden-Raccoon
+Group 3: Valiant-Jaguar, Golden-Badger, Happy-Owl, Heroic-Tortoise, Peaceful-Cat
+Group 4: Epic-Jaguar, Witty-Crow, Bold-Snake, Valiant-Owl, Gentle-Jackal
+Group 5: Glowing-Cheetah, Playful-Wombat, Witty-Beaver, Wild-Flamingo, Legendary-Hedgehog
+Group 6: Hidden-Rabbit, Radiant-Fish, Powerful-Chicken, Friendly-Coyote, Graceful-Sheep
+
+--- Grouping Round 2 ---
+
+Group 1: Radiant-Fish, Dazzling-Hawk, Heroic-Beaver, Friendly-Coyote, Witty-Crow
+Group 2: Jolly-Parrot, Bold-Snake, Happy-Owl, Golden-Raccoon, Heroic-Tortoise
+Group 3: Valiant-Jaguar, Playful-Wombat, Anonymous-Parrot, Legendary-Hedgehog, Valiant-Owl
+Group 4: Epic-Jaguar, Witty-Beaver, Midnight-Serpent, Golden-Badger, Peaceful-Cat
+Group 5: Radiant-Jaguar, Stealthy-Eagle, Powerful-Chicken, Sneaky-Badger, Graceful-Sheep
+Group 6: Hidden-Rabbit, Glowing-Cheetah, Stellar-Otter, Wild-Flamingo, Gentle-Jackal
+
+--- Grouping Round 3 ---
+
+Group 1: Legendary-Hedgehog, Powerful-Chicken, Heroic-Beaver, Golden-Raccoon, Peaceful-Cat
+Group 2: Glowing-Cheetah, Stealthy-Eagle, Jolly-Parrot, Happy-Owl, Gentle-Jackal
+Group 3: Valiant-Jaguar, Epic-Jaguar, Radiant-Jaguar, Witty-Beaver, Friendly-Coyote
+Group 4: Stellar-Otter, Radiant-Fish, Midnight-Serpent, Heroic-Tortoise, Valiant-Owl
+Group 5: Anonymous-Parrot, Witty-Crow, Bold-Snake, Sneaky-Badger, Golden-Badger
+Group 6: Hidden-Rabbit, Playful-Wombat, Dazzling-Hawk, Wild-Flamingo, Graceful-Sheep
+
+--- Grouping Round 1 ---
+
+Group 1: Smart-Koala, Graceful-Raven, Vibrant-Coyote, Graceful-Turtle
+Group 2: Happy-Rabbit, Blazing-Serpent, Calm-Horse, Rapid-Cheetah
+Group 3: Mighty-Lizard, Kind-Cheetah, Heroic-Armadillo, Powerful-Wallaby
+Group 4: Mysterious-Jackal, Nimble-Cat, Nimble-Raccoon, Cosmic-Fish
+Group 5: Jolly-Cheetah, Vibrant-Owl, Mythic-Meerkat, Stellar-Hawk
+Group 6: Mysterious-Chameleon, Peaceful-Panther, Brave-Bear, Heroic-Walrus
+Group 7: Resilient-Eagle, Mythic-Wolf, Midnight-Serpent, Epic-Crow
+Group 8: Quick-Parrot, Valiant-Tortoise
+
+--- Grouping Round 2 ---
+
+Group 1: Smart-Koala, Mythic-Wolf, Vibrant-Coyote, Cosmic-Fish
+Group 2: Happy-Rabbit, Mysterious-Jackal, Heroic-Armadillo, Heroic-Walrus
+Group 3: Calm-Horse, Kind-Cheetah, Rapid-Cheetah, Peaceful-Panther
+Group 4: Quick-Parrot, Blazing-Serpent, Mighty-Lizard, Nimble-Cat
+Group 5: Jolly-Cheetah, Epic-Crow, Valiant-Tortoise, Stellar-Hawk
+Group 6: Graceful-Raven, Resilient-Eagle, Nimble-Raccoon, Midnight-Serpent
+Group 7: Mythic-Meerkat, Powerful-Wallaby, Brave-Bear, Graceful-Turtle
+Group 8: Mysterious-Chameleon, Vibrant-Owl
+
+--- Grouping Round 3 ---
+
+Group 1: Smart-Koala, Resilient-Eagle, Happy-Rabbit, Graceful-Turtle
+Group 2: Blazing-Serpent, Heroic-Walrus, Kind-Cheetah, Cosmic-Fish
+Group 3: Rapid-Cheetah, Nimble-Cat, Heroic-Armadillo, Brave-Bear
+Group 4: Jolly-Cheetah, Mighty-Lizard, Nimble-Raccoon, Peaceful-Panther
+Group 5: Graceful-Raven, Epic-Crow, Calm-Horse, Mysterious-Jackal
+Group 6: Quick-Parrot, Stellar-Hawk, Mysterious-Chameleon, Powerful-Wallaby
+Group 7: Mythic-Meerkat, Vibrant-Owl, Valiant-Tortoise, Midnight-Serpent
+Group 8: Mythic-Wolf, Vibrant-Coyote
+
+--- Grouping Round 1 ---
+
+Group 1: Nimble-Parrot, Colorful-Duck, Shiny-Fish
+Group 2: Valiant-Flamingo, Wise-Squirrel, Dazzling-Panda
+Group 3: Clever-Meerkat, Rapid-Parrot, Midnight-Penguin
+Group 4: Brave-Beaver, Lively-Eagle, Valiant-Penguin
+Group 5: Energetic-Penguin, Smart-Beaver, Smart-Falcon
+Group 6: Royal-Raven, Quick-Seal, Anonymous-Salamander
+Group 7: Dazzling-Wombat, Daring-Tiger, Mighty-Cockatoo
+Group 8: Quick-Dog, Royal-Lion, Heroic-Zebra
+Group 9: Bold-Lion, Valiant-Rabbit, Glowing-Jellyfish
+
+--- Grouping Round 2 ---
+
+Group 1: Valiant-Flamingo, Colorful-Duck, Shiny-Fish
+Group 2: Wise-Squirrel, Dazzling-Panda, Midnight-Penguin
+Group 3: Rapid-Parrot, Valiant-Penguin, Nimble-Parrot
+Group 4: Clever-Meerkat, Dazzling-Wombat, Quick-Seal
+Group 5: Lively-Eagle, Smart-Beaver, Mighty-Cockatoo
+Group 6: Energetic-Penguin, Quick-Dog, Smart-Falcon
+Group 7: Brave-Beaver, Daring-Tiger, Anonymous-Salamander
+Group 8: Royal-Raven, Royal-Lion, Glowing-Jellyfish
+Group 9: Heroic-Zebra, Valiant-Rabbit, Bold-Lion
+
+--- Grouping Round 3 ---
+
+Group 1: Wise-Squirrel, Colorful-Duck, Nimble-Parrot
+Group 2: Royal-Raven, Dazzling-Panda, Shiny-Fish
+Group 3: Clever-Meerkat, Rapid-Parrot, Valiant-Flamingo
+Group 4: Daring-Tiger, Valiant-Penguin, Midnight-Penguin
+Group 5: Quick-Dog, Smart-Beaver, Heroic-Zebra
+Group 6: Brave-Beaver, Lively-Eagle, Smart-Falcon
+Group 7: Energetic-Penguin, Dazzling-Wombat, Anonymous-Salamander
+Group 8: Valiant-Rabbit, Bold-Lion, Royal-Lion
+Group 9: Mighty-Cockatoo, Quick-Seal, Glowing-Jellyfish
+
+--- Grouping Round 1 ---
+
+Group 1: Daring-Tortoise, Mighty-Chicken, Rapid-Hedgehog
+Group 2: Quick-Parrot, Noble-Wolf, Glowing-Panda
+Group 3: Swift-Seal, Colorful-Cat, Hasty-Panther
+Group 4: Legendary-Otter, Noble-Eagle, Radiant-Owl
+Group 5: Heroic-Jackal, Powerful-Sloth, Blissful-Flamingo
+Group 6: Lively-Armadillo, Kind-Swan, Quick-Lizard
+Group 7: Clever-Fox, Mythic-Hawk, Graceful-Fox
+Group 8: Silent-Koala, Epic-Horse, Vibrant-Koala
+Group 9: Energetic-Wombat, Mysterious-Eagle
+
+--- Grouping Round 2 ---
+
+Group 1: Daring-Tortoise, Swift-Seal, Colorful-Cat
+Group 2: Mysterious-Eagle, Noble-Wolf, Radiant-Owl
+Group 3: Powerful-Sloth, Noble-Eagle, Glowing-Panda
+Group 4: Quick-Parrot, Silent-Koala, Kind-Swan
+Group 5: Energetic-Wombat, Legendary-Otter, Blissful-Flamingo
+Group 6: Heroic-Jackal, Lively-Armadillo, Vibrant-Koala
+Group 7: Clever-Fox, Epic-Horse, Mighty-Chicken
+Group 8: Mythic-Hawk, Rapid-Hedgehog, Hasty-Panther
+Group 9: Quick-Lizard, Graceful-Fox
+
+--- Grouping Round 3 ---
+
+Group 1: Daring-Tortoise, Epic-Horse, Hasty-Panther
+Group 2: Blissful-Flamingo, Noble-Wolf, Noble-Eagle
+Group 3: Heroic-Jackal, Glowing-Panda, Radiant-Owl
+Group 4: Quick-Parrot, Powerful-Sloth, Lively-Armadillo
+Group 5: Mythic-Hawk, Colorful-Cat, Mighty-Chicken
+Group 6: Mysterious-Eagle, Legendary-Otter, Kind-Swan
+Group 7: Clever-Fox, Quick-Lizard, Vibrant-Koala
+Group 8: Swift-Seal, Rapid-Hedgehog, Graceful-Fox
+Group 9: Silent-Koala, Energetic-Wombat
+
+--- Grouping Round 1 ---
+
+Group 1: Friendly-Dolphin, Swift-Turtle, Peaceful-Badger, Lively-Snake
+Group 2: Kind-Duck, Shiny-Seal, Mysterious-Otter, Valiant-Beaver
+Group 3: Glowing-Chameleon, Jolly-Cheetah, Blissful-Wallaby
+
+--- Grouping Round 2 ---
+
+Group 1: Swift-Turtle, Kind-Duck, Shiny-Seal, Lively-Snake
+Group 2: Glowing-Chameleon, Peaceful-Badger, Valiant-Beaver, Jolly-Cheetah
+Group 3: Friendly-Dolphin, Mysterious-Otter, Blissful-Wallaby
+
+--- Grouping Round 3 ---
+
+Group 1: Blissful-Wallaby, Swift-Turtle, Valiant-Beaver, Lively-Snake
+Group 2: Friendly-Dolphin, Kind-Duck, Peaceful-Badger, Shiny-Seal
+Group 3: Jolly-Cheetah, Mysterious-Otter, Glowing-Chameleon
+
+--- Grouping Round 1 ---
+
+Group 1: Blissful-Armadillo, Mighty-Swan, Mythic-Lizard
+Group 2: Vibrant-Fox, Calm-Raven, Friendly-Penguin
+Group 3: Silver-Meerkat
+
+--- Grouping Round 2 ---
+
+Group 1: Vibrant-Fox, Silver-Meerkat, Mythic-Lizard
+Group 2: Mighty-Swan, Calm-Raven, Blissful-Armadillo
+Group 3: Friendly-Penguin
+
+--- Grouping Round 3 ---
+
+Group 1: Blissful-Armadillo, Calm-Raven, Mythic-Lizard
+Group 2: Vibrant-Fox, Mighty-Swan, Friendly-Penguin
+Group 3: Silver-Meerkat
+
+--- Grouping Round 1 ---
+
+Group 1: Peaceful-Koala, Royal-Seal, Wise-Sloth
+Group 2: Cosmic-Armadillo, Brave-Tortoise, Sneaky-Cheetah
+
+--- Grouping Round 2 ---
+
+Group 1: Peaceful-Koala, Cosmic-Armadillo, Wise-Sloth
+Group 2: Sneaky-Cheetah, Royal-Seal, Brave-Tortoise
+
+--- Grouping Round 3 ---
+
+Group 1: Peaceful-Koala, Sneaky-Cheetah, Brave-Tortoise
+Group 2: Cosmic-Armadillo, Royal-Seal, Wise-Sloth
+
+--- Grouping Round 1 ---
+
+Group 1: Sneaky-Meerkat, Graceful-Jackal
+Group 2: Brave-Koala, Sneaky-Zebra
+Group 3: Wild-Cockatoo
+
+--- Grouping Round 2 ---
+
+Group 1: Sneaky-Meerkat, Graceful-Jackal
+Group 2: Brave-Koala, Wild-Cockatoo
+Group 3: Sneaky-Zebra
+
+--- Grouping Round 3 ---
+
+Group 1: Sneaky-Meerkat, Wild-Cockatoo
+Group 2: Graceful-Jackal, Brave-Koala
+Group 3: Sneaky-Zebra
+
+--- Grouping Round 1 ---
+
+Group 1: Silent-Seal, Anonymous-Rabbit
+
+--- Grouping Round 2 ---
+
+Group 1: Silent-Seal, Anonymous-Rabbit
+
+--- Grouping Round 3 ---
+
+Group 1: Silent-Seal, Anonymous-Rabbit
+
+--- Grouping Round 1 ---
+
+Group 1: Radiant-Cheetah
+
+--- Grouping Round 2 ---
+
+Group 1: Radiant-Cheetah
+
+--- Grouping Round 3 ---
+
+Group 1: Radiant-Cheetah
+

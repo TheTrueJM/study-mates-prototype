@@ -7,6 +7,7 @@
 
   <body>
     <h1 id="title">Tutorial</h1>
+    <h3>Your Name: <span id="username"></span></h3>
     <h3>State: <span id="state">lobby</span></h3>
     <h2 id="timer-display" style="display:none;">00:00</h2>
 
@@ -40,6 +41,7 @@
 
       socket.on("student_update", tutorial => {
         console.log(tutorial)
+        document.getElementById("username").innerText = tutorial.username;
         document.getElementById("title").innerText = tutorial.name;
         document.getElementById("state").innerText = tutorial.state;
 
