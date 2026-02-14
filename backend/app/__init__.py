@@ -94,7 +94,7 @@ def create_app():
     login_manager.init_app(app)
 
     @login_manager.user_loader
-    def load_user(id_or_name): # Update if Identification changes
-        return db.session.scalar(db.select(Staff).where(or_(Staff.id==id_or_name, Staff.username==id_or_name)))
+    def load_user(username):
+        return db.session.scalar(db.select(Staff).where(Staff.username==username))
 
     return app
