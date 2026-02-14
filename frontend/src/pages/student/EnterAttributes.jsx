@@ -13,21 +13,20 @@ function EnterAttributes() {
   const [currentGPA, setCurrentGPA] = useState('');
   const [noGPAYet, setNoGPAYet] = useState(false);
   const [availableDays, setAvailableDays] = useState(
-    DAYS.map(day => ({ day, times: new Set() }))
+    DAYS.map(day => ({ day, times: [] }))
   );
 
   // Toggle a time slot on/off for a given day
   const toggleTime = (dayIndex, time) => {
     const newDays = [...availableDays];
-    const newTimes = new Set(newDays[dayIndex].times);
+    const current = newDays[dayIndex].times;
 
-    if (newTimes.has(time)) {
-      newTimes.delete(time);
-    } else {
-      newTimes.add(time);
-    }
-
-    newDays[dayIndex] = { ...newDays[dayIndex], times: newTimes };
+    newDays[dayIndex] = {
+      ...newDays[dayIndex],
+      times: current.includes(time)
+        ? current.filter(t => t !== time)
+        : [...current, time],
+    };
     setAvailableDays(newDays);
   };
 
@@ -82,7 +81,7 @@ function EnterAttributes() {
                 {TIME_SLOTS.map(time => (
                   <button
                     key={time}
-                    className={`btn-toggle ${slot.times.has(time) ? 'active' : ''}`}
+                    className={`btn-toggle ${slot.times.includes(time) ? 'active' : ''}`}
                     onClick={() => toggleTime(dayIndex, time)}
                   >
                     {time}

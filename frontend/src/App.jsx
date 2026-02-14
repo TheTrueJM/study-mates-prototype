@@ -1,4 +1,8 @@
 import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+
+// Pages
+import Home from "./pages/Home";
 
 // Student pages
 import JoinSession from "./pages/student/JoinSession";
@@ -14,22 +18,25 @@ import DiscussionBoard from './pages/staff/DiscussionBoard';
 
 function App() {
   return (
-    <Routes>
-      {/* Basic Route */}
-      <Route path="/" element={<JoinSession />} />
+    <>
+      <Navbar />
+      <Routes>
+        {/* Home */}
+        <Route path="/" element={<Home />} />
 
-      {/* Student */}
-      <Route path="/student/join" element={<JoinSession />} />
-      <Route path="/student/attributes" element={<EnterAttributes />} />
-      <Route path="/student/waiting" element={<WaitingLobby />} />
-      <Route path="/student/group" element={<GroupView />} />
+        {/* Student */}
+        <Route path="/student/join" element={<JoinSession />} />
+        <Route path="/student/attributes" element={<EnterAttributes />} />
+        <Route path="/student/waiting" element={<WaitingLobby />} />
+        <Route path="/student/group" element={<GroupView />} />
 
-      {/* Staff */}
-      <Route path="/staff/setup" element={<SessionSetup />} />
-      <Route path="/staff/lobby" element={<SessionLobby />} />
-      <Route path="/staff/groups" element={<GroupFormation />} />
-      <Route path="/staff/discussion" element={<DiscussionBoard />} />
-    </Routes>
+        {/* Staff */}
+        <Route path="/staff/setup" element={<SessionSetup />} />
+        <Route path="/staff/lobby" element={<SessionLobby />} />
+        <Route path="/staff/groups" element={<GroupFormation />} />
+        <Route path="/staff/discussion" element={<DiscussionBoard />} />
+      </Routes>
+    </>
   );
 }
 
