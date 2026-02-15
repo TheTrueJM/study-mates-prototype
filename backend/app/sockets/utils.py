@@ -3,6 +3,8 @@ import string
 import uuid
 import threading
 import logging
+import time
+
 from flask import session, request
 from flask_socketio import emit, join_room
 from .. import socketio
@@ -10,9 +12,12 @@ from .. import socketio
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code}, ... }
+users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code, disconnected_at: float|None}, ... }
 sessions = dict() # { sID: UUID }
 tutorials = dict()
+disconnected_students = dict()  # { code: { user_id: disconnected_at, ... } }
+
+RECONNECT_GRACE_PERIOD = 5.0  # seconds
 
 # {
 #   code: {
@@ -39,6 +44,28 @@ def _generate_code(length=6):
         code  = ''.join(random.choices(string.ascii_uppercase, k=length))
         if code not in tutorials:
             return code
+
+
+def _cleanup_stale_users(code):
+    if not (tutorial := tutorials.get(code)):
+        disconnected_students.pop(code, None)
+        return
+
+    now = time.time()
+    threshold = now - RECONNECT_GRACE_PERIOD
+
+    if not (disconnected := disconnected_students.get(code)):
+        return
+
+    if not (stale_ids := [sid for sid, ts in disconnected.items() if ts <= threshold]):
+        return
+
+    disconnected_students[code] = {sid: ts for sid, ts in disconnected.items() if ts > threshold}
+
+    students = tutorial["students"]
+    for student_id in stale_ids:
+        students.pop(student_id, None)
+        users.pop(student_id, None)
 
 
 def _generate_name(tutorial):
@@ -70,6 +97,8 @@ def _emit_tutorial_update(code):
     tutorial = tutorials.get(code)
     if not tutorial:
         return
+
+    _cleanup_stale_users(code)
 
     staff_payload = {
         "tutorial_code": code,
@@ -106,7 +135,10 @@ def _join_tutorial(user_id, code, namespace):
         emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace=namespace)
         return
 
-    if users[user_id].get("disconnect"): users[user_id]["disconnect"].cancel()
+    if user := users.get(user_id):
+        user["disconnected_at"] = None
+        if code and user.get("role") == "student":
+            disconnected_students.get(code, {}).pop(user_id, None)
 
     users[user_id]["tutorial"] = code
 
@@ -146,18 +178,12 @@ def multi_namespace_event(event, namespaces):
 @multi_namespace_event("disconnect", ["/", "/staff"])
 def disconnect():
     if user_id := sessions.pop(request.sid, None):
-        def confirm_disconnect():
-            if user := users.get(user_id):
-                user["sessions"].discard(user_id)
+        if user := users.get(user_id):
+            user["sessions"].discard(request.sid)
 
-                if code := user["tutorial"]:
-                    user["tutorial"] = None
-
-                    if tutorial := tutorials.get(code):
-                        tutorial["students"].pop(user_id, None)
-
-                if not user["sessions"]:
-                    users.pop(user_id, None)
-        
-        users[user_id]["disconnect"] = threading.Timer(5.0, confirm_disconnect)
-        users[user_id]["disconnect"].start()
+            if not user["sessions"]:
+                user["disconnected_at"] = time.time()
+                if (code := user.get("tutorial")) and user.get("role") == "student":
+                    if code not in disconnected_students:
+                        disconnected_students[code] = {}
+                    disconnected_students[code][user_id] = user["disconnected_at"]
