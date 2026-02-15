@@ -2,47 +2,57 @@
 // TODO: configuredTime and configuredQuestions should come from SessionSetup via API
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
+import { getStaffSocket } from '../../socket';
 
 function DiscussionBoard() {
-  // Placeholder config (will come from session setup)
-  const configuredTime = 10; // minutes
-  const configuredQuestions = [
-    'What are your career goals after graduation?',
-    'What study techniques work best for you?',
-    'What aspect of this course interests you most?',
-    'How do you prefer to collaborate on group projects?',
-  ];
+  const navigate = useNavigate();
 
-  const [timeRemaining, setTimeRemaining] = useState(configuredTime * 60); // in seconds
+  const [timeRemaining, setTimeRemaining] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [questions, setQuestions] = useState([]);
+  const [tutorialName, setTutorialName] = useState('');
 
-  // Timer countdown effect - runs every second while isRunning is true
   useEffect(() => {
-    if (!isRunning) return;
+    const socket = getStaffSocket();
 
-    const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 0) {
-          setIsRunning(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const onUpdate = (tutorial) => {
+      if (!tutorial) return;
+      setTutorialName(tutorial.name || '');
+      if (tutorial.timer) {
+        setTimeRemaining(tutorial.timer.remaining || 0);
+        setIsRunning(!!tutorial.timer.running);
+      }
+      setQuestions(tutorial.questions || []);
 
-    return () => clearInterval(timer);
-  }, [isRunning]);
+      if (tutorial.state === 'lobby') navigate('/staff/tutorial/' + (tutorial.tutorial_code || ''));
+      if (tutorial.state === 'groups') navigate('/staff/groups');
+    };
 
-  // Format seconds as MM:SS
-  const minutes = Math.floor(timeRemaining / 60);
-  const seconds = timeRemaining % 60;
-  const display = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const onTimerSync = (data) => {
+      setTimeRemaining(data.remaining || 0);
+    };
+
+    const onTimerNotification = (data) => {
+      if (data && data.message) alert(data.message);
+    };
+
+    socket.on('tutorial_update', onUpdate);
+    socket.on('timer_sync', onTimerSync);
+    socket.on('timer_notification', onTimerNotification);
+
+    return () => {
+      socket.off('tutorial_update', onUpdate);
+      socket.off('timer_sync', onTimerSync);
+      socket.off('timer_notification', onTimerNotification);
+    };
+  }, [navigate]);
 
   const handleNextRound = () => {
-    console.log('Next group forming round');
-    // TODO: Call API -> navigate to /staff/groups
+    const socket = getStaffSocket();
+    socket.emit('start_grouping');
   };
 
   return (
@@ -53,7 +63,7 @@ function DiscussionBoard() {
         <div className="form-group">
           <label className="input-label">Time Remaining</label>
           <div className="timer-display">
-            <div className="timer-value">{display}</div>
+            <div className="timer-value">{`${String(Math.floor(timeRemaining/60)).padStart(2,'0')}:${String(timeRemaining%60).padStart(2,'0')}`}</div>
             <div className="timer-status">
               {isRunning ? 'Timer running' : 'Timer ready'}
             </div>
@@ -64,7 +74,7 @@ function DiscussionBoard() {
         <div className="mb-md">
           <label className="input-label">Discussion Topics / Ice-Breaker Questions</label>
           <div className="flex-col gap-xs" style={{ display: 'flex' }}>
-            {configuredQuestions.map((question, index) => (
+            {questions.map((question, index) => (
               <div key={index} className="question-item">
                 <div className="question-number">{index + 1}</div>
                 <div>{question}</div>
@@ -76,11 +86,11 @@ function DiscussionBoard() {
         {/* Action buttons - toggles between Start/End */}
         <div className="btn-group">
           {!isRunning ? (
-            <Button variant="secondary" onClick={() => setIsRunning(true)}>
+            <Button variant="secondary" onClick={() => getStaffSocket().emit('start_timer')}>
               Start Discussion Timer
             </Button>
           ) : (
-            <Button variant="outline" onClick={() => setIsRunning(false)}>
+            <Button variant="outline" onClick={() => getStaffSocket().emit('stop_timer')}>
               End Discussion Early
             </Button>
           )}

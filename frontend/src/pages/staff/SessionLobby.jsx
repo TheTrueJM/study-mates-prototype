@@ -1,30 +1,43 @@
 // SessionLobby - Staff sees join code and students joining in real-time
 // TODO: Replace dummy data with real-time socket.io updates
 
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
+import { getStaffSocket } from '../../socket';
 
 function SessionLobby() {
-  // Placeholder data (will come from backend via socket.io)
-  const joinCode = 'ABCD-1234';
-  const students = [
-    'Anonymous-Wombat-42',
-    'Random-Koala-17',
-    'Mystery-Dolphin-89',
-    'Unknown-Eagle-23',
-    'Silent-Tiger-56',
-    'Hidden-Panda-91',
-    'Secret-Fox-34',
-    'Quiet-Bear-78',
-    'Private-Owl-12',
-    'Masked-Wolf-45',
-    'Veiled-Deer-67',
-    'Unseen-Hawk-29',
-  ];
+  const { code } = useParams();
+  const navigate = useNavigate();
+
+  const [joinCode, setJoinCode] = useState(code || '');
+  const [students, setStudents] = useState([]);
+  const [tutorialName, setTutorialName] = useState('');
+
+  useEffect(() => {
+    const socket = getStaffSocket();
+
+    const onUpdate = (tutorial) => {
+      if (!tutorial) return;
+      setJoinCode(tutorial.tutorial_code || code);
+      setTutorialName(tutorial.name || '');
+      setStudents(Object.values(tutorial.students || {}).map(s => s.name));
+
+      if (tutorial.state === 'groups') navigate('/staff/groups');
+      if (tutorial.state === 'discussion') navigate('/staff/discussion');
+    };
+
+    socket.on('tutorial_update', onUpdate);
+
+    return () => {
+      socket.off('tutorial_update', onUpdate);
+    };
+  }, [code, navigate]);
 
   const handleBeginGrouping = () => {
-    console.log('Begin group forming round');
-    // TODO: Call API -> navigate to /staff/groups
+    const socket = getStaffSocket();
+    socket.emit('start_grouping');
   };
 
   return (

@@ -1,34 +1,43 @@
 // GroupFormation - Staff views formed groups and can reform or start discussion
 // TODO: Replace dummy data with group formation algorithm results from backend
 
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
+import { getStaffSocket } from '../../socket';
 
 function GroupFormation() {
-  // Placeholder data (will come from backend)
-  const groups = [
-    {
-      id: 1,
-      members: ['Anonymous-Wombat-42', 'Random-Koala-17', 'Mystery-Dolphin-89', 'Unknown-Eagle-23'],
-    },
-    {
-      id: 2,
-      members: ['Silent-Tiger-56', 'Hidden-Panda-91', 'Secret-Fox-34', 'Quiet-Bear-78'],
-    },
-    {
-      id: 3,
-      members: ['Private-Owl-12', 'Masked-Wolf-45', 'Veiled-Deer-67', 'Unseen-Hawk-29'],
-    },
-  ];
+  const [groups, setGroups] = useState([]);
+  const [tutorialName, setTutorialName] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const socket = getStaffSocket();
+
+    const onUpdate = (tutorial) => {
+      if (!tutorial) return;
+      setTutorialName(tutorial.name || '');
+      const groupList = Object.entries(tutorial.groups || {}).map(([id, members]) => ({ id, members }));
+      setGroups(groupList);
+
+      if (tutorial.state === 'lobby') navigate('/staff/tutorial/' + (tutorial.tutorial_code || ''));
+      if (tutorial.state === 'discussion') navigate('/staff/discussion');
+    };
+
+    socket.on('tutorial_update', onUpdate);
+
+    return () => socket.off('tutorial_update', onUpdate);
+  }, [navigate]);
 
   const handleReform = () => {
-    console.log('Reform groups');
-    // TODO: Call API -> re-run group formation
+    const socket = getStaffSocket();
+    socket.emit('start_grouping');
   };
 
   const handleBeginDiscussion = () => {
-    console.log('Begin discussion time');
-    // TODO: Call API -> navigate to /staff/discussion
+    const socket = getStaffSocket();
+    socket.emit('start_discussion');
   };
 
   return (
