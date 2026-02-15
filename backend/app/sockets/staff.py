@@ -39,7 +39,6 @@ def _with_tutorial_auth(f):
 
 @socketio.on("connect", namespace="/staff")
 def connect(auth):
-    print("Here", auth)
     user_id = auth.get("uuid") if auth else None
     role = session.get("role", "staff")
     code = session.get("tutorial_code")

@@ -13,15 +13,17 @@ function SessionLobby() {
 
   const [joinCode, setJoinCode] = useState(code || '');
   const [students, setStudents] = useState([]);
-  const [tutorialName, setTutorialName] = useState('');
+  const [tutorialName, setTutorialName] = useState('[Lobby] Tutorial');
 
   useEffect(() => {
     const socket = getStaffSocket();
+    socket.emit('get_update');
 
     const onUpdate = (tutorial) => {
+      console.log("tutorial lobby:", tutorial)
       if (!tutorial) return;
       setJoinCode(tutorial.tutorial_code || code);
-      setTutorialName(tutorial.name || '');
+      setTutorialName(`[Lobby] ${tutorial.name || 'Tutorial'}`);
       setStudents(Object.values(tutorial.students || {}).map(s => s.name));
 
       if (tutorial.state === 'groups') navigate('/staff/groups');
@@ -42,7 +44,8 @@ function SessionLobby() {
 
   return (
     <div className="container container-lg mt-lg">
-      <Card title="Session Lobby">
+      <Card title={tutorialName}>
+        <div className="card-subtitle">{students.length} Students in Lobby</div>
 
         {/* Join code + QR code area */}
         <div className="mb-lg">
@@ -68,7 +71,7 @@ function SessionLobby() {
         </div>
 
         <Button variant="secondary" fullWidth onClick={handleBeginGrouping}>
-          Begin Group Forming Round
+          Begin Group Formation
         </Button>
 
       </Card>

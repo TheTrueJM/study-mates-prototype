@@ -17,10 +17,12 @@ function DiscussionBoard() {
 
   useEffect(() => {
     const socket = getStaffSocket();
+    socket.emit('get_update');
 
     const onUpdate = (tutorial) => {
+      console.log("tutorial discussion:", tutorial)
       if (!tutorial) return;
-      setTutorialName(tutorial.name || '');
+      setTutorialName(`${tutorial.name || 'Tutorial'} - ${tutorial.tutorial_code}`);
       if (tutorial.timer) {
         setTimeRemaining(tutorial.timer.remaining || 0);
         setIsRunning(!!tutorial.timer.running);
@@ -31,22 +33,10 @@ function DiscussionBoard() {
       if (tutorial.state === 'groups') navigate('/staff/groups');
     };
 
-    const onTimerSync = (data) => {
-      setTimeRemaining(data.remaining || 0);
-    };
-
-    const onTimerNotification = (data) => {
-      if (data && data.message) alert(data.message);
-    };
-
     socket.on('tutorial_update', onUpdate);
-    socket.on('timer_sync', onTimerSync);
-    socket.on('timer_notification', onTimerNotification);
 
     return () => {
       socket.off('tutorial_update', onUpdate);
-      socket.off('timer_sync', onTimerSync);
-      socket.off('timer_notification', onTimerNotification);
     };
   }, [navigate]);
 
@@ -55,9 +45,17 @@ function DiscussionBoard() {
     socket.emit('start_grouping');
   };
 
+  const handleBackToLobby = () => {
+    const socket = getStaffSocket();
+    socket.emit('reset_lobby');
+  };
+
   return (
     <div className="container container-md mt-lg">
-      <Card title="Discussion Round in Progress">
+      <Card title={tutorialName} actions={(
+        <Button variant="outline" onClick={handleBackToLobby}>Back to Lobby</Button>
+      )}>
+        <div className="card-subtitle">Group Discussion</div>
 
         {/* Timer display */}
         <div className="form-group">
@@ -72,7 +70,7 @@ function DiscussionBoard() {
 
         {/* Discussion questions */}
         <div className="mb-md">
-          <label className="input-label">Discussion Topics / Ice-Breaker Questions</label>
+          <label className="input-label">Discussion Topics and Questions</label>
           <div className="flex-col gap-xs" style={{ display: 'flex' }}>
             {questions.map((question, index) => (
               <div key={index} className="question-item">
