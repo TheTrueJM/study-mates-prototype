@@ -1,5 +1,4 @@
 // DiscussionBoard - Countdown timer + discussion questions for the current round
-// TODO: configuredTime and configuredQuestions should come from SessionSetup via API
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -14,6 +13,7 @@ function DiscussionBoard() {
   const [isRunning, setIsRunning] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [tutorialName, setTutorialName] = useState('');
+  const [resetTime, setResetTime] = useState(10);
 
   useEffect(() => {
     const socket = getStaffSocket();
@@ -55,6 +55,16 @@ function DiscussionBoard() {
     socket.emit('start_grouping');
   };
 
+  const handleResetTimer = () => {
+    const socket = getStaffSocket();
+    socket.emit('reset_timer', { time: resetTime });
+  };
+
+  const handleResetLobby = () => {
+    const socket = getStaffSocket();
+    socket.emit('reset_lobby');
+  };
+
   return (
     <div className="container container-md mt-lg">
       <Card title="Discussion Round in Progress">
@@ -67,6 +77,24 @@ function DiscussionBoard() {
             <div className="timer-status">
               {isRunning ? 'Timer running' : 'Timer ready'}
             </div>
+          </div>
+        </div>
+
+        {/* Timer controls */}
+        <div className="form-group">
+          <div className="flex gap-sm items-center">
+            <input
+              type="number"
+              className="input"
+              style={{ width: '80px' }}
+              min="1"
+              value={resetTime}
+              onChange={(e) => setResetTime(Number(e.target.value))}
+            />
+            <span>minutes</span>
+            <Button variant="outline" onClick={handleResetTimer}>
+              Reset Timer
+            </Button>
           </div>
         </div>
 
@@ -96,6 +124,9 @@ function DiscussionBoard() {
           )}
           <Button variant="primary" onClick={handleNextRound}>
             Next Group Forming Round
+          </Button>
+          <Button variant="outline" onClick={handleResetLobby}>
+            Back to Lobby
           </Button>
         </div>
 

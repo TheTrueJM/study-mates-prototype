@@ -40,6 +40,11 @@ function GroupFormation() {
     socket.emit('start_discussion');
   };
 
+  const handleResetLobby = () => {
+    const socket = getStaffSocket();
+    socket.emit('reset_lobby');
+  };
+
   return (
     <div className="container container-lg mt-lg">
       <Card title="Tutorial Session ABCD-1234">
@@ -66,6 +71,9 @@ function GroupFormation() {
           </Button>
           <Button variant="secondary" onClick={handleBeginDiscussion}>
             Begin Discussion Time
+          </Button>
+          <Button variant="primary" onClick={handleResetLobby}>
+            Back to Lobby
           </Button>
         </div>
 
