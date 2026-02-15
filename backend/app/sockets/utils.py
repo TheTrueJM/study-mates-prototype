@@ -8,6 +8,7 @@ import time
 from flask import session, request
 from flask_socketio import emit, join_room
 from .. import socketio
+from .errors import ERR_TUTORIAL_NOT_FOUND
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -134,7 +135,7 @@ def _join_tutorial(user_id, code, namespace):
     join_room(user_id, namespace=namespace)
 
     if not (tutorial := tutorials.get(code)) and namespace!="/staff":
-        emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace=namespace)
+        emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid, namespace=namespace)
         return
 
     if user := users.get(user_id):

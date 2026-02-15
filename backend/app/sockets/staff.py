@@ -10,6 +10,14 @@ from flask import request, session
 from flask_socketio import emit, join_room
 from .. import socketio, _start_timer_thread, _stop_timer_thread
 from . import utils
+from .errors import (
+    ERR_SESSION_NOT_FOUND,
+    ERR_NO_ACTIVE_TUTORIAL,
+    ERR_TUTORIAL_NOT_FOUND,
+    ERR_UNAUTHORISED,
+    ERR_ALREADY_IN_TUTORIAL,
+    ERR_INVALID_GROUP_SIZE,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -18,19 +26,19 @@ def _with_tutorial_auth(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if not (user_id := utils.sessions.get(request.sid)):
-            emit("error", {"message": "Session not found"}, to=request.sid, namespace="/staff")
+            emit("error", ERR_SESSION_NOT_FOUND, to=request.sid, namespace="/staff")
             return
 
         if not (code := utils.users.get(user_id, {}).get("tutorial")):
-            emit("error", {"message": "No active tutorial"}, to=request.sid, namespace="/staff")
+            emit("error", ERR_NO_ACTIVE_TUTORIAL, to=request.sid, namespace="/staff")
             return
 
         if not (tutorial := utils.tutorials.get(code)):
-            emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace="/staff")
+            emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid, namespace="/staff")
             return
 
         if tutorial["staff"] != user_id:
-            emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
+            emit("error", ERR_UNAUTHORISED, to=request.sid, namespace="/staff")
             return
 
         return f(user_id, code, tutorial, *args, **kwargs)
@@ -82,10 +90,10 @@ def create_tutorial(data):
     user_id = utils.sessions.get(request.sid)
 
     if utils.users.get(user_id, {}).get("role") != "staff":
-        emit("error", {"message": "Unauthorized"}, to=request.sid, namespace="/staff")
+        emit("error", ERR_UNAUTHORISED, to=request.sid, namespace="/staff")
         return
     elif utils.users.get(user_id, {}).get("tutorial") is not None:
-        emit("error", {"message": "Already in a tutorial"}, to=request.sid, namespace="/staff")
+        emit("error", ERR_ALREADY_IN_TUTORIAL, to=request.sid, namespace="/staff")
         return
 
     name = data.get("name")
@@ -94,7 +102,7 @@ def create_tutorial(data):
     discussion_time = int(data.get("discussion_time", 10)) * 60 or 600
 
     if not group_size or group_size < 2:
-        emit("error", {"message": "Invalid group size"}, to=request.sid, namespace="/staff")
+        emit("error", ERR_INVALID_GROUP_SIZE, to=request.sid, namespace="/staff")
         return
 
     code = utils._generate_code()
