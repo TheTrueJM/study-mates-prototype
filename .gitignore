@@ -6,3 +6,4 @@ pytest.log
 .DS_Store
 CLAUDE.md
 backend/uv.lock
+backend/tests/test_reconnect.py
