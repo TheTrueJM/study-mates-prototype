@@ -20,7 +20,7 @@ function GroupFormation() {
       if (!tutorial) {
         return;
       }
-      setTutorialName(tutorial.name || '');
+      setTutorialName(`${tutorial.name || 'Tutorial'} - ${tutorial.tutorial_code}`);
       setStudents(tutorial.students || {});
       const groupList = Object.entries(tutorial.groups || {}).map(([id, members]) => ({ id, members }));
       setGroups(groupList);
@@ -57,8 +57,10 @@ function GroupFormation() {
 
   return (
     <div className="container container-lg mt-lg">
-      <Card title="Tutorial Session ABCD-1234">
-        <div className="card-subtitle">Group Formation Result</div>
+      <Card title={tutorialName} actions={(
+        <Button variant="outline" onClick={handleBackToLobby}>Back to Lobby</Button>
+      )}>
+        <div className="card-subtitle">Group Formation Results</div>
 
         {/* Group cards in responsive grid */}
         {groups.length === 0 ? (

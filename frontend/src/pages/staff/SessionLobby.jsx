@@ -25,7 +25,7 @@ function SessionLobby() {
         return;
       }
       setJoinCode(tutorial.tutorial_code || code);
-      setTutorialName(tutorial.name || '');
+      setTutorialName(tutorial.name || 'Tutorial');
       setStudents(Object.values(tutorial.students || {}).map(s => s.name));
 
       if (tutorial.state === 'groups') {
@@ -50,7 +50,7 @@ function SessionLobby() {
 
   return (
     <div className="container container-lg mt-lg">
-      <Card title="Session Lobby">
+      <Card title={tutorialName}>
 
         {/* Join code + QR code area */}
         <div className="mb-lg">
@@ -76,7 +76,7 @@ function SessionLobby() {
         </div>
 
         <Button variant="secondary" fullWidth onClick={handleBeginGrouping}>
-          Begin Group Forming Round
+          Begin Group Formation
         </Button>
 
       </Card>

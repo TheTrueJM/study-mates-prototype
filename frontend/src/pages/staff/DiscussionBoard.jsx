@@ -20,7 +20,7 @@ function DiscussionBoard() {
 
     const onUpdate = (tutorial) => {
       if (!tutorial) return;
-      setTutorialName(tutorial.name || '');
+      setTutorialName(`${tutorial.name || 'Tutorial'} - ${tutorial.tutorial_code}`);
       if (tutorial.timer) {
         setTimeRemaining(tutorial.timer.remaining || 0);
         setIsRunning(!!tutorial.timer.running);
@@ -67,7 +67,10 @@ function DiscussionBoard() {
 
   return (
     <div className="container container-md mt-lg">
-      <Card title="Discussion Round in Progress">
+      <Card title={tutorialName} actions={(
+        <Button variant="outline" onClick={handleBackToLobby}>Back to Lobby</Button>
+      )}>
+        <div className="card-subtitle">Group Discussion</div>
 
         {/* Timer display */}
         <div className="form-group">
@@ -100,7 +103,7 @@ function DiscussionBoard() {
 
         {/* Discussion questions */}
         <div className="mb-md">
-          <label className="input-label">Discussion Topics / Ice-Breaker Questions</label>
+          <label className="input-label">Discussion Topics and Questions</label>
           <div className="flex-col gap-xs" style={{ display: 'flex' }}>
             {questions.map((question, index) => (
               <div key={index} className="question-item">

@@ -17,6 +17,15 @@ export function getSocket(namespace = "/") {
     path: '/socket.io',
   });
 
+  socket.on("connect", () => {
+    console.log(socket)
+    console.info("socket connected", namespace, socket.id);
+  });
+
+  socket.on("connect_error", (err) => {
+    console.error("socket connect_error", namespace, err);
+  });
+
   socket.on("session", (data) => {
     if (data && data.uuid) {
       localStorage.setItem("uuid", data.uuid);
