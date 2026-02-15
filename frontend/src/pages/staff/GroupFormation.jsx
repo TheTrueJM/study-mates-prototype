@@ -16,6 +16,8 @@ function GroupFormation() {
   useEffect(() => {
     const socket = getStaffSocket();
 
+    socket.emit('fetch_tutorial');
+
     const onUpdate = (tutorial) => {
       if (!tutorial) {
         return;
@@ -58,7 +60,7 @@ function GroupFormation() {
   return (
     <div className="container container-lg mt-lg">
       <Card title={tutorialName} actions={(
-        <Button variant="outline" onClick={handleBackToLobby}>Back to Lobby</Button>
+        <Button variant="outline" onClick={handleResetLobby}>Back to Lobby</Button>
       )}>
         <div className="card-subtitle">Group Formation Results</div>
 
@@ -89,9 +91,6 @@ function GroupFormation() {
           </Button>
           <Button variant="secondary" onClick={handleBeginDiscussion}>
             Begin Discussion Time
-          </Button>
-          <Button variant="primary" onClick={handleResetLobby}>
-            Back to Lobby
           </Button>
         </div>
 

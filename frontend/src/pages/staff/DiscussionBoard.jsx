@@ -18,6 +18,8 @@ function DiscussionBoard() {
   useEffect(() => {
     const socket = getStaffSocket();
 
+    socket.emit('fetch_tutorial');
+
     const onUpdate = (tutorial) => {
       if (!tutorial) return;
       setTutorialName(`${tutorial.name || 'Tutorial'} - ${tutorial.tutorial_code}`);
@@ -68,7 +70,7 @@ function DiscussionBoard() {
   return (
     <div className="container container-md mt-lg">
       <Card title={tutorialName} actions={(
-        <Button variant="outline" onClick={handleBackToLobby}>Back to Lobby</Button>
+        <Button variant="outline" onClick={handleResetLobby}>Back to Lobby</Button>
       )}>
         <div className="card-subtitle">Group Discussion</div>
 
@@ -118,18 +120,15 @@ function DiscussionBoard() {
         <div className="btn-group">
           {!isRunning ? (
             <Button variant="secondary" onClick={() => getStaffSocket().emit('start_timer')}>
-              Start Discussion Timer
+              Resume Discussion Timer
             </Button>
           ) : (
             <Button variant="outline" onClick={() => getStaffSocket().emit('stop_timer')}>
-              End Discussion Early
+              Pause Discussion Timer
             </Button>
           )}
           <Button variant="primary" onClick={handleNextRound}>
             Next Group Forming Round
-          </Button>
-          <Button variant="outline" onClick={handleResetLobby}>
-            Back to Lobby
           </Button>
         </div>
 

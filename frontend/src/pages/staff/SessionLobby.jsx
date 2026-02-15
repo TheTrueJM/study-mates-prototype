@@ -25,7 +25,7 @@ function SessionLobby() {
         return;
       }
       setJoinCode(tutorial.tutorial_code || code);
-      setTutorialName(tutorial.name || 'Tutorial');
+      setTutorialName(`${tutorial.name || 'Tutorial'} - Lobby`);
       setStudents(Object.values(tutorial.students || {}).map(s => s.name));
 
       if (tutorial.state === 'groups') {
