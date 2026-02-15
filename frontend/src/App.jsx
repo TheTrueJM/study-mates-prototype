@@ -7,6 +7,7 @@ import WaitingLobby from "./pages/student/WaitingLobby";
 import GroupView from "./pages/student/GroupView";
 
 // Staff pages
+import Login from './pages/staff/Login';
 import SessionSetup from './pages/staff/SessionSetup';
 import SessionLobby from './pages/staff/SessionLobby';
 import GroupFormation from './pages/staff/GroupFormation';
@@ -19,14 +20,15 @@ function App() {
       <Route path="/" element={<JoinSession />} />
 
       {/* Student */}
-      <Route path="/student/join" element={<JoinSession />} />
-      <Route path="/student/attributes" element={<EnterAttributes />} />
-      <Route path="/student/waiting" element={<WaitingLobby />} />
-      <Route path="/student/group" element={<GroupView />} />
+      <Route path="/join" element={<JoinSession />} />
+      <Route path="/attributes" element={<EnterAttributes />} />
+      <Route path="/waiting" element={<WaitingLobby />} />
+      <Route path="/group" element={<GroupView />} />
 
       {/* Staff */}
-      <Route path="/staff/setup" element={<SessionSetup />} />
-      <Route path="/staff/lobby" element={<SessionLobby />} />
+      <Route path="/staff/login" element={<Login />} />
+      <Route path="/staff/" element={<SessionSetup />} />
+      <Route path="/staff/tutorial/:code" element={<SessionLobby />} />
       <Route path="/staff/groups" element={<GroupFormation />} />
       <Route path="/staff/discussion" element={<DiscussionBoard />} />
     </Routes>
