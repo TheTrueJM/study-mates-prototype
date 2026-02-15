@@ -1,5 +1,4 @@
 // DiscussionBoard - Countdown timer + discussion questions for the current round
-// TODO: configuredTime and configuredQuestions should come from SessionSetup via API
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -14,9 +13,12 @@ function DiscussionBoard() {
   const [isRunning, setIsRunning] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [tutorialName, setTutorialName] = useState('');
+  const [resetTime, setResetTime] = useState(10);
 
   useEffect(() => {
     const socket = getStaffSocket();
+
+    socket.emit('fetch_tutorial');
 
     const onUpdate = (tutorial) => {
       if (!tutorial) return;
@@ -31,10 +33,22 @@ function DiscussionBoard() {
       if (tutorial.state === 'groups') navigate('/staff/groups');
     };
 
+    const onTimerSync = (data) => {
+      setTimeRemaining(data.remaining || 0);
+    };
+
+    const onTimerNotification = (data) => {
+      if (data && data.message) alert(data.message);
+    };
+
     socket.on('tutorial_update', onUpdate);
+    socket.on('timer_sync', onTimerSync);
+    socket.on('timer_notification', onTimerNotification);
 
     return () => {
       socket.off('tutorial_update', onUpdate);
+      socket.off('timer_sync', onTimerSync);
+      socket.off('timer_notification', onTimerNotification);
     };
   }, [navigate]);
 
@@ -43,7 +57,12 @@ function DiscussionBoard() {
     socket.emit('start_grouping');
   };
 
-  const handleBackToLobby = () => {
+  const handleResetTimer = () => {
+    const socket = getStaffSocket();
+    socket.emit('reset_timer', { time: resetTime });
+  };
+
+  const handleResetLobby = () => {
     const socket = getStaffSocket();
     socket.emit('reset_lobby');
   };
@@ -51,7 +70,7 @@ function DiscussionBoard() {
   return (
     <div className="container container-md mt-lg">
       <Card title={tutorialName} actions={(
-        <Button variant="outline" onClick={handleBackToLobby}>Back to Lobby</Button>
+        <Button variant="outline" onClick={handleResetLobby}>Back to Lobby</Button>
       )}>
         <div className="card-subtitle">Group Discussion</div>
 
@@ -63,6 +82,24 @@ function DiscussionBoard() {
             <div className="timer-status">
               {isRunning ? 'Timer running' : 'Timer ready'}
             </div>
+          </div>
+        </div>
+
+        {/* Timer controls */}
+        <div className="form-group">
+          <div className="flex gap-sm items-center">
+            <input
+              type="number"
+              className="input"
+              style={{ width: '80px' }}
+              min="1"
+              value={resetTime}
+              onChange={(e) => setResetTime(Number(e.target.value))}
+            />
+            <span>minutes</span>
+            <Button variant="outline" onClick={handleResetTimer}>
+              Reset Timer
+            </Button>
           </div>
         </div>
 
@@ -83,11 +120,11 @@ function DiscussionBoard() {
         <div className="btn-group">
           {!isRunning ? (
             <Button variant="secondary" onClick={() => getStaffSocket().emit('start_timer')}>
-              Start Discussion Timer
+              Resume Discussion Timer
             </Button>
           ) : (
             <Button variant="outline" onClick={() => getStaffSocket().emit('stop_timer')}>
-              End Discussion Early
+              Pause Discussion Timer
             </Button>
           )}
           <Button variant="primary" onClick={handleNextRound}>

@@ -18,15 +18,22 @@ function SessionLobby() {
   useEffect(() => {
     const socket = getStaffSocket();
 
+    socket.emit('fetch_tutorial');
+
     const onUpdate = (tutorial) => {
-      console.log("tutorial lobby:", tutorial)
-      if (!tutorial) return;
+      if (!tutorial) {
+        return;
+      }
       setJoinCode(tutorial.tutorial_code || code);
-      setTutorialName(`[Lobby] ${tutorial.name || 'Tutorial'}`);
+      setTutorialName(`${tutorial.name || 'Tutorial'} - Lobby`);
       setStudents(Object.values(tutorial.students || {}).map(s => s.name));
 
-      if (tutorial.state === 'groups') navigate('/staff/groups');
-      if (tutorial.state === 'discussion') navigate('/staff/discussion');
+      if (tutorial.state === 'groups') {
+        navigate('/staff/groups');
+      }
+      if (tutorial.state === 'discussion') {
+        navigate('/staff/discussion');
+      }
     };
 
     socket.on('tutorial_update', onUpdate);

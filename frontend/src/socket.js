@@ -3,7 +3,9 @@ import { io } from "socket.io-client";
 const sockets = {};
 
 export function getSocket(namespace = "/") {
-  if (sockets[namespace]) return sockets[namespace];
+  if (sockets[namespace]) {
+    return sockets[namespace];
+  }
 
   const uuid = localStorage.getItem("uuid");
   const url = namespace === "/" ? "http://localhost:5000" : `http://localhost:5000${namespace}`;

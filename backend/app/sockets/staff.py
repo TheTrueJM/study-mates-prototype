@@ -41,7 +41,12 @@ def _with_tutorial_auth(f):
 def connect(auth):
     user_id = auth.get("uuid") if auth else None
     role = session.get("role", "staff")
-    code = session.get("tutorial_code")
+
+    existing_tutorial = None
+    if user_id and user_id in utils.users:
+        existing_tutorial = utils.users[user_id].get("tutorial")
+
+    code = session.get("tutorial_code") or existing_tutorial
 
     if not user_id: user_id = str(uuid.uuid4())
 
@@ -129,6 +134,12 @@ def reset_lobby(user_id, code, tutorial):
     for student in tutorial["students"].values():
         student["group"] = None
 
+    utils._emit_tutorial_update(code)
+
+
+@socketio.on("fetch_tutorial", namespace="/staff")
+@_with_tutorial_auth
+def fetch_tutorial(user_id, code, tutorial):
     utils._emit_tutorial_update(code)
 
 
