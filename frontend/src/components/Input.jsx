@@ -1,7 +1,7 @@
 // Input - Reusable form input component
 // Passes e.target.value directly to onChange for convenience with setState
 
-function Input({ label, type = 'text', value, onChange, placeholder, hint, disabled = false }) {
+function Input({ label, type = 'text', value, min, max, onChange, placeholder, hint, disabled = false }) {
   return (
     <div className="form-group">
       {label && <label className="input-label">{label}</label>}
@@ -10,6 +10,8 @@ function Input({ label, type = 'text', value, onChange, placeholder, hint, disab
         type={type}
         className={`input ${disabled ? 'input-disabled' : ''}`}
         value={value}
+        min={min}
+        max={max}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
