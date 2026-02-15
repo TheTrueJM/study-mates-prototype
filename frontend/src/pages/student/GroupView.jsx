@@ -17,8 +17,12 @@ function GroupView() {
   useEffect(() => {
     const socket = getSocket();
 
+    socket.emit('fetch_tutorial');
+
     const onStudentUpdate = (tutorial) => {
-      if (!tutorial) return;
+      if (!tutorial) {
+        return;
+      }
       setUsername(tutorial.username || '');
       setGroupNumber(tutorial.group_number);
       setGroupMembers(tutorial.group_members || []);
@@ -27,7 +31,7 @@ function GroupView() {
 
       if (tutorial.state === 'lobby') {
         navigate('/waiting');
-      } else if (tutorial.state === 'discussion') {
+      } else if (tutorial.state === 'groups' || tutorial.state === 'discussion') {
         navigate('/group');
       }
 
@@ -64,22 +68,30 @@ function GroupView() {
   return (
     <div className="container container-md mt-lg">
       <Card title={tutorialName || 'Tutorial Session'}>
-        <div className="card-subtitle">Group {groupNumber}</div>
+        {groupNumber != null ? (
+          <>
+            <div className="card-subtitle">Group {groupNumber}</div>
 
-        {state === 'discussion' && (
-          <div className="timer-display mb-md">
-            <div className="timer-value">{formatTime(timerRemaining)}</div>
-            <div className="timer-status">Discussion time remaining</div>
+            {state === 'discussion' && (
+              <div className="timer-display mb-md">
+                <div className="timer-value">{formatTime(timerRemaining)}</div>
+                <div className="timer-status">Discussion time remaining</div>
+              </div>
+            )}
+
+            <div className="flex-col gap-xs" style={{ display: 'flex' }}>
+              {groupMembers.map((member) => (
+                <div key={member} className="member-card">
+                  <div className="member-name">{member}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="text-center">
+            <p>Waiting for group formation...</p>
           </div>
         )}
-
-        <div className="flex-col gap-xs" style={{ display: 'flex' }}>
-          {groupMembers.map((member) => (
-            <div key={member} className="member-card">
-              <div className="member-name">{member}</div>
-            </div>
-          ))}
-        </div>
 
         <div className="divider mt-md">
           <p style={{ fontSize: '0.875rem', color: '#888' }}>

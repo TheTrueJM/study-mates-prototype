@@ -9,6 +9,7 @@ import { getStaffSocket } from '../../socket';
 
 function GroupFormation() {
   const [groups, setGroups] = useState([]);
+  const [students, setStudents] = useState({});
   const [tutorialName, setTutorialName] = useState('');
   const navigate = useNavigate();
 
@@ -16,18 +17,27 @@ function GroupFormation() {
     const socket = getStaffSocket();
 
     const onUpdate = (tutorial) => {
-      if (!tutorial) return;
+      if (!tutorial) {
+        return;
+      }
       setTutorialName(tutorial.name || '');
+      setStudents(tutorial.students || {});
       const groupList = Object.entries(tutorial.groups || {}).map(([id, members]) => ({ id, members }));
       setGroups(groupList);
 
-      if (tutorial.state === 'lobby') navigate('/staff/tutorial/' + (tutorial.tutorial_code || ''));
-      if (tutorial.state === 'discussion') navigate('/staff/discussion');
+      if (tutorial.state === 'lobby') {
+        navigate('/staff/tutorial/' + (tutorial.tutorial_code || ''));
+      }
+      if (tutorial.state === 'discussion') {
+        navigate('/staff/discussion');
+      }
     };
 
     socket.on('tutorial_update', onUpdate);
 
-    return () => socket.off('tutorial_update', onUpdate);
+    return () => {
+      socket.off('tutorial_update', onUpdate);
+    };
   }, [navigate]);
 
   const handleReform = () => {
@@ -51,18 +61,24 @@ function GroupFormation() {
         <div className="card-subtitle">Group Formation Result</div>
 
         {/* Group cards in responsive grid */}
-        <div className="grid grid-cols-3 mb-lg">
-          {groups.map((group) => (
-            <div key={group.id} className="group-card">
-              <div className="group-card-header">Group {group.id}</div>
-              <div className="group-card-body">
-                {group.members.map((member) => (
-                  <div key={member} className="group-member">{member}</div>
-                ))}
+        {groups.length === 0 ? (
+          <div className="text-center mb-lg">
+            <p>No groups formed yet. Click "Reform Groups" to create groups.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 mb-lg">
+            {groups.map((group) => (
+              <div key={group.id} className="group-card">
+                <div className="group-card-header">Group {group.id}</div>
+                <div className="group-card-body">
+                  {group.members.map((member) => (
+                    <div key={member} className="group-member">{students[member]?.name || member}</div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Action buttons */}
         <div className="btn-group">

@@ -12,8 +12,12 @@ function WaitingLobby() {
   useEffect(() => {
     const socket = getSocket();
 
+    socket.emit('fetch_tutorial');
+
     const onStudentUpdate = (payload) => {
-      if (!payload) return;
+      if (!payload) {
+        return;
+      }
       setUsername(payload.username || '');
 
       if (payload.state === 'groups') {

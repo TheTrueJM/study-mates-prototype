@@ -3,7 +3,9 @@ import { io } from "socket.io-client";
 const sockets = {};
 
 export function getSocket(namespace = "/") {
-  if (sockets[namespace]) return sockets[namespace];
+  if (sockets[namespace]) {
+    return sockets[namespace];
+  }
 
   const uuid = localStorage.getItem("uuid");
   const url = namespace === "/" ? "http://localhost:5000" : `http://localhost:5000${namespace}`;
@@ -13,15 +15,6 @@ export function getSocket(namespace = "/") {
     withCredentials: true,
     transports: ["websocket"],
     path: '/socket.io',
-  });
-
-  socket.on("connect", () => {
-    console.log(socket)
-    console.info("socket connected", namespace, socket.id);
-  });
-
-  socket.on("connect_error", (err) => {
-    console.error("socket connect_error", namespace, err);
   });
 
   socket.on("session", (data) => {

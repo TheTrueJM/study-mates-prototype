@@ -64,6 +64,8 @@ def _cleanup_stale_users(code):
 
     students = tutorial["students"]
     for student_id in stale_ids:
+        if users.get(student_id) and users[student_id].get("sessions"):
+            continue
         students.pop(student_id, None)
         users.pop(student_id, None)
 

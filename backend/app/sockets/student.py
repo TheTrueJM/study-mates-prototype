@@ -24,11 +24,8 @@ def connect(auth):
             "tutorial": None
         }
 
-    logger.info(f"DEBUG: {utils.users[user_id]}")
     utils.users[user_id]["sessions"].add(request.sid)
-    logger.info(f"DEBUG: {request.sid}")
     utils.sessions[request.sid] = user_id
-    logger.info("Before emit session reached")
 
     emit("session",
         {
@@ -52,3 +49,20 @@ def join_tutorial(data):
         return
 
     utils._join_tutorial(user_id, code, namespace="/")
+
+
+@socketio.on("fetch_tutorial")
+def fetch_tutorial():
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid)
+        return
+
+    if not (code := utils.users.get(user_id, {}).get("tutorial")):
+        emit("error", {"message": "Not in a tutorial"}, to=request.sid)
+        return
+
+    if not utils.tutorials.get(code):
+        emit("error", {"message": "Tutorial not found"}, to=request.sid)
+        return
+
+    utils._emit_tutorial_update(code)
