@@ -18,8 +18,8 @@ def client(app):
 
 @pytest.fixture
 def socketio_client(app):
-   def _client(namespace="/", test_client=None, disconnect=True):
-       client = socketio.test_client(app, namespace=namespace, flask_test_client=test_client)
+   def _client(namespace="/", test_client=None, disconnect=True, auth=None):
+       client = socketio.test_client(app, namespace=namespace, flask_test_client=test_client, auth=auth)
        if disconnect:
            client.disconnect()
        return client
@@ -32,4 +32,5 @@ def reset_socket_state():
     utils.users.clear()
     utils.sessions.clear()
     utils.tutorials.clear()
+    utils.disconnected_students.clear()
     yield
