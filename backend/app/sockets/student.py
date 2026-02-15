@@ -13,7 +13,12 @@ logger = logging.getLogger(__name__)
 def connect(auth):
     user_id = auth.get("uuid") if auth else None
     role = session.get("role", "student")
-    code = session.get("tutorial_code")
+
+    existing_tutorial = None
+    if user_id and user_id in utils.users:
+        existing_tutorial = utils.users[user_id].get("tutorial")
+
+    code = session.get("tutorial_code") or existing_tutorial
 
     if not user_id: user_id = str(uuid.uuid4())
 

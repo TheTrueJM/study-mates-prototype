@@ -142,7 +142,8 @@ def _join_tutorial(user_id, code, namespace):
         if code and user.get("role") == "student":
             disconnected_students.get(code, {}).pop(user_id, None)
 
-    users[user_id]["tutorial"] = code
+    if code:
+        users[user_id]["tutorial"] = code
 
     if users[user_id]["role"] == "student":
         if user_id not in tutorial["students"]:
