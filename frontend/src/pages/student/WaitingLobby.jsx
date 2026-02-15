@@ -1,12 +1,46 @@
 // WaitingLobby - Student waits here while tutor forms groups
 // TODO: Replace dummy data with real-time socket.io updates
 
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
+import { getSocket } from '../../socket';
+
+
 
 function WaitingLobby() {
-  // Placeholder data (will come from backend via socket.io)
-  const username = 'Anonymous-Wombat-42';
-  const studentCount = 12;
+  const [username, setUsername] = useState('');
+  const [studentCount, setStudentCount] = useState(0);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const socket = getSocket();
+
+    const onStudentUpdate = (payload) => {
+      if (!payload) return;
+      setUsername(payload.username || '');
+      // student list is on tutorial_update for staff, but we can derive count if provided
+      // if the server sends student count, use it; otherwise leave as unknown
+      // navigate to group view when state changes
+      if (payload.state === 'groups') {
+        navigate('/group');
+      }
+    };
+
+    const onTutorial = (tutorial) => {
+      if (!tutorial) return;
+      setStudentCount(Object.keys(tutorial.students || {}).length);
+      if (tutorial.state === 'groups') navigate('/group');
+    };
+
+    socket.on('student_update', onStudentUpdate);
+    socket.on('tutorial_update', onTutorial);
+
+    return () => {
+      socket.off('student_update', onStudentUpdate);
+      socket.off('tutorial_update', onTutorial);
+    };
+  }, [navigate]);
 
   return (
     <div className="container container-sm mt-lg">

@@ -9,11 +9,14 @@ import os
 import threading
 from threading import Lock
 
+FRONTEND_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
 socketio = SocketIO(
     logger=True,
-    cors_allowed_origins=[
-        "http://localhost:5173",
-    ]
+    cors_allowed_origins=FRONTEND_ORIGINS,
 )
 
 timer_threads = dict()
@@ -78,7 +81,7 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///study_mates.sqlite")
 
     db.init_app(app)
-    CORS(app, origins="*") # Update Origins
+    CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True) # Update Origins
     socketio.init_app(app)
 
     with app.app_context():
@@ -87,6 +90,8 @@ def create_app():
     # Register blueprints
     app.register_blueprint(staff_bp, url_prefix="/staff")
     app.register_blueprint(student_bp)
+
+    from . import sockets
 
     login_manager = LoginManager()
     login_manager.login_view = "staff.login"

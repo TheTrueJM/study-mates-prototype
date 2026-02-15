@@ -1,6 +1,7 @@
 // EnterAttributes - Student inputs GPA info and availability times
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
@@ -15,6 +16,7 @@ function EnterAttributes() {
   const [availableDays, setAvailableDays] = useState(
     DAYS.map(day => ({ day, times: new Set() }))
   );
+  const navigate = useNavigate();
 
   // Toggle a time slot on/off for a given day
   const toggleTime = (dayIndex, time) => {
@@ -32,8 +34,29 @@ function EnterAttributes() {
   };
 
   const handleConfirm = () => {
-    console.log('Attributes:', { gradeExpectation, currentGPA, noGPAYet, availableDays });
-    // TODO: Call API -> navigate to /student/waiting
+    // Build availability codes according to backend enum format
+    const DAY_CODES = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+    const PERIOD_MAP = { Morning: 'M', Afternoon: 'A', Evening: 'N' };
+
+    const params = new URLSearchParams();
+    params.append('currentGPA', currentGPA || '0');
+    params.append('goalGPA', gradeExpectation || '4.0');
+
+    availableDays.forEach((slot, dayIndex) => {
+      slot.times.forEach((time) => {
+        const code = `${DAY_CODES[dayIndex]}${PERIOD_MAP[time]}`;
+        params.append('availability', code);
+      });
+    });
+
+    fetch('http://localhost:5000/details', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params,
+      credentials: 'include',
+    }).then(() => {
+      navigate('/waiting');
+    }).catch(err => console.error(err));
   };
 
   return (

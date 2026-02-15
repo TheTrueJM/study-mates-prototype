@@ -6,5 +6,9 @@ export default defineConfig({
   server: {
     port: 5173,
   },
-  proxy: "http://localhost:5000",
+  proxy: {
+    '/staff': { target: 'http://localhost:5000', changeOrigin: true },
+    '/student': { target: 'http://localhost:5000', changeOrigin: true },
+    '/socket.io': { target: 'http://localhost:5000', ws: true, changeOrigin: true },
+  },
 });

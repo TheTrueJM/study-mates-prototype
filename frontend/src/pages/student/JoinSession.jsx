@@ -2,14 +2,23 @@
 
 import { useState } from 'react';
 import Button from '../../components/Button';
+import { useNavigate } from 'react-router-dom';
 
 function JoinSession() {
   const [code, setCode] = useState('');
   const [username] = useState('Anonymous-Wombat-42'); // Read-only for now
+  const navigate = useNavigate();
 
   const handleJoin = () => {
-    console.log('Joining session with code:', code);
-    // TODO: Call API -> navigate to /student/attributes
+    // Post tutorial code to backend to store in server-side session
+    fetch("http://localhost:5000/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ code }),
+      credentials: 'include',
+    }).then(() => {
+      navigate('/attributes');
+    }).catch((err) => console.error(err));
   };
 
   return (

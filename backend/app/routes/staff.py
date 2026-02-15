@@ -52,12 +52,10 @@ def login():
     
     login_user(staff)
 
-    return jsonify({
-        "message": "Login successful",
-        "staff": {
-            "username": "username"
-        }
-    }), 200
+    session["role"] = "staff"
+    session["tutorial_code"] = None
+
+    return jsonify({"message": "Login successful"}), 200
 
 
 @staff_bp.route("/logout")

@@ -2,45 +2,43 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-import { io } from "socket.io-client";
 import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
-// import useSocket from '../../useSocket'
+import { getStaffSocket } from '../../socket';
 
 function SessionSetup() {
-  const [socketInstance, setSocketInstance] = useState("");
+  const [socketInstance, setSocketInstance] = useState(null);
   const [name, setName] = useState("");
   const [groupSize, setGroupSize] = useState(6);
   const [discussionTime, setDiscussionTime] = useState(10);
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   let uuid = localStorage.getItem("uuid");
-  //   // socket.auth = { uuid };
+  useEffect(() => {
+    const socket = getStaffSocket();
+    setSocketInstance(socket);
 
-  //   // Connect socket aer component mounts
-  //   const socket = io("http://localhost:5000/staff", {
-  //     auth: { uuid },
-  //   });
+    const onTutorialCreated = (data) => {
+      console.log("Tutorial created with code:", data.code);
+      navigate(`/staff/tutorial/${data.code}`);
+    };
 
-  //   socket.on("connect", () => {
-  //     console.log("Socket connected:", socket.id);
-  //   });
+    socket.on("tutorial_created", onTutorialCreated);
 
-  //   socket.on("tutorial_created", (data) => {
-  //     navigate(`/tutorial/${data.code}`);
-  //   });
-  // });
+    return () => {
+      socket.off("tutorial_created", onTutorialCreated);
+    };
+  }, [navigate]);
 
   const handleBegin = (e) => {
     e.preventDefault();
+    if (!socketInstance) return;
 
-    // socket.emit("create_tutorial", {
-    //   name: name,
-    //   group_size: groupSize,
-    //   discussion_time: discussionTime,
-    // });
+    socketInstance.emit("create_tutorial", {
+      name: name,
+      group_size: groupSize,
+      discussion_time: discussionTime,
+    });
   };
 
   return (
