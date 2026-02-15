@@ -17,10 +17,8 @@ function DiscussionBoard() {
 
   useEffect(() => {
     const socket = getStaffSocket();
-    socket.emit('get_update');
 
     const onUpdate = (tutorial) => {
-      console.log("tutorial discussion:", tutorial)
       if (!tutorial) return;
       setTutorialName(`${tutorial.name || 'Tutorial'} - ${tutorial.tutorial_code}`);
       if (tutorial.timer) {

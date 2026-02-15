@@ -14,10 +14,8 @@ function GroupFormation() {
 
   useEffect(() => {
     const socket = getStaffSocket();
-    socket.emit('get_update');
 
     const onUpdate = (tutorial) => {
-      console.log("tutorial groups:", tutorial)
       if (!tutorial) return;
       setTutorialName(`${tutorial.name || 'Tutorial'} - ${tutorial.tutorial_code}`);
       const groupList = Object.entries(tutorial.groups || {}).map(([id, members]) => ({ id, members }));

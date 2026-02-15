@@ -13,7 +13,7 @@ function SessionLobby() {
 
   const [joinCode, setJoinCode] = useState(code || '');
   const [students, setStudents] = useState([]);
-  const [tutorialName, setTutorialName] = useState('[Lobby] Tutorial');
+  const [tutorialName, setTutorialName] = useState('');
 
   useEffect(() => {
     const socket = getStaffSocket();
@@ -45,7 +45,6 @@ function SessionLobby() {
   return (
     <div className="container container-lg mt-lg">
       <Card title={tutorialName}>
-        <div className="card-subtitle">{students.length} Students in Lobby</div>
 
         {/* Join code + QR code area */}
         <div className="mb-lg">
