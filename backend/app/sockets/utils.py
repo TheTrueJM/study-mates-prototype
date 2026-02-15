@@ -1,6 +1,7 @@
 import random
 import string
 import uuid
+import threading
 import logging
 from flask import session, request
 from flask_socketio import emit, join_room
@@ -40,6 +41,31 @@ def _generate_code(length=6):
             return code
 
 
+def _generate_name(tutorial):
+    DESCRIPTORS = (
+        'agile', 'anonymous', 'blazing', 'blissful', 'bold', 'brave', 'bright', 'calm', 'cheerful',
+        'clever', 'colorful', 'cosmic',  'curious', 'daring', 'dazzling', 'energetic', 'epic',
+        'friendly', 'frosty', 'gentle', 'glowing', 'golden', 'graceful', 'happy', 'hasty', 'heroic',
+        'hidden', 'jolly', 'joyful', 'kind', 'legendary', 'lively', 'lunar', 'midnight', 'mighty',
+        'mysterious', 'mythic', 'nimble', 'noble', 'peaceful', 'playful', 'powerful', 'quick',
+        'radiant', 'rapid', 'resilient', 'royal', 'shiny', 'silent', 'silver', 'smart', 'sneaky',
+        'stealthy', 'stellar', 'strong', 'swift', 'valiant', 'vibrant', 'wild', 'wise', 'witty'
+    )
+    ANIMALS = (
+        'armadillo', 'badger', 'bear', 'beaver', 'cat', 'chameleon', 'cheetah', 'chicken', 'cockatoo',
+        'coyote', 'jackal', 'crow', 'dog', 'dolphin', 'duck', 'eagle', 'falcon', 'fish', 'flamingo',
+        'fox', 'hawk', 'hedgehog', 'horse', 'jaguar', 'jellyfish', 'kangaroo', 'koala', 'leopard',
+        'lion', 'lizard', 'meerkat', 'otter', 'owl', 'panda', 'panther', 'parrot', 'penguin', 'rabbit',
+        'raccoon', 'raven', 'salamander', 'seal', 'serpent', 'shark', 'sheep', 'sloth', 'snake',
+        'squirrel', 'swan', 'tiger', 'tortoise', 'turtle', 'wallaby', 'walrus', 'wolf', 'wombat', 'zebra'
+    )
+    names = {student["name"] for student in tutorial["students"].values()}
+    while True:
+        name = f"{random.choice(DESCRIPTORS).title()}-{random.choice(ANIMALS).title()}"
+        if name not in names:
+            return name
+
+
 def _emit_tutorial_update(code):
     tutorial = tutorials.get(code)
     if not tutorial:
@@ -61,6 +87,7 @@ def _emit_tutorial_update(code):
         group = tutorial["groups"].get(group_number)
         members = [tutorial["students"][sid].get("name") for sid in group] if group else None
         payload = {
+            "username": data["name"],
             "name": tutorial["name"],
             "state": tutorial["state"],
             "group_number": group_number,
@@ -79,12 +106,14 @@ def _join_tutorial(user_id, code, namespace):
         emit("error", {"message": "Tutorial not found"}, to=request.sid, namespace=namespace)
         return
 
+    if users[user_id].get("disconnect"): users[user_id]["disconnect"].cancel()
+
     users[user_id]["tutorial"] = code
 
     if users[user_id]["role"] == "student":
         if user_id not in tutorial["students"]:
             tutorial["students"][user_id] = {
-                "name": session.get("name"),
+                "name": _generate_name(tutorial),
                 "currentGPA": session.get("currentGPA"),
                 "goalGPA": session.get("goalGPA"),
                 "availability": session.get("availability", []),
@@ -117,13 +146,18 @@ def multi_namespace_event(event, namespaces):
 @multi_namespace_event("disconnect", ["/", "/staff"])
 def disconnect():
     if user_id := sessions.pop(request.sid, None):
-        users[user_id]["sessions"].discard(request.sid)
+        def confirm_disconnect():
+            if user := users.get(user_id):
+                user["sessions"].discard(user_id)
 
-        if code := users[user_id]["tutorial"]:
-            users[user_id]["tutorial"] = None
+                if code := user["tutorial"]:
+                    user["tutorial"] = None
 
-            if tutorial := tutorials.get(code):
-                tutorial["students"].pop(user_id, None)
+                    if tutorial := tutorials.get(code):
+                        tutorial["students"].pop(user_id, None)
 
-        if not users[user_id]["sessions"]:
-            users.pop(user_id, None)
+                if not user["sessions"]:
+                    users.pop(user_id, None)
+        
+        users[user_id]["disconnect"] = threading.Timer(5.0, confirm_disconnect)
+        users[user_id]["disconnect"].start()

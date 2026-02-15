@@ -10,9 +10,7 @@ student_bp = Blueprint("student", __name__)
 def index():
     if request.method == "POST":
         code = request.form.get("code")
-        name = request.form.get("name") # Generate Random on Frontend, Here, or Socket-Server?
         session["tutorial_code"] = code
-        session["name"] = name
         return redirect(url_for("student.details"))
 
     client_path = os.path.join(os.getcwd(), "../frontend/public/student/index.html")

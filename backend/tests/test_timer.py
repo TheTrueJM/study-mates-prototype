@@ -99,7 +99,7 @@ def test_start_stop_timer(client, socketio_client):
 
     sio.disconnect(namespace=namespace)
 
-def test_edit_timer(client, socketio_client):
+def test_reset_timer(client, socketio_client):
     namespace = "/staff"
     set_session(client, name="test", currentGPA=0.0, goalGPA=6.7, availability="")
     sio = socketio_client(namespace=namespace, test_client=client, disconnect=False)
@@ -108,7 +108,7 @@ def test_edit_timer(client, socketio_client):
     uuid = response.get("uuid")
     utils.users[uuid]["role"] = "staff"
 
-    sio.emit("create_tutorial", {"name": "EditTest", "group_size": 2, "discussion_time": 5}, namespace=namespace)
+    sio.emit("create_tutorial", {"name": "ResetTest", "group_size": 2, "discussion_time": 5}, namespace=namespace)
     time.sleep(0.5)
 
     code = utils.users[uuid].get("tutorial")
@@ -119,14 +119,11 @@ def test_edit_timer(client, socketio_client):
     sio.emit("start_discussion", namespace=namespace)
     time.sleep(0.5)
 
-    sio.emit("edit_timer", {"time": 20}, namespace=namespace)
+    sio.emit("reset_timer", {"time": 20}, namespace=namespace)
     time.sleep(0.5)
 
     assert tutorial["timer"]["duration"] == 1200
     assert tutorial["timer"]["remaining"] == 1200
-
-    sio.emit("stop_timer", namespace=namespace)
-    time.sleep(0.5)
 
     sio.disconnect(namespace=namespace)
 
