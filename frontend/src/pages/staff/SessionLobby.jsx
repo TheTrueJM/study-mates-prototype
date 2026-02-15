@@ -17,7 +17,6 @@ function SessionLobby() {
 
   useEffect(() => {
     const socket = getStaffSocket();
-    socket.emit('get_update');
 
     const onUpdate = (tutorial) => {
       console.log("tutorial lobby:", tutorial)
