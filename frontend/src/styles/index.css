@@ -58,6 +58,9 @@ body {
 .card-header {
   font-size: 1.5rem;
   font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: var(--spacing-md);
   padding-bottom: var(--spacing-sm);
   border-bottom: var(--border-width) solid var(--color-border);

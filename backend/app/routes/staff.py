@@ -1,4 +1,4 @@
-from flask import Blueprint, session, request, redirect, url_for, send_file, render_template
+from flask import Blueprint, session, request, redirect, url_for, send_file, render_template, jsonify
 from flask_bcrypt import generate_password_hash, check_password_hash
 from flask_login import login_required, login_user, logout_user, current_user
 from sqlalchemy import or_
@@ -32,48 +32,37 @@ def tutorial(code):
 
 
 
-@staff_bp.route("/login", methods=["GET", "POST"])
+@staff_bp.route("/login", methods=["POST"])
 def login():
-    error: str = None
-    
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-        
-        # Check if staff exists
-        # To-Do: Update if Identification changes
-        staff: Staff | None = db.session.scalar(db.select(Staff).where(Staff.username==username))
+    data = request.get_json()
 
-        # Validate staff identity and password
-        if not isinstance(staff, Staff):
-            error = "User not found for that username"
-        elif not check_password_hash(staff.password_hash, password):
-            error = "Incorrect password"
-        
-        if error:
-            print(error)
-            # flash(error, "danger")
-        else:
-            login_user(staff)
-            # flash("Login successful", "success")
-
-            # Redirect to the original destination or index
-            destination = request.args.get("next") 
-            if destination is None or not destination.startswith("/"):
-                return redirect(url_for("staff.index"))
-            return redirect(destination)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid login data or format"}), 400
     
-    # return render_template("auth.html", form=login_form, heading="Login")
-    client_path = os.path.join(os.getcwd(), "../frontend/public/staff/login.html")
-    return send_file(client_path)
+    username = data.get("username")
+    password = data.get("password")
+    
+    staff: Staff | None = db.session.scalar(db.select(Staff).where(Staff.username==username))
+
+    # Validate staff identity and password
+    if not isinstance(staff, Staff):
+        return jsonify({"error": "Staff not found"}), 400
+    if not check_password_hash(staff.password_hash, password):
+        return jsonify({"error": "Incorrect password"}), 401
+    
+    login_user(staff)
+
+    session["role"] = "staff"
+    session["tutorial_code"] = None
+
+    return jsonify({"message": "Login successful"}), 200
 
 
 @staff_bp.route("/logout")
 @login_required
 def logout():
     logout_user()
-    # flash("Logout successful", "info")
-    return redirect(url_for("staff.login"))
+    return jsonify({"message": "Logout successful"}), 200
 
 
 

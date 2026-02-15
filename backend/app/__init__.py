@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_socketio import SocketIO
+from flask_cors import CORS
 from flask_login import LoginManager
-from sqlalchemy import or_
 from .database import db, Staff
 from .routes import staff_bp, student_bp
 
@@ -9,10 +9,14 @@ import os
 import threading
 from threading import Lock
 
+FRONTEND_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
 socketio = SocketIO(
     logger=True,
-    cors_allows_origins="*",
-    cors_credentials=False
+    cors_allowed_origins=FRONTEND_ORIGINS,
 )
 
 timer_threads = dict()
@@ -77,6 +81,7 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///study_mates.sqlite")
 
     db.init_app(app)
+    CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True) # Update Origins
     socketio.init_app(app)
 
     with app.app_context():
@@ -89,7 +94,6 @@ def create_app():
     from . import sockets
 
     login_manager = LoginManager()
-
     login_manager.login_view = "staff.login"
     login_manager.init_app(app)
 

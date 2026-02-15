@@ -1,54 +1,88 @@
 // GroupFormation - Staff views formed groups and can reform or start discussion
 // TODO: Replace dummy data with group formation algorithm results from backend
 
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
+import { getStaffSocket } from '../../socket';
 
 function GroupFormation() {
-  // Placeholder data (will come from backend)
-  const groups = [
-    {
-      id: 1,
-      members: ['Anonymous-Wombat-42', 'Random-Koala-17', 'Mystery-Dolphin-89', 'Unknown-Eagle-23'],
-    },
-    {
-      id: 2,
-      members: ['Silent-Tiger-56', 'Hidden-Panda-91', 'Secret-Fox-34', 'Quiet-Bear-78'],
-    },
-    {
-      id: 3,
-      members: ['Private-Owl-12', 'Masked-Wolf-45', 'Veiled-Deer-67', 'Unseen-Hawk-29'],
-    },
-  ];
+  const [groups, setGroups] = useState([]);
+  const [students, setStudents] = useState({});
+  const [tutorialName, setTutorialName] = useState('');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const socket = getStaffSocket();
+
+    socket.emit('fetch_tutorial');
+
+    const onUpdate = (tutorial) => {
+      if (!tutorial) {
+        return;
+      }
+      setTutorialName(`${tutorial.name || 'Tutorial'} - ${tutorial.tutorial_code}`);
+      setStudents(tutorial.students || {});
+      const groupList = Object.entries(tutorial.groups || {}).map(([id, members]) => ({ id, members }));
+      setGroups(groupList);
+
+      if (tutorial.state === 'lobby') {
+        navigate('/staff/tutorial/' + (tutorial.tutorial_code || ''));
+      }
+      if (tutorial.state === 'discussion') {
+        navigate('/staff/discussion');
+      }
+    };
+
+    socket.on('tutorial_update', onUpdate);
+
+    return () => {
+      socket.off('tutorial_update', onUpdate);
+    };
+  }, [navigate]);
 
   const handleReform = () => {
-    console.log('Reform groups');
-    // TODO: Call API -> re-run group formation
+    const socket = getStaffSocket();
+    socket.emit('start_grouping');
   };
 
   const handleBeginDiscussion = () => {
-    console.log('Begin discussion time');
-    // TODO: Call API -> navigate to /staff/discussion
+    const socket = getStaffSocket();
+    socket.emit('start_discussion');
+  };
+
+  const handleResetLobby = () => {
+    const socket = getStaffSocket();
+    socket.emit('reset_lobby');
   };
 
   return (
     <div className="container container-lg mt-lg">
-      <Card title="Tutorial Session ABCD-1234">
-        <div className="card-subtitle">Group Formation Result</div>
+      <Card title={tutorialName} actions={(
+        <Button variant="outline" onClick={handleResetLobby}>Back to Lobby</Button>
+      )}>
+        <div className="card-subtitle">Group Formation Results</div>
 
         {/* Group cards in responsive grid */}
-        <div className="grid grid-cols-3 mb-lg">
-          {groups.map((group) => (
-            <div key={group.id} className="group-card">
-              <div className="group-card-header">Group {group.id}</div>
-              <div className="group-card-body">
-                {group.members.map((member) => (
-                  <div key={member} className="group-member">{member}</div>
-                ))}
+        {groups.length === 0 ? (
+          <div className="text-center mb-lg">
+            <p>No groups formed yet. Click "Reform Groups" to create groups.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 mb-lg">
+            {groups.map((group) => (
+              <div key={group.id} className="group-card">
+                <div className="group-card-header">Group {group.id}</div>
+                <div className="group-card-body">
+                  {group.members.map((member) => (
+                    <div key={member} className="group-member">{students[member]?.name || member}</div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         {/* Action buttons */}
         <div className="btn-group">

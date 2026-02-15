@@ -3,6 +3,9 @@ flask-socketio
 flask-login
 flask-sqlalchemy
 flask-bcrypt
+flask_cors
 sqlalchemy
 pytest
 pudb
+numpy
+eventlet

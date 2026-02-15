@@ -13,7 +13,12 @@ logger = logging.getLogger(__name__)
 def connect(auth):
     user_id = auth.get("uuid") if auth else None
     role = session.get("role", "student")
-    code = session.get("tutorial_code")
+
+    existing_tutorial = None
+    if user_id and user_id in utils.users:
+        existing_tutorial = utils.users[user_id].get("tutorial")
+
+    code = session.get("tutorial_code") or existing_tutorial
 
     if not user_id: user_id = str(uuid.uuid4())
 
@@ -24,11 +29,8 @@ def connect(auth):
             "tutorial": None
         }
 
-    logger.info(f"DEBUG: {utils.users[user_id]}")
     utils.users[user_id]["sessions"].add(request.sid)
-    logger.info(f"DEBUG: {request.sid}")
     utils.sessions[request.sid] = user_id
-    logger.info("Before emit session reached")
 
     emit("session",
         {
@@ -52,3 +54,20 @@ def join_tutorial(data):
         return
 
     utils._join_tutorial(user_id, code, namespace="/")
+
+
+@socketio.on("fetch_tutorial")
+def fetch_tutorial():
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid)
+        return
+
+    if not (code := utils.users.get(user_id, {}).get("tutorial")):
+        emit("error", {"message": "Not in a tutorial"}, to=request.sid)
+        return
+
+    if not utils.tutorials.get(code):
+        emit("error", {"message": "Tutorial not found"}, to=request.sid)
+        return
+
+    utils._emit_tutorial_update(code)
