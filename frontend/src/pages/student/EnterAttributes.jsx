@@ -49,7 +49,7 @@ function EnterAttributes() {
       });
     });
 
-    fetch('https://study-mates-deployment.onrender.com/', {
+    fetch('https://study-mates-deployment.onrender.com/details', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params,
