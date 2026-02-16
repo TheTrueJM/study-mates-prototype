@@ -8,8 +8,8 @@ function Navbar() {
     <nav className="nav">
       <div className="nav-inner">
         <Link to="/" className="nav-brand">Study Mates</Link>
-        
-        <Link to="/staff/setup" className="nav-action">Staff Login</Link>
+
+        <Link to="/staff/login" className="nav-action">Staff Login</Link>
       </div>
     </nav>
   );
