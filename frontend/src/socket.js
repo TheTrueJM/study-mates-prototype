@@ -8,7 +8,8 @@ export function getSocket(namespace = "/") {
   }
 
   const uuid = localStorage.getItem("uuid");
-  const url = namespace === "/" ? "http://localhost:5000" : `http://localhost:5000${namespace}`;
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  const url = namespace === "/" ? `${BACKEND_URL}` : `${BACKEND_URL}${namespace}`;
 
   const socket = io(url, {
     auth: { uuid },

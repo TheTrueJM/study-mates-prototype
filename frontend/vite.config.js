@@ -1,14 +1,16 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
   },
   proxy: {
-    '/staff': { target: 'http://localhost:5000', changeOrigin: true },
-    '/student': { target: 'http://localhost:5000', changeOrigin: true },
-    '/socket.io': { target: 'http://localhost:5000', ws: true, changeOrigin: true },
+    '/staff': { target: BACKEND_URL, changeOrigin: true },
+    '/student': { target: BACKEND_URL, changeOrigin: true },
+    '/socket.io': { target: BACKEND_URL, ws: true, changeOrigin: true },
   },
 });
