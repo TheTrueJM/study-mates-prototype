@@ -11,9 +11,11 @@ function Login() {
   const navigate = useNavigate();  
 
   const handleLogin= async () => {
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
     try {
       const response = await fetch(
-        `http://localhost:5000/staff/login`,
+        `${BACKEND_URL}/staff/login`,
         {
           method: "POST",
           headers: {

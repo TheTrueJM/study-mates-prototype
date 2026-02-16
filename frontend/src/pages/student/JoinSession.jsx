@@ -11,7 +11,9 @@ function JoinSession() {
 
   const handleJoin = () => {
     // Post tutorial code to backend to store in server-side session
-    fetch("http://localhost:5000/", {
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+    
+    fetch(`${BACKEND_URL}/`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ code }),

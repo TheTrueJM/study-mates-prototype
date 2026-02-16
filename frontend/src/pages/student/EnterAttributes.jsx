@@ -49,7 +49,9 @@ function EnterAttributes() {
       });
     });
 
-    fetch('http://localhost:5000/details', {
+    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+
+    fetch(`${BACKEND_URL}/details`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params,
