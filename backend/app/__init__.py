@@ -9,10 +9,16 @@ import os
 import threading
 from threading import Lock
 
-FRONTEND_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+_env_frontend = os.getenv("FRONTEND_ORIGINS")
+if _env_frontend:
+    FRONTEND_ORIGINS = [o.strip() for o in _env_frontend.split(',') if o.strip()]
+else:
+    FRONTEND_ORIGINS = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://study-mates-deployment.vercel.app",
+        "https://study-mates-deployment-studymates-projects-4d298d59.vercel.app"
+    ]
 
 socketio = SocketIO(
     logger=True,
@@ -79,6 +85,12 @@ def create_app():
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "insecure-key")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///study_mates.sqlite")
+    
+    # Configure session cookie for cross-site usage when using HTTPS
+    # Use secure cookies when any frontend origin is https
+    has_https_origin = any(o.startswith("https://") for o in FRONTEND_ORIGINS)
+    app.config["SESSION_COOKIE_SAMESITE"] = "None"
+    app.config["SESSION_COOKIE_SECURE"] = bool(has_https_origin)
 
     db.init_app(app)
     CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True) # Update Origins
