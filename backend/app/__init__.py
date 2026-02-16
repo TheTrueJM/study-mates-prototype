@@ -12,6 +12,8 @@ from threading import Lock
 FRONTEND_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://study-mates-deployment.vercel.app/",
+    "https://study-mates-deployment-studymates-projects-4d298d59.vercel.app/",
 ]
 
 socketio = SocketIO(
