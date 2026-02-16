@@ -11,7 +11,7 @@ function JoinSession() {
 
   const handleJoin = () => {
     // Post tutorial code to backend to store in server-side session
-    fetch("http://localhost:5000/", {
+    fetch("https://study-mates-deployment.onrender.com/", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({ code }),
