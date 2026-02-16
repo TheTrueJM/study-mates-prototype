@@ -8,7 +8,7 @@ export function getSocket(namespace = "/") {
   }
 
   const uuid = localStorage.getItem("uuid");
-  const url = namespace === "/" ? "http://localhost:5000" : `http://localhost:5000${namespace}`;
+  const url = namespace === "/" ? "https://study-mates-deployment.onrender.com" : `https://study-mates-deployment.onrender.com${namespace}`;
 
   const socket = io(url, {
     auth: { uuid },
