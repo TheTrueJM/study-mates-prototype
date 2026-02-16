@@ -49,7 +49,7 @@ function EnterAttributes() {
       });
     });
 
-    fetch('http://localhost:5000/details', {
+    fetch('https://study-mates-deployment.onrender.com/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params,
