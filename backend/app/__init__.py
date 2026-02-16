@@ -12,8 +12,6 @@ from threading import Lock
 FRONTEND_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://study-mates-deployment.vercel.app",
-    "https://study-mates-deployment-studymates-projects-4d298d59.vercel.app",
 ]
 
 socketio = SocketIO(
@@ -81,10 +79,6 @@ def create_app():
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "insecure-key")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///study_mates.sqlite")
-
-    has_https_origin = any(o.startswith("https://") for o in FRONTEND_ORIGINS)
-    app.config["SESSION_COOKIE_SAMESITE"] = "None"
-    app.config["SESSION_COOKIE_SECURE"] = bool(has_https_origin)
 
     db.init_app(app)
     CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True) # Update Origins
