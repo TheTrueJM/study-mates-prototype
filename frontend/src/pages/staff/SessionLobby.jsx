@@ -28,7 +28,8 @@ function SessionLobby() {
   };
 
   return (
-    <div className="container container-lg mt-lg">
+    <div className="page">
+      <div className="container container-lg">
       <Card title="Session Lobby">
 
         {/* Join code + QR code area */}
@@ -59,6 +60,7 @@ function SessionLobby() {
         </Button>
 
       </Card>
+      </div>
     </div>
   );
 }

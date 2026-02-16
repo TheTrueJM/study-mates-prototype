@@ -1,21 +1,22 @@
 // DiscussionBoard - Countdown timer + discussion questions for the current round
-// TODO: configuredTime and configuredQuestions should come from SessionSetup via API
+// Receives timeMinutes and questions as props from parent (fetched from backend API)
 
 import { useState, useEffect } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 
-function DiscussionBoard() {
-  // Placeholder config (will come from session setup)
-  const configuredTime = 10; // minutes
-  const configuredQuestions = [
+function DiscussionBoard({ timeMinutes = 10, questions = [] }) {
+  // timeMinutes and questions will come from backend API via props
+  // Defaults are placeholders for development only
+  const defaultQuestions = [
     'What are your career goals after graduation?',
     'What study techniques work best for you?',
     'What aspect of this course interests you most?',
     'How do you prefer to collaborate on group projects?',
   ];
+  const configuredQuestions = questions.length > 0 ? questions : defaultQuestions;
 
-  const [timeRemaining, setTimeRemaining] = useState(configuredTime * 60); // in seconds
+  const [timeRemaining, setTimeRemaining] = useState(timeMinutes * 60);
   const [isRunning, setIsRunning] = useState(false);
 
   // Timer countdown effect - runs every second while isRunning is true
@@ -46,7 +47,8 @@ function DiscussionBoard() {
   };
 
   return (
-    <div className="container container-md mt-lg">
+    <div className="page">
+      <div className="container container-md">
       <Card title="Discussion Round in Progress">
 
         {/* Timer display */}
@@ -90,6 +92,7 @@ function DiscussionBoard() {
         </div>
 
       </Card>
+      </div>
     </div>
   );
 }

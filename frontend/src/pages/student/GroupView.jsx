@@ -33,7 +33,8 @@ function GroupView() {
   ];
 
   return (
-    <div className="container container-md mt-lg">
+    <div className="page">
+      <div className="container container-md">
       <Card title="Tutorial Session ABCD-1234">
         <div className="card-subtitle">Group 1</div>
 
@@ -72,6 +73,7 @@ function GroupView() {
           </p>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

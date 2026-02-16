@@ -49,7 +49,8 @@ function EnterAttributes() {
   };
 
   return (
-    <div className="container container-md mt-lg">
+    <div className="page">
+      <div className="container container-md">
       <Card title="Tutorial Session ABCD-1234">
         {/* GPA inputs */}
         <Input
@@ -68,7 +69,7 @@ function EnterAttributes() {
           onChange={setCurrentGPA}
           placeholder="e.g. 5.3"
           hint="Your current or most recent GPA"
-          disabled={noGPAYet}
+          disabled={noGPAYet} //is true
         />
 
         <div className="checkbox-group">
@@ -112,6 +113,7 @@ function EnterAttributes() {
           </Button>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

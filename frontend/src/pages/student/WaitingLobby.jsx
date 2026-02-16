@@ -9,7 +9,8 @@ function WaitingLobby() {
   const studentCount = 12;
 
   return (
-    <div className="container container-sm mt-lg">
+    <div className="page-center">
+      <div className="container container-sm">
       <Card>
         <div className="text-center">
 
@@ -48,6 +49,7 @@ function WaitingLobby() {
 
         </div>
       </Card>
+      </div>
     </div>
   );
 }

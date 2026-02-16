@@ -8,7 +8,8 @@ function Home() {
   const navigate = useNavigate();
 
   return (
-    <div className="container container-sm mt-lg">
+    <div className="page-center">
+      <div className="container container-sm">
       <Card title="Study Mates">
         <p className="mb-md" style={{ color: '#888' }}>
           Select how you want to join the tutorial session.
@@ -23,6 +24,7 @@ function Home() {
           </Button>
         </div>
       </Card>
+      </div>
     </div>
   );
 }

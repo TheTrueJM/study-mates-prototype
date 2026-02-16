@@ -13,7 +13,8 @@ function JoinSession() {
   };
 
   return (
-    <div className="container container-sm mt-lg">
+    <div className="page-center">
+      <div className="container container-sm">
       <div className="card">
         <h1 className="card-header">Join Tutorial Session</h1>
 
@@ -45,6 +46,7 @@ function JoinSession() {
             Join Tutorial Session
           </Button>
         </div>
+      </div>
       </div>
     </div>
   );

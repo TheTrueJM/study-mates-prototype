@@ -32,7 +32,8 @@ function GroupFormation() {
   };
 
   return (
-    <div className="container container-lg mt-lg">
+    <div className="page">
+      <div className="container container-lg">
       <Card title="Tutorial Session ABCD-1234">
         <div className="card-subtitle">Group Formation Result</div>
 
@@ -61,6 +62,7 @@ function GroupFormation() {
         </div>
 
       </Card>
+      </div>
     </div>
   );
 }

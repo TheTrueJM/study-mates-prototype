@@ -15,7 +15,8 @@ function SessionSetup() {
   };
 
   return (
-    <div className="container container-md mt-lg">
+    <div className="page-center">
+      <div className="container container-md">
       <Card title="Tutorial Session Setup">
 
         {/* Members per group slider (range: 2-8) */}
@@ -53,6 +54,7 @@ function SessionSetup() {
         </div>
 
       </Card>
+      </div>
     </div>
   );
 }
