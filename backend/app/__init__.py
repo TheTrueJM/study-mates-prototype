@@ -4,6 +4,7 @@ from flask_cors import CORS
 from flask_login import LoginManager
 from .database import db, Staff
 from .routes import staff_bp, student_bp
+from .populate import populate_all
 
 import os
 import threading
@@ -98,6 +99,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        populate_all()
 
     # Register blueprints
     app.register_blueprint(staff_bp, url_prefix="/staff")

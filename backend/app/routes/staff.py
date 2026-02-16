@@ -42,7 +42,7 @@ def login():
     username = data.get("username")
     password = data.get("password")
     
-    staff: Staff | None = db.session.scalar(db.select(Staff).where(Staff.username==username))
+    staff: Staff | None =  Staff.query.filter_by(username=username).first()
 
     # Validate staff identity and password
     if not isinstance(staff, Staff):
@@ -84,7 +84,7 @@ def generate_invite():
     return send_file(client_path)
 
 def _generate_invite_code(length = 20):
-    codes: list[AccountInvite] = db.session.scalars(db.select(AccountInvite.code)).all()
+    codes: list[AccountInvite] = AccountInvite.query.with_entities(AccountInvite.code).all()
     for _ in range(1 + len(codes) * 2):
         code = ''.join(random.choices(string.ascii_letters, k=length))
         if code not in codes:
@@ -94,7 +94,7 @@ def _generate_invite_code(length = 20):
 
 @staff_bp.route("/register/<code>", methods=["GET", "POST"])
 def register(code: str):
-    invite = db.session.scalar(db.select(AccountInvite).where(AccountInvite.code==code))
+    invite = AccountInvite.query.filter_by(code=code).first()
 
     if not invite or not invite.active:
         # flash("This invitation link is invalid or has already been used.", "danger")
@@ -110,7 +110,7 @@ def register(code: str):
         password = request.form.get("password")
 
         # Check if staff already exists
-        staff: Staff | None = db.session.scalar(db.select(Staff).where(Staff.username==username))
+        staff: Staff | None = Staff.query.filter_by(username=username).first()
 
         if isinstance(staff, Staff):
             error = "Username already taken"
@@ -141,17 +141,3 @@ def register(code: str):
     # return render_template("auth.html", form=register_form, heading="Register")
     client_path = os.path.join(os.getcwd(), "../frontend/public/staff/register.html")
     return send_file(client_path)
-
-
-### REMOVE THIS LATER
-@staff_bp.route("/test_user", methods=["GET", "POST"])
-def test_user():
-    exists: Staff | None = db.session.scalar(db.select(Staff).where(Staff.username=="test"))
-    if exists is None:
-        staff = Staff(
-            username="test",
-            password_hash=generate_password_hash("test"),
-        )
-        db.session.add(staff)
-        db.session.commit()
-    return redirect(url_for("staff.login"))

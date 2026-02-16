@@ -2,9 +2,12 @@ import logging
 import uuid
 import random
 import math
+import numpy as np
 from functools import wraps
 
-import numpy as np # Used for Matrix grouping algorithm, can be removed if we switch to a simpler approach
+from sqlalchemy.sql.expression import func
+from ..database import DiscussionQuestion
+
 
 from flask import request, session
 from flask_socketio import emit, join_room
@@ -261,7 +264,11 @@ def start_discussion(user_id, code, tutorial):
     tutorial["timer"]["running"] = True
     _start_timer_thread(code)
 
-    questions = ["Question Test1", "Question Test2", "Question Test3"]
+    academic = DiscussionQuestion.query.filter_by(category_name="academic").order_by(func.random()).first()
+    casual = DiscussionQuestion.query.filter_by(category_name="casual").order_by(func.random()).first()
+    study = DiscussionQuestion.query.filter_by(category_name="study").order_by(func.random()).first()
+
+    questions = [academic.question, casual.question, study.question]
     tutorial["questions"] = questions
 
     utils._emit_tutorial_update(code)
