@@ -37,23 +37,12 @@ function JoinSession() {
               className="input"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="ABCD-1234"
+              placeholder="ABCDEF..."
             />
           </div>
 
-          {/* Anonymous username display */}
-          <div className="form-group">
-            <label className="input-label">Your Anonymous Username</label>
-            <div className="flex items-center gap-sm">
-              <div className="input" style={{ backgroundColor: 'var(--color-gray)', flex: 1 }}>
-                {username}
-              </div>
-              <Button variant="outline">Change</Button>
-            </div>
-          </div>
-
           <Button variant="primary" fullWidth onClick={handleJoin}>
-            Join Tutorial Session
+            Confirm
           </Button>
         </div>
       </div>

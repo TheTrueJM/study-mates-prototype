@@ -73,21 +73,19 @@ function EnterAttributes() {
       <Card title="Tutorial Session ABCD-1234">
         {/* GPA inputs */}
         <Input
-          label="Grade Expectation (GPA)"
+          label="Goal GPA for Unit"
           type="number"
           value={gradeExpectation}
           onChange={setGradeExpectation}
-          placeholder="e.g. 6"
-          hint="Your target GPA for this unit"
+          placeholder="e.g. 4.0"
         />
 
         <Input
-          label="Current GPA"
+          label="Current or Most Recent GPA"
           type="number"
           value={currentGPA}
           onChange={setCurrentGPA}
-          placeholder="e.g. 5.3"
-          hint="Your current or most recent GPA"
+          placeholder="e.g. 4.0"
           disabled={noGPAYet}
         />
 
