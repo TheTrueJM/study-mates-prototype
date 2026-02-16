@@ -13,7 +13,7 @@ function Login() {
   const handleLogin= async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/staff/login`,
+        `https://study-mates-deployment.onrender.com/staff/login`,
         {
           method: "POST",
           headers: {
