@@ -249,26 +249,63 @@ body {
   background-color: var(--color-primary);
   border-bottom: var(--border-width) solid var(--color-primary);
   padding: var(--spacing-sm);
-  margin-bottom: var(--spacing-lg);
 }
 
-.nav-title {
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: var(--spacing-sm);
-  color: white;
-}
-
-.nav-links {
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  font-size: 0.875rem;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.nav-links a { color: white; text-decoration: underline; }
-.nav-links a:hover { text-decoration: none; }
-.nav-section { font-weight: bold; color: white; }
+.nav-brand {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+}
+
+.nav-brand:hover { opacity: 0.85; }
+
+.nav-action {
+  border: var(--border-width) solid white;
+  padding: 0.4rem 1rem;
+  background-color: transparent;
+  color: white;
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.nav-action:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* TODO: Remove debug nav styles before production */
+.nav-debug {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.nav-debug a {
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.nav-debug a:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+.nav-debug-label { color: rgba(255, 255, 255, 0.5); font-weight: bold; }
+.nav-debug-divider { color: rgba(255, 255, 255, 0.3); }
 
 /* Stat Box (highlighted number display, e.g. "Students Joined: 12") */
 .stat-box {

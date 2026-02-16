@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
 
 // Student pages
 import JoinSession from "./pages/student/JoinSession";
@@ -15,23 +16,27 @@ import DiscussionBoard from './pages/staff/DiscussionBoard';
 
 function App() {
   return (
-    <Routes>
-      {/* Basic Route */}
-      <Route path="/" element={<JoinSession />} />
+    <>
+      <Navbar />
+      <Routes>
+        {/* Home */}
+        <Route path="/" element={<JoinSession />} />
 
-      {/* Student */}
-      <Route path="/join" element={<JoinSession />} />
-      <Route path="/attributes" element={<EnterAttributes />} />
-      <Route path="/waiting" element={<WaitingLobby />} />
-      <Route path="/group" element={<GroupView />} />
+        {/* Student */}
+        {/* Use Route '/join/:code' to prefill code and go to attributes (For QR Code) */}
+        <Route path="/join" element={<JoinSession />} /> 
+        <Route path="/attributes" element={<EnterAttributes />} />
+        <Route path="/waiting" element={<WaitingLobby />} />
+        <Route path="/group" element={<GroupView />} />
 
-      {/* Staff */}
-      <Route path="/staff/login" element={<Login />} />
-      <Route path="/staff/" element={<SessionSetup />} />
-      <Route path="/staff/tutorial/:code" element={<SessionLobby />} />
-      <Route path="/staff/groups" element={<GroupFormation />} />
-      <Route path="/staff/discussion" element={<DiscussionBoard />} />
-    </Routes>
+        {/* Staff */}
+        <Route path="/staff/login" element={<Login />} />
+        <Route path="/staff/" element={<SessionSetup />} />
+        <Route path="/staff/tutorial/:code" element={<SessionLobby />} />
+        <Route path="/staff/groups" element={<GroupFormation />} />
+        <Route path="/staff/discussion" element={<DiscussionBoard />} />
+      </Routes>
+    </>
   );
 }
 
