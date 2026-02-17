@@ -1,10 +1,10 @@
-// JoinSession - Student enters a tutorial code and joins a session
+// JoinTutorial - Student enters a tutorial code and joins a session
 
 import { useState } from 'react';
 import Button from '../../components/Button';
 import { useNavigate } from 'react-router-dom';
 
-function JoinSession() {
+function JoinTutorial() {
   const [code, setCode] = useState('');
   const [username] = useState('Anonymous-Wombat-42'); // Read-only for now
   const navigate = useNavigate();
@@ -50,4 +50,4 @@ function JoinSession() {
   );
 }
 
-export default JoinSession;
+export default JoinTutorial;

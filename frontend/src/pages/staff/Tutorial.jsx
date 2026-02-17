@@ -1,6 +1,6 @@
 // Tutorial - Staff can handle tutorial actions, across lobby, grouping and discussion states
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { getStaffSocket } from '../../socket';
@@ -34,9 +34,9 @@ function Tutorial() {
     const onUpdate = (tutorial) => {
       if (!tutorial) return;
 
-    setTutorialCode(tutorial.tutorial_code || code || '');
+      setTutorialCode(tutorial.tutorial_code || code || '');
       setTutorialState(tutorial.state || 'lobby');
-      setTutorialName(`${tutorial.name || 'QUT Tutorial'}${tutorial.tutorial_code ? `' - ${tutorial.tutorial_code}` : ''}`);
+      setTutorialName(`${tutorial.name || 'QUT Tutorial'}${tutorialCode ? ` - ${tutorialCode}` : ''}`);
 
       setStudents(tutorial.students || {});
 
@@ -91,14 +91,14 @@ function Tutorial() {
         {tutorialState === 'groups' && <GroupsLayout groups={groups} students={students} onGrouping={handleGrouping} onDiscussion={handleDiscussion} />}
         {tutorialState === 'discussion' && (
           <DiscussionLayout
+            questions={questions}
             timeRemaining={timeRemaining}
             isRunning={isRunning}
             resetTime={resetTime}
-            questions={questions}
+            setResetTime={setResetTime}
             onStartTimer={handleTimerStart}
             onStopTimer={handleTimerStop}
             onResetTimer={handleTimerReset}
-            setResetTime={setResetTime}
             onGrouping={handleGrouping}
           />
         )}

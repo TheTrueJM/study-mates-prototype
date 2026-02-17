@@ -1,4 +1,4 @@
-// SessionSetup - Staff configures group size and discussion time before starting
+// TutorialSetup - Staff configures group size and discussion time before starting
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
@@ -7,7 +7,7 @@ import Input from '../../components/Input';
 import Button from '../../components/Button';
 import { getStaffSocket } from '../../socket';
 
-function SessionSetup() {
+function TutorialSetup() {
   const [socketInstance, setSocketInstance] = useState(null);
   const [name, setName] = useState("");
   const [groupSize, setGroupSize] = useState(6);
@@ -93,4 +93,4 @@ function SessionSetup() {
   );
 }
 
-export default SessionSetup;
+export default TutorialSetup;

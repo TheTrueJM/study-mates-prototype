@@ -3,7 +3,13 @@ import React from 'react';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 
-export default function DiscussionLayout({ timeRemaining = 0, isRunning = false, resetTime = 10, setResetTime = () => {}, questions = [], onResetTimer, onStartTimer, onStopTimer, onGrouping }) {
+export default function DiscussionLayout({ questions = [], timeRemaining = 0, isRunning = false, resetTime = 10, setResetTime = () => {}, onResetTimer, onStartTimer, onStopTimer, onGrouping }) {
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <>
       <div className="card-subtitle">Group Discussion</div>
@@ -12,7 +18,7 @@ export default function DiscussionLayout({ timeRemaining = 0, isRunning = false,
       <div className="form-group">
         <label className="input-label">Time Remaining</label>
         <div className="timer-display">
-          <div className="timer-value">{`${String(Math.floor(timeRemaining/60)).padStart(2,'0')}:${String(timeRemaining%60).padStart(2,'0')}`}</div>
+          <div className="timer-value">{formatTime(timeRemaining)}</div>
           <div className="timer-status">{isRunning ? 'Timer running' : 'Timer ready'}</div>
         </div>
       </div>
