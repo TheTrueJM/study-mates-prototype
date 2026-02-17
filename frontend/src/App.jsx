@@ -45,7 +45,7 @@ function App() {
           path="/staff/login" 
           element={<PublicRoute> <Login /> </PublicRoute>} 
         />
-        <Route 
+        <Route W
           path="/staff/" 
           element={<ProtectedStaffRoute> <TutorialSetup /> </ProtectedStaffRoute>} 
         />
