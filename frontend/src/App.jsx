@@ -2,17 +2,14 @@ import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 
 // Student pages
-import JoinSession from "./pages/student/JoinSession";
+import JoinTutorial from "./pages/student/JoinTutorial";
 import EnterAttributes from "./pages/student/EnterAttributes";
-import WaitingLobby from "./pages/student/WaitingLobby";
-import GroupView from "./pages/student/GroupView";
+import StudentTutorial from './pages/student/Tutorial';
 
 // Staff pages
 import Login from './pages/staff/Login';
-import SessionSetup from './pages/staff/SessionSetup';
-import SessionLobby from './pages/staff/SessionLobby';
-import GroupFormation from './pages/staff/GroupFormation';
-import DiscussionBoard from './pages/staff/DiscussionBoard';
+import TutorialSetup from './pages/staff/TutorialSetup';
+import StaffTutorial from './pages/staff/Tutorial';
 
 function App() {
   return (
@@ -20,21 +17,19 @@ function App() {
       <Navbar />
       <Routes>
         {/* Home */}
-        <Route path="/" element={<JoinSession />} />
+        <Route path="/" element={<JoinTutorial />} />
 
         {/* Student */}
         {/* Use Route '/join/:code' to prefill code and go to attributes (For QR Code) */}
-        <Route path="/join" element={<JoinSession />} /> 
+        {/* Use Route '/tutorial/:code' for tutorial */}
+        <Route path="/join" element={<JoinTutorial />} /> 
         <Route path="/attributes" element={<EnterAttributes />} />
-        <Route path="/waiting" element={<WaitingLobby />} />
-        <Route path="/group" element={<GroupView />} />
+        <Route path="/tutorial" element={<StudentTutorial />} />
 
         {/* Staff */}
         <Route path="/staff/login" element={<Login />} />
-        <Route path="/staff/" element={<SessionSetup />} />
-        <Route path="/staff/tutorial/:code" element={<SessionLobby />} />
-        <Route path="/staff/groups" element={<GroupFormation />} />
-        <Route path="/staff/discussion" element={<DiscussionBoard />} />
+        <Route path="/staff/" element={<TutorialSetup />} />
+        <Route path="/staff/tutorial/:code" element={<StaffTutorial />} />
       </Routes>
     </>
   );

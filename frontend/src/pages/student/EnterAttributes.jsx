@@ -64,7 +64,7 @@ function EnterAttributes() {
       body: params,
       credentials: 'include',
     }).then(() => {
-      navigate('/waiting');
+      navigate('/tutorial');
     }).catch(err => console.error(err));
   };
 
