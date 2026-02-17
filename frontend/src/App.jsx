@@ -10,9 +10,7 @@ import GroupView from "./pages/student/GroupView";
 // Staff pages
 import Login from './pages/staff/Login';
 import SessionSetup from './pages/staff/SessionSetup';
-import SessionLobby from './pages/staff/SessionLobby';
-import GroupFormation from './pages/staff/GroupFormation';
-import DiscussionBoard from './pages/staff/DiscussionBoard';
+import Tutorial from './pages/staff/Tutorial';
 
 function App() {
   return (
@@ -32,9 +30,7 @@ function App() {
         {/* Staff */}
         <Route path="/staff/login" element={<Login />} />
         <Route path="/staff/" element={<SessionSetup />} />
-        <Route path="/staff/tutorial/:code" element={<SessionLobby />} />
-        <Route path="/staff/groups" element={<GroupFormation />} />
-        <Route path="/staff/discussion" element={<DiscussionBoard />} />
+        <Route path="/staff/tutorial/:code" element={<Tutorial />} />
       </Routes>
     </>
   );
