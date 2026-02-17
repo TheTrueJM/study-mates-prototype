@@ -5,7 +5,7 @@ from flask import request, session
 from flask_socketio import emit
 from .. import socketio
 from . import utils
-from .errors import ERR_CODE_REQUIRED, ERR_SESSION_NOT_FOUND
+from .errors import ERR_CODE_REQUIRED, ERR_SESSION_NOT_FOUND, ERR_TUTORIAL_NOT_FOUND
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +43,19 @@ def connect(auth):
 
     utils._join_tutorial(user_id, code, namespace="/")
 
+
+@socketio.on("check_tutorial")
+def check_tutorial(data):
+    if not (code := data.get("code")):
+        emit("error", ERR_CODE_REQUIRED, to=request.sid)
+        return
+
+    if code not in utils.tutorials:
+        emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid)
+        return
+
+    emit("tutorial_found", {"tutorial_code": code}, to=request.sid)
+    
 
 @socketio.on("join_tutorial")
 def join_tutorial(data):

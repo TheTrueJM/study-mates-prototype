@@ -1,26 +1,61 @@
 // JoinTutorial - Student enters a tutorial code and joins a session
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Button from '../../components/Button';
 import { useNavigate } from 'react-router-dom';
+import { getSocket } from '../../socket';
 
 function JoinTutorial() {
   const [code, setCode] = useState('');
-  const [username] = useState('Anonymous-Wombat-42'); // Read-only for now
   const navigate = useNavigate();
 
-  const handleJoin = () => {
-    // Post tutorial code to backend to store in server-side session
+  // useEffect(() => {
+  //   const socket = getSocket();
+
+  //   const onTutorialFound = () => {
+  //     navigate('/attributes');
+  //   };
+
+  //   socket.on("tutorial_found", onTutorialFound);
+
+  //   return () => {
+  //     socket.off("tutorial_found", onTutorialFound);
+  //   };
+  // }, []);
+
+  const handleJoin = async () => {
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-    
-    fetch(`${BACKEND_URL}/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ code }),
-      credentials: 'include',
-    }).then(() => {
-      navigate('/attributes');
-    }).catch((err) => console.error(err));
+
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/join/${code}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: 'include',
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error);
+        return;
+      }
+      
+      const onTutorialFound = () => {
+        navigate('/attributes');
+      };
+
+      const socket = getSocket();
+
+      socket.on("tutorial_found", onTutorialFound);
+      socket.emit("check_tutorial", { code });
+    } catch (error) {
+      console.error("Join tutorial error:", error);
+    }
   };
 
   return (
