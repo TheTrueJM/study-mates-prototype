@@ -11,7 +11,7 @@ html, body, #root {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  background-color: #ffffff;
+  background-color: #D6DEE8;
   color: #2B2B2B;
   line-height: 1.5;
 }
@@ -49,7 +49,12 @@ body {
 
   /* Border */
   --border-width: 2px;
-  --border-radius: 0;     /* Wireframe style - no rounded corners */
+  --border-radius: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 47, 108, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 47, 108, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 47, 108, 0.12);
 }
 
 /* ==================== Layout ==================== */
@@ -78,8 +83,10 @@ body {
 /* Card */
 .card {
   border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius);
   padding: var(--spacing-lg);
   background-color: white;
+  box-shadow: var(--shadow-lg);
 }
 
 .card-header {
@@ -103,12 +110,17 @@ body {
 /* Button */
 .btn {
   border: var(--border-width) solid;
+  border-radius: 8px;
   padding: 0.75rem var(--spacing-md);
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+  transition: all 0.2s;
   font-family: inherit;
+  box-shadow: var(--shadow-sm);
 }
+
+.btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.btn:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
 
 .btn-primary {
   border-color: var(--color-primary);
@@ -139,13 +151,14 @@ body {
 /* Toggle Button (used in availability time selection) */
 .btn-toggle {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 20px;
   padding: 0.25rem 0.75rem;
   font-size: 0.875rem;
   cursor: pointer;
   background-color: white;
   color: var(--color-primary);
   font-family: inherit;
-  transition: background-color 0.2s, color 0.2s;
+  transition: all 0.2s;
 }
 
 .btn-toggle:hover { background-color: var(--color-gray); }
@@ -167,15 +180,18 @@ body {
 .input {
   width: 100%;
   border: var(--border-width) solid var(--color-border);
+  border-radius: 8px;
   padding: 0.75rem;
   font-size: 1rem;
   font-family: inherit;
   color: var(--color-text);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .input:focus {
   outline: none;
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 47, 108, 0.15);
 }
 
 .input-label {
@@ -238,6 +254,7 @@ body {
   min-width: 3rem;
   text-align: center;
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 8px;
   padding: var(--spacing-xs);
   font-weight: bold;
   color: var(--color-primary);
@@ -257,9 +274,10 @@ body {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--spacing-xs);
-  padding: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background-color: var(--color-gray);
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 8px;
 }
 
 .availability-row .day-label {
@@ -294,6 +312,7 @@ body {
 
 .nav-action {
   border: var(--border-width) solid white;
+  border-radius: 8px;
   padding: 0.4rem 1rem;
   background-color: transparent;
   color: white;
@@ -301,7 +320,7 @@ body {
   font-family: inherit;
   cursor: pointer;
   text-decoration: none;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
 }
 
 .nav-action:hover {
@@ -321,6 +340,7 @@ body {
   text-decoration: none;
   padding: 0.2rem 0.4rem;
   border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
 }
 
 .nav-debug a:hover {
@@ -334,6 +354,7 @@ body {
 /* Stat Box (highlighted number display, e.g. "Students Joined: 12") */
 .stat-box {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
   padding: var(--spacing-sm);
   background-color: var(--color-gray);
   text-align: center;
@@ -362,6 +383,7 @@ body {
   width: 0.75rem;
   height: 0.75rem;
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 50%;
   animation: pulse 1.4s infinite ease-in-out;
 }
 
@@ -378,9 +400,14 @@ body {
 /* Member Card (group member info card in GroupView) */
 .member-card {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
   padding: var(--spacing-sm);
   background-color: var(--color-gray);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s;
 }
+
+.member-card:hover { box-shadow: var(--shadow-md); }
 
 .member-card .member-name {
   font-weight: bold;
@@ -422,16 +449,19 @@ body {
 /* Student Chip (name badge in session lobby) */
 .student-chip {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 8px;
   padding: var(--spacing-sm);
   text-align: center;
   background-color: var(--color-gray);
   color: var(--color-primary);
   font-size: 0.875rem;
+  box-shadow: var(--shadow-sm);
 }
 
 /* Join Code (large session code display) */
 .join-code {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
   padding: var(--spacing-md);
   background-color: var(--color-gray);
   display: inline-block;
@@ -449,6 +479,7 @@ body {
   width: 12rem;
   height: 12rem;
   border: var(--border-width) solid #ccc;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -460,7 +491,13 @@ body {
 /* Group Card (group formation result cards) */
 .group-card {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
+
+.group-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 
 .group-card .group-card-header {
   padding: var(--spacing-sm);
@@ -480,6 +517,7 @@ body {
 
 .group-card .group-member {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 6px;
   padding: var(--spacing-sm);
   background-color: white;
   color: var(--color-primary);
@@ -488,6 +526,7 @@ body {
 /* Timer (large countdown display) */
 .timer-display {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
   padding: var(--spacing-lg);
   text-align: center;
   background-color: var(--color-gray);
@@ -508,6 +547,7 @@ body {
 /* Question List (discussion topic items) */
 .question-item {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
   padding: var(--spacing-sm);
   background-color: var(--color-gray);
   display: flex;
@@ -519,6 +559,7 @@ body {
   width: 2rem;
   height: 2rem;
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 50%;
   background-color: var(--color-primary);
   color: white;
   display: flex;
@@ -572,7 +613,18 @@ body {
     height: 8rem;
   }
 
-  .nav-debug { display: none; }
+  .nav-inner {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .nav-debug {
+    order: 3;
+    width: 100%;
+    flex-wrap: wrap;
+    font-size: 0.625rem;
+    gap: 0.25rem;
+  }
 }
 
 /* Mobile (Student pages) */
