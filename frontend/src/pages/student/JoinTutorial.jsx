@@ -24,6 +24,8 @@ function JoinTutorial() {
   // }, []);
 
   const handleJoin = async () => {
+    if (!code.trim()) return;
+
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
     try {
@@ -46,13 +48,13 @@ function JoinTutorial() {
       }
       
       const onTutorialFound = () => {
-        navigate('/attributes');
+        navigate('/tutorial');
       };
 
       const socket = getSocket();
 
-      socket.on("tutorial_found", onTutorialFound);
-      socket.emit("check_tutorial", { code });
+      socket.on("student_update", onTutorialFound);
+      socket.emit("join_tutorial", { code });
     } catch (error) {
       console.error("Join tutorial error:", error);
     }

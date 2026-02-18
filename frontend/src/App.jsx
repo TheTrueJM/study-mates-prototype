@@ -3,7 +3,7 @@ import Navbar from "./components/Navbar";
 
 // Student pages
 import JoinTutorial from "./pages/student/JoinTutorial";
-import EnterAttributes from "./pages/student/EnterAttributes";
+import EnterDetails from "./pages/student/EnterDetails";
 import StudentTutorial from './pages/student/Tutorial';
 
 // Staff pages
@@ -17,13 +17,12 @@ function App() {
       <Navbar />
       <Routes>
         {/* Home */}
-        <Route path="/" element={<JoinTutorial />} />
+        <Route path="/" element={<EnterDetails />} />
 
         {/* Student */}
-        {/* Use Route '/join/:code' to prefill code and go to attributes (For QR Code) */}
         {/* Use Route '/tutorial/:code' for tutorial */}
+        <Route path="/details" element={<EnterDetails />} />
         <Route path="/join" element={<JoinTutorial />} /> 
-        <Route path="/attributes" element={<EnterAttributes />} />
         <Route path="/tutorial" element={<StudentTutorial />} />
 
         {/* Staff */}

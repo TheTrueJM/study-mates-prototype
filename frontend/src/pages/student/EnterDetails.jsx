@@ -1,4 +1,4 @@
-// EnterAttributes - Student inputs GPA info and availability times
+// EnterDetails - Student inputs GPA info and availability times
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -17,8 +17,8 @@ const DAYS = [
   "Sunday",
 ];
 
-function EnterAttributes() {
-  const [gradeExpectation, setGradeExpectation] = useState("");
+function EnterDetails() {
+  const [goalGPA, setGoalGPA] = useState("");
   const [currentGPA, setCurrentGPA] = useState("");
   const [noGPAYet, setNoGPAYet] = useState(false);
   const [availableDays, setAvailableDays] = useState(
@@ -40,32 +40,51 @@ function EnterAttributes() {
     setAvailableDays(newDays);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    if (noGPAYet) setCurrentGPA(4.5);
+
     // Build availability codes according to backend enum format
     const DAY_CODES = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
     const PERIOD_MAP = { Morning: 'M', Afternoon: 'A', Evening: 'N' };
 
-    const params = new URLSearchParams();
-    params.append('currentGPA', currentGPA || '0');
-    params.append('goalGPA', gradeExpectation || '4.0');
-
+    const availability = [];
     availableDays.forEach((slot, dayIndex) => {
       slot.times.forEach((time) => {
         const code = `${DAY_CODES[dayIndex]}${PERIOD_MAP[time]}`;
-        params.append('availability', code);
+        availability.push(code);
       });
     });
 
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
-    fetch(`${BACKEND_URL}/details`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params,
-      credentials: 'include',
-    }).then(() => {
-      navigate('/tutorial');
-    }).catch(err => console.error(err));
+    try {
+      const response = await fetch(
+        `${BACKEND_URL}/details`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            currentGPA,
+            goalGPA,
+            availability
+          }),
+          credentials: 'include',
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.error);
+        return;
+      }
+
+      navigate('/join');
+    } catch (error) {
+      console.error("Details error:", error);
+    }
   };
 
   return (
@@ -75,8 +94,8 @@ function EnterAttributes() {
         <Input
           label="Goal GPA for Unit"
           type="number"
-          value={gradeExpectation}
-          onChange={setGradeExpectation}
+          value={goalGPA}
+          onChange={setGoalGPA}
           placeholder="e.g. 4.0"
         />
 
@@ -126,7 +145,7 @@ function EnterAttributes() {
 
         <div className="mt-md">
           <Button variant="primary" fullWidth onClick={handleConfirm}>
-            Confirm Attributes
+            Confirm Details
           </Button>
         </div>
       </Card>
@@ -134,4 +153,4 @@ function EnterAttributes() {
   );
 }
 
-export default EnterAttributes;
+export default EnterDetails;
