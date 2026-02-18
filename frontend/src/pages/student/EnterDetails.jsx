@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
@@ -17,6 +18,7 @@ function EnterDetails() {
     DAYS.map((day) => ({ day, times: [] }))
   );
   const navigate = useNavigate();
+  const { setStudent } = useAuth();
 
   // Toggle a time slot on/off for a given day
   const toggleTime = (dayIndex, time) => {
@@ -77,6 +79,14 @@ function EnterDetails() {
         goalGPA,
         availability
       });
+      
+      // Update frontend state
+      setStudent({
+        currentGPA: noGPAYet ? 4.5 : parseFloat(currentGPA),
+        goalGPA: parseFloat(goalGPA),
+        availability
+      });
+      
       navigate("/join");
     } catch (err) {
       alert(err.message);

@@ -3,7 +3,7 @@ from flask_socketio import SocketIO
 from flask_cors import CORS
 from flask_login import LoginManager
 from .database import db, Staff
-from .routes import staff_bp, student_bp
+from .routes import staff_bp, student_bp, util_bp
 from .populate import populate_all
 
 import os
@@ -104,6 +104,7 @@ def create_app():
     # Register blueprints
     app.register_blueprint(staff_bp, url_prefix="/staff")
     app.register_blueprint(student_bp)
+    app.register_blueprint(util_bp)
 
     from . import sockets
 

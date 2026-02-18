@@ -3,19 +3,21 @@
 import { useState, useEffect } from 'react';
 import Button from '../../components/Button';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { getSocket } from '../../socket';
 
 function JoinTutorial() {
   const [socketInstance, setSocketInstance] = useState(null);
   const [code, setCode] = useState('');
   const navigate = useNavigate();
+  const { studentDetails, setStudent } = useAuth();
 
   useEffect(() => {
     const socket = getSocket();
     setSocketInstance(socket);
 
-    const onTutorialFound = () => {
-      navigate("/tutorial");
+    const onTutorialFound = (tutorial) => {
+      navigate(`/tutorial/${tutorial.tutorial_code}`);
     };
 
     socket.on("student_update", onTutorialFound);
@@ -47,6 +49,12 @@ function JoinTutorial() {
 
     try {
       await apiPost(`/join/${code}`, {});
+
+      // Update frontend state with tutorial code
+      setStudent({
+        ...studentDetails,
+        tutorialCode: code
+      });
 
       const onError = (err) => {
         alert(err.message || "An error occurred while joining the tutorial.");

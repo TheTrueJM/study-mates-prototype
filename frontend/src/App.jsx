@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import { PublicRoute, ProtectedStudentRoute, ProtectedStaffRoute } from "./components/ProtectedRoute";
 
 // Student pages
 import JoinTutorial from "./pages/student/JoinTutorial";
@@ -16,19 +17,39 @@ function App() {
     <>
       <Navbar />
       <Routes>
-        {/* Home */}
-        <Route path="/" element={<EnterDetails />} />
+        {/* Home Route */}
+        <Route 
+          path="/" 
+          element={<PublicRoute> <EnterDetails /> </PublicRoute> } 
+        />
 
-        {/* Student */}
-        {/* Use Route '/tutorial/:code' for tutorial */}
-        <Route path="/details" element={<EnterDetails />} />
-        <Route path="/join" element={<JoinTutorial />} /> 
-        <Route path="/tutorial" element={<StudentTutorial />} />
+        {/* Student Routes */}
+        <Route 
+          path="/details" 
+          element={<PublicRoute> <EnterDetails /> </PublicRoute>} 
+        />
+        <Route 
+          path="/join" 
+          element={<ProtectedStudentRoute> <JoinTutorial /> </ProtectedStudentRoute>} 
+        />
+        <Route 
+          path="/tutorial/:code" 
+          element={<ProtectedStudentRoute requiresJoin={true}> <StudentTutorial /> </ProtectedStudentRoute>} 
+        />
 
-        {/* Staff */}
-        <Route path="/staff/login" element={<Login />} />
-        <Route path="/staff/" element={<TutorialSetup />} />
-        <Route path="/staff/tutorial/:code" element={<StaffTutorial />} />
+        {/* Staff Routes */}
+        <Route 
+          path="/staff/login" 
+          element={<PublicRoute> <Login /> </PublicRoute>} 
+        />
+        <Route 
+          path="/staff/" 
+          element={<ProtectedStaffRoute> <TutorialSetup /> </ProtectedStaffRoute>} 
+        />
+        <Route 
+          path="/staff/tutorial/:code" 
+          element={ <ProtectedStaffRoute> <StaffTutorial /> </ProtectedStaffRoute>} 
+        />
       </Routes>
     </>
   );

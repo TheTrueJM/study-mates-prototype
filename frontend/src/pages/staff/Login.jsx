@@ -2,13 +2,15 @@
 
 import { useState } from 'react';
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../../hooks/useAuth';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 
 function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();  
+  const navigate = useNavigate();
+  const { setStaff } = useAuth();  
 
   const handleLogin= async () => {
     if (!username || !password) {
@@ -32,6 +34,10 @@ function Login() {
 
     try {
       await apiPost("/staff/login", { username, password });
+      
+      // Update frontend state
+      setStaff(username);
+      
       navigate("/staff/");
     } catch (err) {
       alert(err.message);
