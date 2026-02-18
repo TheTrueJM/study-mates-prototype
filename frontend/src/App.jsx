@@ -12,6 +12,9 @@ import Login from './pages/staff/Login';
 import TutorialSetup from './pages/staff/TutorialSetup';
 import StaffTutorial from './pages/staff/Tutorial';
 
+// Error pages
+import NotFound from './pages/NotFound';
+
 function App() {
   return (
     <>
@@ -49,6 +52,12 @@ function App() {
         <Route 
           path="/staff/tutorial/:code" 
           element={ <ProtectedStaffRoute> <StaffTutorial /> </ProtectedStaffRoute>} 
+        />
+
+        {/* 404 - Catch all unspecified routes */}
+        <Route
+          path="*"
+          element={<PublicRoute> <NotFound /> </PublicRoute>}
         />
       </Routes>
     </>
