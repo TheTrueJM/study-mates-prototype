@@ -42,6 +42,7 @@ class AsyncTimer:
         if not self.running:
             self.running = True
             self.next_tick = monotonic() + 1
+            self.deque.clear()
             self._timer_thread = Thread(target=self._timer_loop, daemon=True)
             self._timer_thread.start()
             self.socketio.start_background_task(self._emit_loop)
@@ -125,9 +126,8 @@ class AsyncTimer:
                         dq.append((c, remaining, False))
 
                 if finished:
-                    with self.lock:
-                        for c in finished:
-                            self.codes.discard(c)
+                    for c in finished:
+                        self.codes.discard(c)
 
     def stop(self, code):
         with self.lock:

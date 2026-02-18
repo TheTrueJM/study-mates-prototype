@@ -10,7 +10,7 @@ from ..database import DiscussionQuestion
 
 
 from flask import request, session
-from flask_socketio import emit, join_room
+from flask_socketio import emit, join_room, leave_room
 from .. import socketio
 from . import utils
 from .timer import timer
@@ -166,6 +166,7 @@ def fetch_tutorial(user_id, code, tutorial):
 def start_grouping(user_id, code, tutorial):
     tutorial["questions"].clear()
     tutorial["timer"]["running"] = False
+    timer.stop(code)
     group_size = tutorial["group_size"]
 
     students = list(tutorial["students"].keys())
@@ -300,4 +301,36 @@ def reset_timer(user_id, code, tutorial, data):
     tutorial["timer"]["duration"] = new_time
     tutorial["timer"]["remaining"] = new_time
     tutorial["timer"]["running"] = False
+    timer.stop(code)
     utils._emit_tutorial_update(code)
+
+
+@socketio.on("leave_tutorial", namespace="/staff")
+def leave_tutorial():
+    user_id = utils.sessions.get(request.sid)
+    if not user_id:
+        return
+
+    code = utils.users.get(user_id, {}).get("tutorial")
+    if not code:
+        return
+
+    tutorial = utils.tutorials.get(code)
+    if not tutorial or tutorial.get("staff") != user_id:
+        return
+
+    tutorial["timer"]["running"] = False
+    timer.stop(code)
+
+    emit("tutorial_ended", room=code, namespace="/")
+
+    student_ids = list(tutorial.get("students", {}).keys())
+    for student_id in student_ids:
+        if student_id in utils.users:
+            utils.users[student_id]["tutorial"] = None
+
+    utils.tutorials.pop(code, None)
+    utils.users[user_id]["tutorial"] = None
+
+    leave_room(code, namespace="/staff")
+    emit("left_tutorial", to=request.sid, namespace="/staff")

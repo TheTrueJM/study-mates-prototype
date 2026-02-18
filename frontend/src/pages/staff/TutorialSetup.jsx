@@ -23,10 +23,18 @@ function TutorialSetup() {
       navigate(`/staff/tutorial/${data.code}`);
     };
 
+    const onSession = (data) => {
+      if (data && data.tutorial) {
+        navigate(`/staff/tutorial/${data.tutorial}`);
+      }
+    };
+
     socket.on("tutorial_created", onTutorialCreated);
+    socket.on("session", onSession);
 
     return () => {
       socket.off("tutorial_created", onTutorialCreated);
+      socket.off("session", onSession);
     };
   }, [navigate]);
 

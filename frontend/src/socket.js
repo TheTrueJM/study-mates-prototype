@@ -19,12 +19,16 @@ export function getSocket(namespace = "/") {
   });
 
   socket.on("connect", () => {
-    console.log(socket)
+    console.log(socket);
     console.info("socket connected", namespace, socket.id);
   });
 
   socket.on("connect_error", (err) => {
     console.error("socket connect_error", namespace, err);
+  });
+
+  socket.on("error", (data) => {
+    console.error("Socket Error: ", namespace, data);
   });
 
   socket.on("session", (data) => {

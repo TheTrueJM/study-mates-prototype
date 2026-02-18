@@ -1,6 +1,6 @@
 // Tutorial - Staff can handle tutorial actions, across lobby, grouping and discussion states
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { getStaffSocket } from '../../socket';
@@ -10,6 +10,7 @@ import DiscussionLayout from './DiscussionLayout';
 
 function Tutorial() {
   const { code } = useParams();
+  const navigate = useNavigate();
 
   const [socketInstance, setSocketInstance] = useState(null);
 
@@ -59,33 +60,58 @@ function Tutorial() {
       if (data && data.message) alert(data.message);
     };
 
+    const onError = (err) => {
+      if (err && err.message) {
+        navigate("/staff/");
+      }
+    };
+
+    const onLeftTutorial = () => {
+      navigate("/staff/");
+    };
+
     socket.on('tutorial_update', onUpdate);
     socket.on('timer_sync', onTimerSync);
     socket.on('timer_notification', onTimerNotification);
+    socket.on('error', onError);
+    socket.on('left_tutorial', onLeftTutorial);
 
     return () => {
       socket.off('tutorial_update', onUpdate);
       socket.off('timer_sync', onTimerSync);
       socket.off('timer_notification', onTimerNotification);
+      socket.off('error', onError);
+      socket.off('left_tutorial', onLeftTutorial);
     };
-  }, [code]);
+  }, [code, navigate]);
 
   /* socket handlers shared across tutorial states */
   const handleLobby = () => socketInstance.emit('reset_lobby');
   const handleGrouping = () => socketInstance.emit('start_grouping');
   const handleDiscussion = () => socketInstance.emit('start_discussion');
-
+  const handleLeave = () => {
+    socketInstance.emit("leave_tutorial");
+    navigate("/staff/");
+  };
   const handleTimerStart = () => socketInstance.emit('start_timer');
   const handleTimerStop = () => socketInstance.emit('stop_timer');
   const handleTimerReset = () => socketInstance.emit('reset_timer', { time: resetTime });
 
   return (
     <div className="container container-lg mt-lg">
-      <Card title={tutorialName} actions={(
-        (tutorialState === 'groups' || tutorialState === 'discussion') ? (
-          <Button variant="outline" onClick={handleLobby}>Back to Lobby</Button>
-        ) : null
-      )}>
+      <Card
+        title={tutorialName}
+        actions={
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button onClick={handleLeave}>Leave Tutorial</button>
+            {(tutorialState === "groups" || tutorialState === "discussion") && (
+              <Button variant="outline" onClick={handleLobby}>
+                Back to Lobby
+              </Button>
+            )}
+          </div>
+        }
+      >
         {/* tutorial components split across separate files */}
         {tutorialState === 'lobby' && <LobbyLayout tutorialCode={tutorialCode} students={students} onGrouping={handleGrouping} />}
         {tutorialState === 'groups' && <GroupsLayout groups={groups} students={students} onGrouping={handleGrouping} onDiscussion={handleDiscussion} />}
