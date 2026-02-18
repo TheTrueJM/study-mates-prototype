@@ -13,32 +13,23 @@ function Login() {
   const handleLogin= async () => {
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
+    const apiPost = (endpoint, payload) =>
+      fetch(`${BACKEND_URL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }).then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        return data;
+      });
+
     try {
-      const response = await fetch(
-        `${BACKEND_URL}/staff/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            username,
-            password,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error);
-        return;
-      }
-
+      await apiPost("/staff/login", { username, password });
       navigate("/staff/");
-    } catch (error) {
-      console.error("Login error:", error);
+    } catch (err) {
+      alert(err.message);
     }
   };
 

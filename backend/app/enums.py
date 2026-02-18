@@ -14,7 +14,7 @@ class Day(Enum):
 class TimePeriod(Enum):
     M = "M"
     A = "A"
-    N = "N"
+    E = "E"
 
 
 VALID_CODES = {day.value + time.value for day in Day for time in TimePeriod}

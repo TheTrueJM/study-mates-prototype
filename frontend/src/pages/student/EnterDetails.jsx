@@ -6,16 +6,8 @@ import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 
-const TIME_SLOTS = ["Morning", "Afternoon", "Evening"];
-const DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const TIMES = ["Morning", "Afternoon", "Evening"];
 
 function EnterDetails() {
   const [goalGPA, setGoalGPA] = useState("");
@@ -41,49 +33,38 @@ function EnterDetails() {
   };
 
   const handleConfirm = async () => {
-    if (noGPAYet) setCurrentGPA(4.5);
-
-    // Build availability codes according to backend enum format
-    const DAY_CODES = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
-    const PERIOD_MAP = { Morning: 'M', Afternoon: 'A', Evening: 'N' };
-
+    // Build availability codes according to format
     const availability = [];
     availableDays.forEach((slot, dayIndex) => {
       slot.times.forEach((time) => {
-        const code = `${DAY_CODES[dayIndex]}${PERIOD_MAP[time]}`;
+        const code = `${DAYS[dayIndex].slice(0,3)}${time[0]}`;
         availability.push(code);
       });
     });
 
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
+    const apiPost = (endpoint, payload) =>
+      fetch(`${BACKEND_URL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }).then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        return data;
+      });
+
     try {
-      const response = await fetch(
-        `${BACKEND_URL}/details`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            currentGPA,
-            goalGPA,
-            availability
-          }),
-          credentials: 'include',
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error);
-        return;
-      }
-
-      navigate('/join');
-    } catch (error) {
-      console.error("Details error:", error);
+      await apiPost("/details", {
+        currentGPA: noGPAYet ? 4.5 : currentGPA,
+        goalGPA,
+        availability
+      });
+      navigate("/join");
+    } catch (err) {
+      alert(err.message);
     }
   };
 
@@ -127,7 +108,7 @@ function EnterDetails() {
               <div key={dayIndex} className="availability-row">
                 <span className="day-label">{slot.day}</span>
 
-                {TIME_SLOTS.map((time) => (
+                {TIMES.map((time) => (
                   <button
                     key={time}
                     className={`btn-toggle ${

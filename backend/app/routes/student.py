@@ -23,7 +23,7 @@ def details():
     session["currentGPA"] = current
     session["goalGPA"] = goal
     session["availability"] = availability
-
+    
     return jsonify({"message": "Student details set"}), 200
 
 
@@ -33,7 +33,6 @@ def join_tutorial(code):
         return jsonify({"error": "Invalid tutorial code"}), 400
     
     if session.get("currentGPA") is None or session.get("goalGPA")  is None or session.get("availability") is None:
-        print(session.get("currentGPA"), session.get("goalGPA"), session.get("availability"))
         return jsonify({"error": "Must set details before joining tutorial"}), 400
 
     session["tutorial_code"] = code
