@@ -33,6 +33,16 @@ function EnterDetails() {
   };
 
   const handleConfirm = async () => {
+    if (isNaN(parseFloat(goalGPA)) ) {
+      alert("Please enter a valid goal GPA.");
+      return;
+    }
+
+    if (isNaN(parseFloat(currentGPA)) && !noGPAYet) {
+      alert("Please enter a valid current GPA or select no GPA.");
+      return;
+    }
+
     // Build availability codes according to format
     const availability = [];
     availableDays.forEach((slot, dayIndex) => {
@@ -41,6 +51,11 @@ function EnterDetails() {
         availability.push(code);
       });
     });
+
+    if (availability.length === 0) {
+      const proceed = window.confirm("You did not select any available times. Submit anyway?");
+      if (!proceed) return;
+    }
 
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
@@ -73,7 +88,7 @@ function EnterDetails() {
       <Card title="Tutorial Session ABCD-1234">
         {/* GPA inputs */}
         <Input
-          label="Goal GPA for Unit"
+          label="Goal GPA for this Unit"
           type="number"
           value={goalGPA}
           onChange={setGoalGPA}
@@ -81,7 +96,7 @@ function EnterDetails() {
         />
 
         <Input
-          label="Current or Most Recent GPA"
+          label="Current or Recent GPA"
           type="number"
           value={currentGPA}
           onChange={setCurrentGPA}

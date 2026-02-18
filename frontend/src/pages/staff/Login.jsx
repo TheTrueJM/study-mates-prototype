@@ -11,6 +11,11 @@ function Login() {
   const navigate = useNavigate();  
 
   const handleLogin= async () => {
+    if (!username || !password) {
+      alert("Please enter both a username and password.");
+      return;
+    }
+
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
     const apiPost = (endpoint, payload) =>

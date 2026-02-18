@@ -26,7 +26,6 @@ function Tutorial() {
     socket.emit('fetch_tutorial');
 
     const onStudentUpdate = (tutorial) => {
-      console.log(tutorial);
       if (!tutorial) return;
 
       setUsername(tutorial.username || 'Unknown');

@@ -6,57 +6,57 @@ import { useNavigate } from 'react-router-dom';
 import { getSocket } from '../../socket';
 
 function JoinTutorial() {
+  const [socketInstance, setSocketInstance] = useState(null);
   const [code, setCode] = useState('');
   const navigate = useNavigate();
 
-  // useEffect(() => {
-  //   const socket = getSocket();
+  useEffect(() => {
+    const socket = getSocket();
+    setSocketInstance(socket);
 
-  //   const onTutorialFound = () => {
-  //     navigate('/attributes');
-  //   };
+    const onTutorialFound = () => {
+      navigate("/tutorial");
+    };
 
-  //   socket.on("tutorial_found", onTutorialFound);
+    socket.on("student_update", onTutorialFound);
 
-  //   return () => {
-  //     socket.off("tutorial_found", onTutorialFound);
-  //   };
-  // }, []);
+    return () => {
+      socket.off("student_update", onTutorialFound);
+    };
+  }, []);
 
   const handleJoin = async () => {
-    if (!code.trim()) return;
+    if (!code.trim()) {
+      alert("Please enter a tutorial code.");
+      return;
+    }
 
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
+    const apiPost = (endpoint, payload) =>
+      fetch(`${BACKEND_URL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }).then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        return data;
+      });
+
     try {
-      const response = await fetch(
-        `${BACKEND_URL}/join/${code}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: 'include',
-        }
-      );
+      await apiPost(`/join/${code}`, {});
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.error);
-        return;
-      }
-      
-      const onTutorialFound = () => {
-        navigate('/tutorial');
+      const onError = (err) => {
+        alert(err.message || "An error occurred while joining the tutorial.");
+        socketInstance.off("error", onError);
       };
 
-      const socket = getSocket();
-
-      socket.on("student_update", onTutorialFound);
-      socket.emit("join_tutorial", { code });
-    } catch (error) {
-      console.error("Join tutorial error:", error);
+      socketInstance.emit("join_tutorial", { code });
+      socketInstance.on("error", onError);
+    } catch (err) {
+      alert(err.message);
     }
   };
 
