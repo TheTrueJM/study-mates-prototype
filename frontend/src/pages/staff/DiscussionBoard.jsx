@@ -63,7 +63,7 @@ function DiscussionBoard({ timeMinutes = 10, questions = [] }) {
         </div>
 
         {/* Discussion questions */}
-        <div className="mb-md">
+        <div className="mb-sm">
           <label className="input-label">Discussion Topics / Ice-Breaker Questions</label>
           <div className="flex-col gap-xs" style={{ display: 'flex' }}>
             {configuredQuestions.map((question, index) => (

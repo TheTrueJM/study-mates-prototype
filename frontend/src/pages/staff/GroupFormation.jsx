@@ -5,21 +5,13 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 
 function GroupFormation() {
-  // Placeholder data (will come from backend)
-  const groups = [
-    {
-      id: 1,
-      members: ['Anonymous-Wombat-42', 'Random-Koala-17', 'Mystery-Dolphin-89', 'Unknown-Eagle-23'],
-    },
-    {
-      id: 2,
-      members: ['Silent-Tiger-56', 'Hidden-Panda-91', 'Secret-Fox-34', 'Quiet-Bear-78'],
-    },
-    {
-      id: 3,
-      members: ['Private-Owl-12', 'Masked-Wolf-45', 'Veiled-Deer-67', 'Unseen-Hawk-29'],
-    },
-  ];
+  // Stress-test: 8 groups x 4 members
+  const groups = Array.from({ length: 8 }, (_, i) => ({
+    id: i + 1,
+    members: Array.from({ length: 4 }, (_, j) =>
+      `Student-${String(i * 4 + j + 1).padStart(2, '0')}`
+    ),
+  }));
 
   const handleReform = () => {
     console.log('Reform groups');
@@ -38,7 +30,7 @@ function GroupFormation() {
         <div className="card-subtitle">Group Formation Result</div>
 
         {/* Group cards in responsive grid */}
-        <div className="grid grid-cols-3 mb-lg">
+        <div className="grid grid-cols-4 mb-sm">
           {groups.map((group) => (
             <div key={group.id} className="group-card">
               <div className="group-card-header">Group {group.id}</div>

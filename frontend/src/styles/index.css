@@ -26,7 +26,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: var(--spacing-lg) var(--spacing-sm);
+  padding: var(--spacing-sm);
 }
 
 /* ==================== Design System (from Figma wireframes) ==================== */
@@ -67,7 +67,7 @@ body {
 
 .container-sm { max-width: 500px; }
 .container-md { max-width: 768px; }
-.container-lg { max-width: 1024px; }
+.container-lg { max-width: 1400px; }
 
 /* Center card vertically on pages with small content */
 .page-center {
@@ -84,35 +84,36 @@ body {
 .card {
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--border-radius);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-sm);
   background-color: white;
   box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
 
 .card-header {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: bold;
-  margin-bottom: var(--spacing-md);
-  padding-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
   border-bottom: var(--border-width) solid var(--color-border);
   color: var(--color-primary);
 }
 
 .card-subtitle {
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: bold;
   color: var(--color-primary);
-  padding-bottom: var(--spacing-xs);
+  padding-bottom: 0.25rem;
   border-bottom: var(--border-width) solid var(--color-primary);
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-xs);
 }
 
 /* Button */
 .btn {
   border: var(--border-width) solid;
   border-radius: 8px;
-  padding: 0.75rem var(--spacing-md);
-  font-size: 1rem;
+  padding: 0.5rem var(--spacing-sm);
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
   font-family: inherit;
@@ -171,7 +172,7 @@ body {
 /* Button Group (side-by-side buttons) */
 .btn-group {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
 }
 
 .btn-group .btn { flex: 1; }
@@ -235,7 +236,7 @@ body {
 
 /* Form Group */
 .form-group {
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
 }
 
 /* Range Slider */
@@ -434,7 +435,7 @@ body {
 /* Grid (responsive layout) */
 .grid {
   display: grid;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
 }
 
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
@@ -443,18 +444,18 @@ body {
 
 /* Auto-adjusts columns based on screen width */
 .grid-responsive {
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
 }
 
 /* Student Chip (name badge in session lobby) */
 .student-chip {
   border: var(--border-width) solid var(--color-primary);
-  border-radius: 8px;
-  padding: var(--spacing-sm);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
   text-align: center;
   background-color: var(--color-gray);
   color: var(--color-primary);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   box-shadow: var(--shadow-sm);
 }
 
@@ -462,13 +463,14 @@ body {
 .join-code {
   border: var(--border-width) solid var(--color-primary);
   border-radius: 10px;
-  padding: var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
   background-color: var(--color-gray);
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
 }
 
 .join-code .code-value {
-  font-size: 2.5rem;
+  font-size: 1.75rem;
   font-weight: bold;
   color: var(--color-primary);
   letter-spacing: 0.1em;
@@ -476,8 +478,8 @@ body {
 
 /* QR Placeholder */
 .qr-placeholder {
-  width: 12rem;
-  height: 12rem;
+  width: 5rem;
+  height: 5rem;
   border: var(--border-width) solid #ccc;
   border-radius: 10px;
   display: flex;
@@ -500,40 +502,41 @@ body {
 .group-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 
 .group-card .group-card-header {
-  padding: var(--spacing-sm);
+  padding: 0.35rem var(--spacing-xs);
   background-color: var(--color-primary);
   color: white;
   font-weight: bold;
-  font-size: 1.125rem;
+  font-size: 0.875rem;
 }
 
 .group-card .group-card-body {
-  padding: var(--spacing-sm);
+  padding: var(--spacing-xs);
   background-color: var(--color-gray);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xs);
+  gap: 0.25rem;
 }
 
 .group-card .group-member {
-  border: var(--border-width) solid var(--color-primary);
-  border-radius: 6px;
-  padding: var(--spacing-sm);
+  border: 1px solid var(--color-primary);
+  border-radius: 4px;
+  padding: 0.25rem var(--spacing-xs);
   background-color: white;
   color: var(--color-primary);
+  font-size: 0.75rem;
 }
 
 /* Timer (large countdown display) */
 .timer-display {
   border: var(--border-width) solid var(--color-primary);
   border-radius: 10px;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-sm);
   text-align: center;
   background-color: var(--color-gray);
 }
 
 .timer-display .timer-value {
-  font-size: 4rem;
+  font-size: 2.5rem;
   font-weight: bold;
   color: var(--color-primary);
 }
@@ -548,16 +551,18 @@ body {
 .question-item {
   border: var(--border-width) solid var(--color-primary);
   border-radius: 10px;
-  padding: var(--spacing-sm);
+  padding: 0.35rem 0.5rem;
   background-color: var(--color-gray);
   display: flex;
   align-items: flex-start;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-xs);
+  font-size: 0.85rem;
 }
 
 .question-item .question-number {
-  width: 2rem;
-  height: 2rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.75rem;
   border: var(--border-width) solid var(--color-primary);
   border-radius: 50%;
   background-color: var(--color-primary);
@@ -635,7 +640,7 @@ body {
   .card { padding: var(--spacing-sm); }
   .card-header { font-size: 1.25rem; }
 
-  .timer-display .timer-value { font-size: 2.5rem; }
+  .timer-display .timer-value { font-size: 2rem; }
 
   .availability-row {
     flex-direction: column;

@@ -7,20 +7,10 @@ import Button from '../../components/Button';
 function SessionLobby() {
   // Placeholder data (will come from backend via socket.io)
   const joinCode = 'ABCD-1234';
-  const students = [
-    'Anonymous-Wombat-42',
-    'Random-Koala-17',
-    'Mystery-Dolphin-89',
-    'Unknown-Eagle-23',
-    'Silent-Tiger-56',
-    'Hidden-Panda-91',
-    'Secret-Fox-34',
-    'Quiet-Bear-78',
-    'Private-Owl-12',
-    'Masked-Wolf-45',
-    'Veiled-Deer-67',
-    'Unseen-Hawk-29',
-  ];
+  // Stress-test: 30 students
+  const students = Array.from({ length: 30 }, (_, i) =>
+    `Unknown-Student-${String(i + 1).padStart(2, '0')}`
+  );
 
   const handleBeginGrouping = () => {
     console.log('Begin group forming round');
@@ -33,7 +23,7 @@ function SessionLobby() {
       <Card title="Session Lobby">
 
         {/* Join code + QR code area */}
-        <div className="mb-lg">
+        <div className="mb-sm">
           <label className="input-label">Join Code</label>
           <div className="flex gap-md">
             <div className="join-code">
@@ -44,7 +34,7 @@ function SessionLobby() {
         </div>
 
         {/* Joined students grid */}
-        <div className="mb-md">
+        <div className="mb-sm">
           <div className="input-label">Students Joined: {students.length}</div>
           <div className="grid grid-responsive">
             {students.map((student) => (
