@@ -1,30 +1,24 @@
-// EnterAttributes - Student inputs GPA info and availability times
+// EnterDetails - Student inputs GPA info and availability times
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 
-const TIME_SLOTS = ["Morning", "Afternoon", "Evening"];
-const DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const TIMES = ["Morning", "Afternoon", "Evening"];
 
-function EnterAttributes() {
-  const [gradeExpectation, setGradeExpectation] = useState("");
+function EnterDetails() {
+  const [goalGPA, setGoalGPA] = useState("");
   const [currentGPA, setCurrentGPA] = useState("");
   const [noGPAYet, setNoGPAYet] = useState(false);
   const [availableDays, setAvailableDays] = useState(
     DAYS.map((day) => ({ day, times: [] }))
   );
   const navigate = useNavigate();
+  const { setStudent } = useAuth();
 
   // Toggle a time slot on/off for a given day
   const toggleTime = (dayIndex, time) => {
@@ -40,32 +34,63 @@ function EnterAttributes() {
     setAvailableDays(newDays);
   };
 
-  const handleConfirm = () => {
-    // Build availability codes according to backend enum format
-    const DAY_CODES = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
-    const PERIOD_MAP = { Morning: 'M', Afternoon: 'A', Evening: 'N' };
+  const handleConfirm = async () => {
+    if (isNaN(parseFloat(goalGPA)) ) {
+      alert("Please enter a valid goal GPA.");
+      return;
+    }
 
-    const params = new URLSearchParams();
-    params.append('currentGPA', currentGPA || '0');
-    params.append('goalGPA', gradeExpectation || '4.0');
+    if (isNaN(parseFloat(currentGPA)) && !noGPAYet) {
+      alert("Please enter a valid current GPA or select no GPA.");
+      return;
+    }
 
+    // Build availability codes according to format
+    const availability = [];
     availableDays.forEach((slot, dayIndex) => {
       slot.times.forEach((time) => {
-        const code = `${DAY_CODES[dayIndex]}${PERIOD_MAP[time]}`;
-        params.append('availability', code);
+        const code = `${DAYS[dayIndex].slice(0,3)}${time[0]}`;
+        availability.push(code);
       });
     });
 
+    if (availability.length === 0) {
+      const proceed = window.confirm("You did not select any available times. Submit anyway?");
+      if (!proceed) return;
+    }
+
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
-    fetch(`${BACKEND_URL}/details`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: params,
-      credentials: 'include',
-    }).then(() => {
-      navigate('/tutorial');
-    }).catch(err => console.error(err));
+    const apiPost = (endpoint, payload) =>
+      fetch(`${BACKEND_URL}${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      }).then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || res.statusText);
+        return data;
+      });
+
+    try {
+      await apiPost("/details", {
+        currentGPA: noGPAYet ? 4.5 : currentGPA,
+        goalGPA,
+        availability
+      });
+      
+      // Update frontend state
+      setStudent({
+        currentGPA: noGPAYet ? 4.5 : parseFloat(currentGPA),
+        goalGPA: parseFloat(goalGPA),
+        availability
+      });
+      
+      navigate("/join");
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   return (
@@ -73,15 +98,15 @@ function EnterAttributes() {
       <Card title="Tutorial Session ABCD-1234">
         {/* GPA inputs */}
         <Input
-          label="Goal GPA for Unit"
+          label="Goal GPA for this Unit"
           type="number"
-          value={gradeExpectation}
-          onChange={setGradeExpectation}
+          value={goalGPA}
+          onChange={setGoalGPA}
           placeholder="e.g. 4.0"
         />
 
         <Input
-          label="Current or Most Recent GPA"
+          label="Current or Recent GPA"
           type="number"
           value={currentGPA}
           onChange={setCurrentGPA}
@@ -108,7 +133,7 @@ function EnterAttributes() {
               <div key={dayIndex} className="availability-row">
                 <span className="day-label">{slot.day}</span>
 
-                {TIME_SLOTS.map((time) => (
+                {TIMES.map((time) => (
                   <button
                     key={time}
                     className={`btn-toggle ${
@@ -126,7 +151,7 @@ function EnterAttributes() {
 
         <div className="mt-md">
           <Button variant="primary" fullWidth onClick={handleConfirm}>
-            Confirm Attributes
+            Confirm Details
           </Button>
         </div>
       </Card>
@@ -134,4 +159,4 @@ function EnterAttributes() {
   );
 }
 
-export default EnterAttributes;
+export default EnterDetails;

@@ -1,7 +1,6 @@
 from flask import Blueprint, session, request, redirect, url_for, send_file, render_template, jsonify
 from flask_bcrypt import generate_password_hash, check_password_hash
 from flask_login import login_required, login_user, logout_user, current_user
-from sqlalchemy import or_
 from ..database import db, Staff, AccountInvite
 import random, string
 
@@ -9,16 +8,6 @@ import os
 
 
 staff_bp = Blueprint("staff", __name__, url_prefix="/staff")
-
-
-@staff_bp.route("/", methods=["GET"])
-@login_required
-def index():
-    session["role"] = "staff"
-    session["tutorial_code"] = None
-
-    client_path = os.path.join(os.getcwd(), "../frontend/public/staff/index.html")
-    return send_file(client_path)
 
 
 @staff_bp.route("/tutorial/<code>", methods=["GET"])
@@ -46,7 +35,7 @@ def login():
 
     # Validate staff identity and password
     if not isinstance(staff, Staff):
-        return jsonify({"error": "Staff not found"}), 400
+        return jsonify({"error": "Staff username not found"}), 400
     if not check_password_hash(staff.password_hash, password):
         return jsonify({"error": "Incorrect password"}), 401
     

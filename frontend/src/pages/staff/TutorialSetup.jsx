@@ -19,7 +19,6 @@ function TutorialSetup() {
     setSocketInstance(socket);
 
     const onTutorialCreated = (data) => {
-      console.log("Tutorial created with code:", data.code);
       navigate(`/staff/tutorial/${data.code}`);
     };
 

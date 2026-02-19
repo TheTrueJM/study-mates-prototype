@@ -1,46 +1,40 @@
-from flask import Blueprint, session, request, redirect, url_for, send_file, render_template
-import os
-from app.enums import get_availability_code, Day, TimePeriod, parse_availability
+from flask import Blueprint, session, request, jsonify
+from app.enums import parse_availability
 
 
 student_bp = Blueprint("student", __name__)
 
 
-@student_bp.route("/", methods=["GET", "POST"])
-def index():
-    if request.method == "POST":
-        code = request.form.get("code")
-        session["tutorial_code"] = code
-        return redirect(url_for("student.details"))
+@student_bp.route("/details", methods=["POST"])
+def details():   
+    data = request.get_json()
 
-    client_path = os.path.join(os.getcwd(), "../frontend/public/student/index.html")
-    return send_file(client_path)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid details data or format"}), 400
 
+    try:
+        current = float(data.get("currentGPA", 4.5))
+        current = max(0, min(current, 7))
+        goal = float(data.get("goalGPA", 4.0))
+        goal = max(0, min(goal, 7))
+        availability = parse_availability(data.get("availability"))
+    except ValueError:
+        return jsonify({"error": "Invalid details provided"}), 400
 
-@student_bp.route("/details", methods=["GET", "POST"])
-def details():
-    if not session.get("tutorial_code"):
-        return redirect(url_for("student.index"))
-
-    if request.method == "POST":
-        session["currentGPA"] = float(request.form.get("currentGPA", 0.0))
-        session["goalGPA"] = float(request.form.get("goalGPA", 4.0))
-        # e.g form output: ['MONM', 'WEDA', 'THUA', 'FRIA', 'SUNN']
-        availability_list = request.form.getlist("availability")
-        session["availability"] = list(parse_availability(availability_list))
-        return redirect(url_for("student.tutorial", code=session["tutorial_code"]))
-
-    client_path = os.path.join(os.getcwd(), "../frontend/public/student/details.html")
-    return send_file(client_path)
+    session["currentGPA"] = current
+    session["goalGPA"] = goal
+    session["availability"] = availability
+    return jsonify({"message": "Student details set"}), 200
 
 
-@student_bp.route("/tutorial/<code>", methods=["GET"])
-def tutorial(code):
-    ## To-Do: Kick back to Index if Tutorial doesn't exist on server
-    if not session.get("tutorial_code"):
-        return redirect(url_for("student.index"))
+@student_bp.route("/join/<code>", methods=["POST"])
+def join_tutorial(code):
+    if not code:
+        return jsonify({"error": "Invalid tutorial code"}), 400
+    
+    if session.get("currentGPA") is None or session.get("goalGPA")  is None or session.get("availability") is None:
+        return jsonify({"error": "Must set details before joining tutorial"}), 400
 
+    session["tutorial_code"] = code
     session["role"] = "student"
-
-    client_path = os.path.join(os.getcwd(), "../frontend/public/student/tutorial.html")
-    return send_file(client_path)
+    return jsonify({"message": "Tutorial code set"}), 200
