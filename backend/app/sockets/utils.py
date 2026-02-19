@@ -117,7 +117,7 @@ def _emit_tutorial_update(code):
     for student_id, data in tutorial["students"].items():
         group_number = data.get("group")
         group = tutorial["groups"].get(group_number)
-        members = [tutorial["students"][sid].get("name") for sid in group] if group else None
+        members = [tutorial["students"][sid].get("name") for sid in group if sid in tutorial["students"]] if group else None
         payload = {
             "username": data["name"],
             "name": tutorial["name"],

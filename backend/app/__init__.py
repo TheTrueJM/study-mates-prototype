@@ -7,8 +7,6 @@ from .routes import staff_bp, student_bp
 from .populate import populate_all
 
 import os
-import threading
-from threading import Lock
 
 _env_frontend = os.getenv("FRONTEND_ORIGINS")
 if _env_frontend:
@@ -22,67 +20,12 @@ else:
     ]
 
 socketio = SocketIO(
-    logger=True,
-    cors_allowed_origins=FRONTEND_ORIGINS,
+    logger=True, cors_allowed_origins=FRONTEND_ORIGINS, async_mode="eventlet"
 )
-
-timer_threads = dict()
-timer_locks = dict()
-app_context_holder = None
-
-
-def _start_timer_thread(code):
-    if code in timer_threads and timer_threads[code].is_alive():
-        return
-
-    timer_locks.setdefault(code, Lock())
-
-    def timer_loop():
-        from time import sleep
-
-        while True:
-            sleep(1)
-
-            if not app_context_holder:
-                continue
-
-            with app_context_holder.app_context():
-                from .sockets import utils
-
-                lock = timer_locks.get(code)
-                if not lock:
-                    return
-
-                with lock:
-                    tutorial = utils.tutorials.get(code)
-                    if not tutorial or not tutorial.get("timer", {}).get("running", False):
-                        return
-
-                    timer = tutorial["timer"]
-                    timer["remaining"] = max(0, timer["remaining"] - 1)
-
-                    if timer["remaining"] == 0:
-                        timer["running"] = False
-                        message = {"message": "Time's up!"}
-                        socketio.emit("timer_notification", message, room=code, namespace="/")
-                        socketio.emit("timer_notification", message, room=code, namespace="/staff")
-                    else:
-                        utils._emit_tutorial_update(code)
-
-    timer_threads[code] = threading.Thread(target=timer_loop, daemon=True)
-    timer_threads[code].start()
-
-
-def _stop_timer_thread(code):
-    timer_threads.pop(code, None)
-    timer_locks.pop(code, None)
 
 
 def create_app():
     app = Flask(__name__)
-
-    global app_context_holder
-    app_context_holder = app
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "insecure-key")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///study_mates.sqlite")
@@ -104,6 +47,11 @@ def create_app():
     # Register blueprints
     app.register_blueprint(staff_bp, url_prefix="/staff")
     app.register_blueprint(student_bp)
+
+    from .sockets.timer import timer
+
+    timer.app_ctx = app
+    timer.socketio = socketio
 
     from . import sockets
 
