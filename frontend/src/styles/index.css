@@ -5,11 +5,37 @@
   box-sizing: border-box;
 }
 
+html, body, #root {
+  height: 100%;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  background-color: #ffffff;
+  background-color: #D6DEE8;
   color: #2B2B2B;
   line-height: 1.5;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Full-height page wrapper */
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-sm);
+}
+
+/* Center card vertically on pages with small content */
+.page-center {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm);
 }
 
 /* ==================== Design System (from Figma wireframes) ==================== */
@@ -32,11 +58,17 @@ body {
 
   /* Border */
   --border-width: 2px;
-  --border-radius: 0;     /* Wireframe style - no rounded corners */
+  --border-radius: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 /* ==================== Layout ==================== */
 .container {
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--spacing-sm);
@@ -44,15 +76,18 @@ body {
 
 .container-sm { max-width: 500px; }
 .container-md { max-width: 768px; }
-.container-lg { max-width: 1024px; }
+.container-lg { max-width: 1400px; }
 
 /* ==================== Components ==================== */
 
 /* Card */
 .card {
   border: var(--border-width) solid var(--color-border);
+  border-radius: var(--border-radius);
   padding: var(--spacing-lg);
   background-color: white;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
 
 .card-header {
@@ -79,11 +114,21 @@ body {
 /* Button */
 .btn {
   border: var(--border-width) solid;
+  border-radius: 8px;
   padding: 0.75rem var(--spacing-md);
   font-size: 1rem;
   cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+  transition: all 0.2s;
   font-family: inherit;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn:active {
+  transform: translateY(0);
 }
 
 .btn-primary {
@@ -115,13 +160,14 @@ body {
 /* Toggle Button (used in availability time selection) */
 .btn-toggle {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 20px;
   padding: 0.25rem 0.75rem;
   font-size: 0.875rem;
   cursor: pointer;
   background-color: white;
   color: var(--color-primary);
   font-family: inherit;
-  transition: background-color 0.2s, color 0.2s;
+  transition: all 0.2s;
 }
 
 .btn-toggle:hover { background-color: var(--color-gray); }
@@ -143,15 +189,18 @@ body {
 .input {
   width: 100%;
   border: var(--border-width) solid var(--color-border);
+  border-radius: 8px;
   padding: 0.75rem;
   font-size: 1rem;
   font-family: inherit;
   color: var(--color-text);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .input:focus {
   outline: none;
   border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(0, 47, 108, 0.15);
 }
 
 .input-label {
@@ -214,6 +263,7 @@ body {
   min-width: 3rem;
   text-align: center;
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 8px;
   padding: var(--spacing-xs);
   font-weight: bold;
   color: var(--color-primary);
@@ -236,6 +286,7 @@ body {
   padding: var(--spacing-xs);
   background-color: var(--color-gray);
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 8px;
 }
 
 .availability-row .day-label {
@@ -270,6 +321,7 @@ body {
 
 .nav-action {
   border: var(--border-width) solid white;
+  border-radius: 8px;
   padding: 0.4rem 1rem;
   background-color: transparent;
   color: white;
@@ -297,6 +349,7 @@ body {
   text-decoration: none;
   padding: 0.2rem 0.4rem;
   border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
 }
 
 .nav-debug a:hover {
@@ -310,9 +363,11 @@ body {
 /* Stat Box (highlighted number display, e.g. "Students Joined: 12") */
 .stat-box {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
   padding: var(--spacing-sm);
   background-color: var(--color-gray);
   text-align: center;
+  box-shadow: var(--shadow-sm);
 }
 
 .stat-box .stat-label {
@@ -338,6 +393,7 @@ body {
   width: 0.75rem;
   height: 0.75rem;
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 50%;
   animation: pulse 1.4s infinite ease-in-out;
 }
 
@@ -354,8 +410,16 @@ body {
 /* Member Card (group member info card in GroupView) */
 .member-card {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
   padding: var(--spacing-sm);
   background-color: var(--color-gray);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.member-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .member-card .member-name {
@@ -392,22 +456,25 @@ body {
 
 /* Auto-adjusts columns based on screen width */
 .grid-responsive {
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
 }
 
 /* Student Chip (name badge in session lobby) */
 .student-chip {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 8px;
   padding: var(--spacing-sm);
   text-align: center;
   background-color: var(--color-gray);
   color: var(--color-primary);
   font-size: 0.875rem;
+  box-shadow: var(--shadow-sm);
 }
 
 /* Join Code (large session code display) */
 .join-code {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
   padding: var(--spacing-md);
   background-color: var(--color-gray);
   display: inline-block;
@@ -425,6 +492,7 @@ body {
   width: 12rem;
   height: 12rem;
   border: var(--border-width) solid #ccc;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -436,7 +504,13 @@ body {
 /* Group Card (group formation result cards) */
 .group-card {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
+
+.group-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 
 .group-card .group-card-header {
   padding: var(--spacing-sm);
@@ -456,6 +530,7 @@ body {
 
 .group-card .group-member {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 6px;
   padding: var(--spacing-sm);
   background-color: white;
   color: var(--color-primary);
@@ -464,6 +539,7 @@ body {
 /* Timer (large countdown display) */
 .timer-display {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
   padding: var(--spacing-lg);
   text-align: center;
   background-color: var(--color-gray);
@@ -484,6 +560,7 @@ body {
 /* Question List (discussion topic items) */
 .question-item {
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 10px;
   padding: var(--spacing-sm);
   background-color: var(--color-gray);
   display: flex;
@@ -495,6 +572,7 @@ body {
   width: 2rem;
   height: 2rem;
   border: var(--border-width) solid var(--color-primary);
+  border-radius: 50%;
   background-color: var(--color-primary);
   color: white;
   display: flex;
@@ -529,3 +607,64 @@ body {
 .gap-xs { gap: var(--spacing-xs); }
 .gap-sm { gap: var(--spacing-sm); }
 .gap-md { gap: var(--spacing-md); }
+
+/* ==================== Responsive ==================== */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
+
+  .btn-group {
+    flex-direction: column;
+  }
+
+  .join-code .code-value { font-size: 1.75rem; }
+
+  .qr-placeholder {
+    width: 8rem;
+    height: 8rem;
+  }
+
+  .nav-inner {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .nav-debug {
+    order: 3;
+    width: 100%;
+    flex-wrap: wrap;
+    font-size: 0.65rem;
+    gap: 0.3rem;
+  }
+}
+
+/* Mobile (Student pages) */
+@media (max-width: 480px) {
+  .grid-cols-2 { grid-template-columns: 1fr; }
+  .grid-cols-3 { grid-template-columns: 1fr; }
+
+  .card { padding: var(--spacing-sm); }
+  .card-header { font-size: 1.25rem; }
+
+  .timer-display .timer-value { font-size: 2.5rem; }
+
+  .availability-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .availability-row .day-label {
+    min-width: auto;
+    margin-bottom: 0.25rem;
+  }
+
+  .flex.gap-md { flex-direction: column; }
+
+  .member-card .member-info div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+}

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import { getSocket } from '../../socket';
 import LobbyLayout from './LobbyLayout';
 import GroupLayout from './GroupLayout';
 
 function Tutorial() {
-  // const { code } = useParams();
+  const navigate = useNavigate();
 
   const [username, setUsername] = useState('Unknown');
 
@@ -23,7 +24,12 @@ function Tutorial() {
   useEffect(() => {
     const socket = getSocket();
 
-    socket.emit('fetch_tutorial');
+    const tutorialCode = localStorage.getItem("tutorial_code");
+    if (tutorialCode) {
+      socket.emit("join_tutorial", { code: tutorialCode });
+    } else {
+      socket.emit("fetch_tutorial");
+    }
 
     const onStudentUpdate = (tutorial) => {
       if (!tutorial) return;
@@ -53,16 +59,32 @@ function Tutorial() {
       if (data && data.message) alert(data.message);
     };
 
+    const onTutorialEnded = () => {
+      localStorage.removeItem("tutorial_code");
+      navigate("/join");
+    };
+
+    const onError = (err) => {
+      if (err && err.message) {
+        localStorage.removeItem("tutorial_code");
+        navigate("/join");
+      }
+    };
+
     socket.on('student_update', onStudentUpdate);
     socket.on('timer_sync', onTimerSync);
     socket.on('timer_notification', onTimerNotification);
+    socket.on('tutorial_ended', onTutorialEnded);
+    socket.on('error', onError);
 
     return () => {
       socket.off('student_update', onStudentUpdate);
       socket.off('timer_sync', onTimerSync);
       socket.off('timer_notification', onTimerNotification);
+      socket.off('tutorial_ended', onTutorialEnded);
+      socket.off('error', onError);
     };
-  }, []);
+  }, [navigate, tutorialCode]);
 
   return (
     <div className="container container-sm mt-lg">

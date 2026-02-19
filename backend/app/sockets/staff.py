@@ -10,9 +10,10 @@ from ..database import DiscussionQuestion
 
 
 from flask import request, session
-from flask_socketio import emit, join_room
-from .. import socketio, _start_timer_thread, _stop_timer_thread
+from flask_socketio import emit, join_room, leave_room
+from .. import socketio
 from . import utils
+from .timer import timer
 from .errors import (
     ERR_SESSION_NOT_FOUND,
     ERR_NO_ACTIVE_TUTORIAL,
@@ -141,6 +142,7 @@ def reset_lobby(user_id, code, tutorial):
     tutorial["groups"].clear()
     tutorial["questions"].clear()
     tutorial["timer"]["running"] = False
+    timer.stop(code)
 
     for student in tutorial["students"].values():
         student["group"] = None
@@ -158,12 +160,14 @@ def fetch_tutorial(user_id, code, tutorial):
 # Grouping
 # -----------------------------
 
+
 @socketio.on("start_grouping", namespace="/staff")
 @_with_tutorial_auth
 def start_grouping(user_id, code, tutorial):
     tutorial["questions"].clear()
     tutorial["timer"]["running"] = False
-    group_size = tutorial["group_size"] 
+    timer.stop(code)
+    group_size = tutorial["group_size"]
 
     students = list(tutorial["students"].keys())
 
@@ -262,7 +266,7 @@ def start_discussion(user_id, code, tutorial):
     tutorial["state"] = "discussion"
     tutorial["timer"]["remaining"] = tutorial["timer"]["duration"]
     tutorial["timer"]["running"] = True
-    _start_timer_thread(code)
+    timer.start(code)
 
     academic = DiscussionQuestion.query.filter_by(category_name="academic").order_by(func.random()).first()
     casual = DiscussionQuestion.query.filter_by(category_name="casual").order_by(func.random()).first()
@@ -278,7 +282,7 @@ def start_discussion(user_id, code, tutorial):
 @_with_tutorial_auth
 def start_timer(user_id, code, tutorial):
     tutorial["timer"]["running"] = True
-    _start_timer_thread(code)
+    timer.start(code)
     utils._emit_tutorial_update(code)
 
 
@@ -286,6 +290,7 @@ def start_timer(user_id, code, tutorial):
 @_with_tutorial_auth
 def stop_timer(user_id, code, tutorial):
     tutorial["timer"]["running"] = False
+    timer.stop(code)
     utils._emit_tutorial_update(code)
 
 
@@ -296,4 +301,36 @@ def reset_timer(user_id, code, tutorial, data):
     tutorial["timer"]["duration"] = new_time
     tutorial["timer"]["remaining"] = new_time
     tutorial["timer"]["running"] = False
+    timer.stop(code)
     utils._emit_tutorial_update(code)
+
+
+@socketio.on("leave_tutorial", namespace="/staff")
+def leave_tutorial():
+    user_id = utils.sessions.get(request.sid)
+    if not user_id:
+        return
+
+    code = utils.users.get(user_id, {}).get("tutorial")
+    if not code:
+        return
+
+    tutorial = utils.tutorials.get(code)
+    if not tutorial or tutorial.get("staff") != user_id:
+        return
+
+    tutorial["timer"]["running"] = False
+    timer.stop(code)
+
+    emit("tutorial_ended", room=code, namespace="/")
+
+    student_ids = list(tutorial.get("students", {}).keys())
+    for student_id in student_ids:
+        if student_id in utils.users:
+            utils.users[student_id]["tutorial"] = None
+
+    utils.tutorials.pop(code, None)
+    utils.users[user_id]["tutorial"] = None
+
+    leave_room(code, namespace="/staff")
+    emit("left_tutorial", to=request.sid, namespace="/staff")

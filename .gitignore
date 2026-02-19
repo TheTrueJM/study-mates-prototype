@@ -8,3 +8,4 @@ CLAUDE.md
 backend/uv.lock
 *.swp
 frontend/dist/
+*.txt
