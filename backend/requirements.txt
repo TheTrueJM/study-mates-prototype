@@ -9,3 +9,5 @@ pytest
 pudb
 numpy
 eventlet
+python-dotenv
+

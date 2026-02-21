@@ -89,7 +89,7 @@ function Tutorial() {
   const handleLobby = () => socketInstance.emit('reset_lobby');
   const handleGrouping = () => socketInstance.emit('start_grouping');
   const handleDiscussion = () => socketInstance.emit('start_discussion');
-  const handleLeave = () => {
+  const handleClose = () => {
     socketInstance.emit("leave_tutorial");
     navigate("/staff/");
   };
@@ -103,7 +103,7 @@ function Tutorial() {
         title={tutorialName}
         actions={
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button onClick={handleLeave}>Leave Tutorial</button>
+            <button onClick={handleClose}>Close Tutorial</button>
             {(tutorialState === "groups" || tutorialState === "discussion") && (
               <Button variant="outline" onClick={handleLobby}>
                 Back to Lobby

@@ -5,7 +5,9 @@ instance/
 pytest.log
 .DS_Store
 CLAUDE.md
+AGENTS.md
 backend/uv.lock
 *.swp
 frontend/dist/
 *.txt
+*.env
