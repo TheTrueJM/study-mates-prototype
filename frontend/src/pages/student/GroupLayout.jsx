@@ -1,10 +1,18 @@
+import { useState } from 'react';
+
 export default function GroupLayout({ state = 'groups', username, groupNumber, groupMembers = [], questions = [], timeRemaining = 0, isRunning = false }) {
+  const [expandedMember, setExpandedMember] = useState(null);
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
     
+
+  const toggleMember = (name) => {
+    setExpandedMember(expandedMember === name ? null : name);
+  };
+
   return (
     <>
         {groupNumber === null ? (
@@ -26,6 +34,18 @@ export default function GroupLayout({ state = 'groups', username, groupNumber, g
               {groupMembers.map((member) => (
                 <div key={member} className="member-card">
                   <div className="member-name">{member}</div>
+                <div 
+                  key={member.name} 
+                  className="member-card"
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => toggleMember(member.name)}
+                >
+                  <div className="member-name">{member.name}</div>
+                  {expandedMember === member.name && member.availability && (
+                    <div className="member-availability" style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                      <strong>Availability:</strong> {member.availability.join(', ') || 'None specified'}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -39,4 +59,3 @@ export default function GroupLayout({ state = 'groups', username, groupNumber, g
         </div>
     </>
   );
-}

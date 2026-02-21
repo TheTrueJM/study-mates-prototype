@@ -67,6 +67,7 @@ function Tutorial() {
     };
 
     const onLeftTutorial = () => {
+    const onTutorialDeleted = () => {
       navigate("/staff/");
     };
 
@@ -75,6 +76,7 @@ function Tutorial() {
     socket.on('timer_notification', onTimerNotification);
     socket.on('error', onError);
     socket.on('left_tutorial', onLeftTutorial);
+    socket.on('tutorial_deleted', onTutorialDeleted);
 
     return () => {
       socket.off('tutorial_update', onUpdate);
@@ -82,6 +84,7 @@ function Tutorial() {
       socket.off('timer_notification', onTimerNotification);
       socket.off('error', onError);
       socket.off('left_tutorial', onLeftTutorial);
+      socket.off('tutorial_deleted', onTutorialDeleted);
     };
   }, [code, navigate]);
 
@@ -92,6 +95,7 @@ function Tutorial() {
   const handleClose = () => {
     socketInstance.emit("leave_tutorial");
     navigate("/staff/");
+    socketInstance.emit("delete_tutorial");
   };
   const handleTimerStart = () => socketInstance.emit('start_timer');
   const handleTimerStop = () => socketInstance.emit('stop_timer');

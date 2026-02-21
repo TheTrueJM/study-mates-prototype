@@ -60,25 +60,12 @@ def connect(auth):
 
     code = session.get("tutorial_code") or existing_tutorial
 
-    if not user_id: user_id = str(uuid.uuid4())
 
     if user_id not in utils.users:
-        utils.users[user_id] = {
-            "sessions": set(),
-            "role": role,
-            "tutorial": None
-        }
 
     utils.users[user_id]["sessions"].add(request.sid)
     utils.sessions[request.sid] = user_id
 
-    emit("session",
-        {
-            "uuid": user_id,
-            "role": role,
-            "tutorial": utils.users[user_id]["tutorial"]
-        },
-        namespace="/staff"
     )
 
     utils._join_tutorial(user_id, code, namespace="/staff")
@@ -122,8 +109,6 @@ def create_tutorial(data):
         "timer": {
             "duration": discussion_time,
             "remaining": discussion_time,
-            "running": False
-        }
     }
 
     logger.info(f"Created tutorial {code} for {user_id}")
@@ -191,12 +176,9 @@ def start_grouping(user_id, code, tutorial):
         while len(group) < group_size and unmatched:
             best_student, best_score = None, -1
 
-            for (candidate, c_id) in unmatched:
                 # Compatibility with entire group
                 score = rematches = 0
-                for (member, m_id) in group:
                     # Track rematches between students in the group, with a slight chance to allow rematches through uncounted
-                    if c_id in tutorial["previous_matches"].get(m_id, ()) and random.random() > rematch_rate:
                         rematches += 1
                     score += connections[candidate][member]
 
@@ -250,7 +232,6 @@ def _build_matrix(ids, students):
     for i in range(len(ids)):
         for j in range(i + 1, len(ids)):
             matrix[i][j] = matrix[j][i] = matrix[i][j] / max_weight
-    
     return matrix
 
 
@@ -267,9 +248,6 @@ def start_discussion(user_id, code, tutorial):
     tutorial["timer"]["running"] = True
     timer.start(code)
 
-    academic = DiscussionQuestion.query.filter_by(category_name="academic").order_by(func.random()).first()
-    casual = DiscussionQuestion.query.filter_by(category_name="casual").order_by(func.random()).first()
-    study = DiscussionQuestion.query.filter_by(category_name="study").order_by(func.random()).first()
 
     questions = [academic.question, casual.question, study.question]
     tutorial["questions"] = questions
@@ -306,6 +284,8 @@ def reset_timer(user_id, code, tutorial, data):
 
 @socketio.on("leave_tutorial", namespace="/staff")
 def leave_tutorial():
+@socketio.on("delete_tutorial", namespace="/staff")
+def delete_tutorial():
     user_id = utils.sessions.get(request.sid)
     if not user_id:
         return
@@ -330,6 +310,7 @@ def leave_tutorial():
 
     utils.tutorials.pop(code, None)
     utils.users[user_id]["tutorial"] = None
+    utils._close_tutorial(code)
 
     leave_room(code, namespace="/staff")
     emit("left_tutorial", to=request.sid, namespace="/staff")

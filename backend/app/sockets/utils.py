@@ -13,8 +13,6 @@ from .errors import ERR_TUTORIAL_NOT_FOUND
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code, disconnected_at: float|None}, ... }
-sessions = dict() # { sID: UUID }
 tutorials = dict()
 disconnected_students = dict()  # { code: { user_id: disconnected_at, ... } }
 
@@ -42,7 +40,6 @@ RECONNECT_GRACE_PERIOD = 5.0  # seconds
 
 def _generate_code(length=6):
     while True:
-        code  = ''.join(random.choices(string.ascii_uppercase, k=length))
         if code not in tutorials:
             return code
 
@@ -54,14 +51,29 @@ def _cleanup_stale_users(code):
 
     now = time.time()
     threshold = now - RECONNECT_GRACE_PERIOD
+    student_threshold = now - RECONNECT_GRACE_PERIOD
+    staff_threshold = now - STAFF_RECONNECT_GRACE_PERIOD
+
+    if staff_disconnect_time := disconnected_staff.get(code):
+        if staff_disconnect_time <= staff_threshold:
+            _close_tutorial(code)
+            return
 
     if not (disconnected := disconnected_students.get(code)):
         return
 
     if not (stale_ids := [sid for sid, ts in disconnected.items() if ts <= threshold]):
+    if not (
+        stale_ids := [
+            sid for sid, ts in disconnected.items() if ts <= student_threshold
+        ]
+    ):
         return
 
     disconnected_students[code] = {sid: ts for sid, ts in disconnected.items() if ts > threshold}
+    disconnected_students[code] = {
+        sid: ts for sid, ts in disconnected.items() if ts > student_threshold
+    }
 
     students = tutorial["students"]
     for student_id in stale_ids:
@@ -73,13 +85,6 @@ def _cleanup_stale_users(code):
 
 def _generate_name(tutorial):
     DESCRIPTORS = (
-        'agile', 'anonymous', 'blazing', 'blissful', 'bold', 'brave', 'bright', 'calm', 'cheerful',
-        'clever', 'colorful', 'cosmic',  'curious', 'daring', 'dazzling', 'energetic', 'epic',
-        'friendly', 'frosty', 'gentle', 'glowing', 'golden', 'graceful', 'happy', 'hasty', 'heroic',
-        'hidden', 'jolly', 'joyful', 'kind', 'legendary', 'lively', 'lunar', 'midnight', 'mighty',
-        'mysterious', 'mythic', 'nimble', 'noble', 'peaceful', 'playful', 'powerful', 'quick',
-        'radiant', 'rapid', 'resilient', 'royal', 'shiny', 'silent', 'silver', 'smart', 'sneaky',
-        'stealthy', 'stellar', 'strong', 'swift', 'valiant', 'vibrant', 'wild', 'wise', 'witty'
     )
     ANIMALS = (
         'armadillo', 'badger', 'bear', 'beaver', 'cat', 'chameleon', 'cheetah', 'chicken', 'cockatoo',
@@ -94,6 +99,39 @@ def _generate_name(tutorial):
         name = f"{random.choice(DESCRIPTORS).title()}-{random.choice(ANIMALS).title()}"
         if name not in names:
             return name
+
+
+def _close_tutorial(code):
+    from .timer import timer
+
+    if not (tutorial := tutorials.get(code)):
+        return
+
+    staff_id = tutorial.get("staff")
+
+    timer.stop(code)
+
+    emit("tutorial_ended", {}, room=code, namespace="/")
+
+    student_ids = list(tutorial.get("students", {}).keys())
+    for student_id in student_ids:
+        if student_id in users:
+            users[student_id]["tutorial"] = None
+            emit("session_cleared", {}, room=student_id, namespace="/")
+
+    if staff_id and staff_id in users:
+        users[staff_id]["tutorial"] = None
+        staff_sessions = users[staff_id].get("sessions", set())
+        if staff_sessions:
+            staff_sid = sessions.get(list(staff_sessions)[0])
+            if staff_sid:
+                socketio.emit("tutorial_deleted", {}, to=staff_sid, namespace="/staff")
+
+    tutorials.pop(code, None)
+    disconnected_students.pop(code, None)
+    disconnected_staff.pop(code, None)
+
+    logger.info(f"Tutorial {code} closed")
 
 
 def _emit_tutorial_update(code):
@@ -118,6 +156,18 @@ def _emit_tutorial_update(code):
         group_number = data.get("group")
         group = tutorial["groups"].get(group_number)
         members = [tutorial["students"][sid].get("name") for sid in group if sid in tutorial["students"]] if group else None
+        members = (
+            [
+                {
+                    "name": tutorial["students"][sid].get("name"),
+                    "availability": tutorial["students"][sid].get("availability", []),
+                }
+                for sid in group
+                if sid in tutorial["students"]
+            ]
+            if group
+            else None
+        )
         payload = {
             "username": data["name"],
             "name": tutorial["name"],
@@ -126,7 +176,6 @@ def _emit_tutorial_update(code):
             "group_members": members,
             "questions": tutorial["questions"],
             "timer": tutorial.get("timer"),
-            "tutorial_code": code
         }
         emit("student_update", payload, room=student_id, namespace="/")
 
@@ -134,7 +183,6 @@ def _emit_tutorial_update(code):
 def _join_tutorial(user_id, code, namespace):
     join_room(user_id, namespace=namespace)
 
-    if not (tutorial := tutorials.get(code)) and namespace!="/staff":
         emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid, namespace=namespace)
         return
 
@@ -142,6 +190,11 @@ def _join_tutorial(user_id, code, namespace):
         user["disconnected_at"] = None
         if code and user.get("role") == "student":
             disconnected_students.get(code, {}).pop(user_id, None)
+        if code:
+            if user.get("role") == "student":
+                disconnected_students.get(code, {}).pop(user_id, None)
+            elif user.get("role") == "staff":
+                disconnected_staff.pop(code, None)
 
     if code:
         users[user_id]["tutorial"] = code
@@ -153,7 +206,6 @@ def _join_tutorial(user_id, code, namespace):
                 "currentGPA": session.get("currentGPA", 4.5),
                 "goalGPA": session.get("goalGPA", 4.0),
                 "availability": session.get("availability", []),
-                "group": None
             }
             session.pop("student_details", None)
             session.pop("currentGPA", None)
@@ -191,3 +243,10 @@ def disconnect():
                     if code not in disconnected_students:
                         disconnected_students[code] = {}
                     disconnected_students[code][user_id] = user["disconnected_at"]
+                if code := user.get("tutorial"):
+                    if user.get("role") == "student":
+                        if code not in disconnected_students:
+                            disconnected_students[code] = {}
+                        disconnected_students[code][user_id] = user["disconnected_at"]
+                    elif user.get("role") == "staff":
+                        disconnected_staff[code] = user["disconnected_at"]
