@@ -24,5 +24,7 @@ dependencies = [
     "numpy>=2.4.2",
     "pudb>=2025.1.5",
     "pytest>=9.0.2",
+    "python-dotenv>=1.2.1",
     "sqlalchemy>=2.0.46",
 ]
+requires-python = "==3.13.12"
