@@ -34,7 +34,7 @@ export default function GroupLayout({ state = 'groups', username, groupNumber, g
               {groupMembers.map((member) => (
                 <div
                   key={member.name}
-                  className="member-card"
+                  className={`member-card ${member.name === username ? 'current-user' : ''}`}
                   style={{ cursor: 'pointer' }}
                   onClick={() => toggleMember(member.name)}
                 >
