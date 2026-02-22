@@ -21,28 +21,22 @@ def connect(auth):
 
     code = session.get("tutorial_code") or existing_tutorial
 
-    if not user_id: user_id = str(uuid.uuid4())
+    if not user_id:
+        user_id = str(uuid.uuid4())
 
     if user_id not in utils.users:
-        utils.users[user_id] = {
-            "sessions": set(),
-            "role": role,
-            "tutorial": None
-        }
+        utils.users[user_id] = {"sessions": set(), "role": role, "tutorial": None}
 
     utils.users[user_id]["sessions"].add(request.sid)
     utils.sessions[request.sid] = user_id
 
-    emit("session",
-        {
-            "uuid": user_id,
-            "role": role,
-            "tutorial": utils.users[user_id]["tutorial"]
-        }
+    emit(
+        "session",
+        {"uuid": user_id, "role": role, "tutorial": utils.users[user_id]["tutorial"]},
     )
 
     utils._join_tutorial(user_id, code, namespace="/")
-    
+
 
 @socketio.on("join_tutorial")
 def join_tutorial(data):
@@ -72,3 +66,21 @@ def fetch_tutorial():
         return
 
     utils._emit_tutorial_update(code)
+
+
+@socketio.on("reset_session")
+def reset_session():
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid)
+        return
+
+    code = utils.users.get(user_id, {}).get("tutorial")
+    if code and code in utils.tutorials:
+        tutorial = utils.tutorials[code]
+        if user_id in tutorial.get("students", {}):
+            tutorial["students"].pop(user_id, None)
+        utils._emit_tutorial_update(code)
+
+    utils.users[user_id]["tutorial"] = None
+
+    emit("session_cleared", {"message": "Session cleared"}, to=request.sid)

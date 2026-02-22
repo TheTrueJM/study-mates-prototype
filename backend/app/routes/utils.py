@@ -6,13 +6,11 @@ util_bp = Blueprint("main", __name__)
 
 @util_bp.route("/session", methods=["GET"])
 def get_session():
-    # Check if staff is authenticated
     if current_user.is_authenticated:
         return jsonify(
             {"role": "staff", "username": current_user.username, "authenticated": True}
         ), 200
 
-    # Check if student has details set
     if session.get("currentGPA") is not None and session.get("goalGPA") is not None:
         details = {
             "currentGPA": session.get("currentGPA"),
@@ -23,5 +21,14 @@ def get_session():
 
         return jsonify({"role": "student", "details": details}), 200
 
-    # No valid session
     return "", 204
+
+
+@util_bp.route("/session/clear", methods=["POST"])
+def clear_session():
+    session.pop("tutorial_code", None)
+    session.pop("role", None)
+    session.pop("currentGPA", None)
+    session.pop("goalGPA", None)
+    session.pop("availability", None)
+    return jsonify({"message": "Session cleared"}), 200
