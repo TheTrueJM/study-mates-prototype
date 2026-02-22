@@ -72,3 +72,21 @@ def fetch_tutorial():
         return
 
     utils._emit_tutorial_update(code)
+
+
+@socketio.on("reset_session")
+def reset_session():
+    if not (user_id := utils.sessions.get(request.sid)):
+        emit("error", {"message": "Session not found"}, to=request.sid)
+        return
+
+    code = utils.users.get(user_id, {}).get("tutorial")
+    if code and code in utils.tutorials:
+        tutorial = utils.tutorials[code]
+        if user_id in tutorial.get("students", {}):
+            tutorial["students"].pop(user_id, None)
+        utils._emit_tutorial_update(code)
+
+    utils.users[user_id]["tutorial"] = None
+
+    emit("session_cleared", {"message": "Session cleared"}, to=request.sid)

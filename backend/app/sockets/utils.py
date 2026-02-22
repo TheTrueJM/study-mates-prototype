@@ -17,8 +17,35 @@ users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: c
 sessions = dict() # { sID: UUID }
 tutorials = dict()
 disconnected_students = dict()  # { code: { user_id: disconnected_at, ... } }
+disconnected_staff = dict()  # { code: disconnected_at, ... }
 
 RECONNECT_GRACE_PERIOD = 5.0  # seconds
+STAFF_RECONNECT_GRACE_PERIOD = 30.0  # seconds
+
+_DAY = {
+    "MON": "Monday",
+    "TUE": "Tuesday",
+    "WED": "Wednesday",
+    "THU": "Thursday",
+    "FRI": "Friday",
+    "SAT": "Saturday",
+    "SUN": "Sunday",
+}
+_TIME = {"M": "Morning", "A": "Afternoon", "E": "Evening"}
+_day_idx = {k: i for i, k in enumerate(_DAY.keys())}
+_time_idx = {k: i for i, k in enumerate(_TIME.keys())}
+_fmt_avail = lambda c: (
+    f"{_DAY.get(c[:3], c[:3])}-{_TIME.get(c[3:], c[3:])}" if len(c) == 4 else c
+)
+_fmt_to_code = {v: k for k, v in _DAY.items()}
+_time_to_code = {v: k for k, v in _TIME.items()}
+
+
+def _sort_avail(codes):
+    return sorted(
+        codes, key=lambda c: (_day_idx.get(c[:3], 9), _time_idx.get(c[3:], 9))
+    )
+
 
 # {
 #   code: {
@@ -50,25 +77,38 @@ def _generate_code(length=6):
 def _cleanup_stale_users(code):
     if not (tutorial := tutorials.get(code)):
         disconnected_students.pop(code, None)
+        disconnected_staff.pop(code, None)
         return
 
     now = time.time()
-    threshold = now - RECONNECT_GRACE_PERIOD
+    student_threshold = now - RECONNECT_GRACE_PERIOD
+    staff_threshold = now - STAFF_RECONNECT_GRACE_PERIOD
 
-    if not (disconnected := disconnected_students.get(code)):
-        return
+    if disconnected := disconnected_students.get(code):
+        stale_ids = [sid for sid, ts in disconnected.items() if ts <= student_threshold]
+        disconnected_students[code] = {
+            sid: ts for sid, ts in disconnected.items() if ts > student_threshold
+        }
 
-    if not (stale_ids := [sid for sid, ts in disconnected.items() if ts <= threshold]):
-        return
+        students = tutorial["students"]
+        for student_id in stale_ids:
+            if users.get(student_id) and users[student_id].get("sessions"):
+                continue
+            students.pop(student_id, None)
+            users.pop(student_id, None)
 
-    disconnected_students[code] = {sid: ts for sid, ts in disconnected.items() if ts > threshold}
-
-    students = tutorial["students"]
-    for student_id in stale_ids:
-        if users.get(student_id) and users[student_id].get("sessions"):
-            continue
-        students.pop(student_id, None)
-        users.pop(student_id, None)
+    staff_disconnect_time = disconnected_staff.get(code)
+    if staff_disconnect_time and staff_disconnect_time <= staff_threshold:
+        staff_id = tutorial.get("staff")
+        emit("tutorial_ended", room=code, namespace="/")
+        for student_id in list(tutorial.get("students", {}).keys()):
+            if student_id in users:
+                users[student_id]["tutorial"] = None
+        tutorials.pop(code, None)
+        disconnected_students.pop(code, None)
+        disconnected_staff.pop(code, None)
+        if staff_id and staff_id in users:
+            users[staff_id]["tutorial"] = None
 
 
 def _generate_name(tutorial):
@@ -117,7 +157,23 @@ def _emit_tutorial_update(code):
     for student_id, data in tutorial["students"].items():
         group_number = data.get("group")
         group = tutorial["groups"].get(group_number)
-        members = [tutorial["students"][sid].get("name") for sid in group if sid in tutorial["students"]] if group else None
+        members = (
+            [
+                {
+                    "name": tutorial["students"][sid].get("name"),
+                    "availability": [
+                        _fmt_avail(a)
+                        for a in _sort_avail(
+                            tutorial["students"][sid].get("availability", [])
+                        )
+                    ],
+                }
+                for sid in group
+                if sid in tutorial["students"]
+            ]
+            if group
+            else None
+        )
         payload = {
             "username": data["name"],
             "name": tutorial["name"],
@@ -142,6 +198,8 @@ def _join_tutorial(user_id, code, namespace):
         user["disconnected_at"] = None
         if code and user.get("role") == "student":
             disconnected_students.get(code, {}).pop(user_id, None)
+        elif code and user.get("role") == "staff":
+            disconnected_staff.pop(code, None)
 
     if code:
         users[user_id]["tutorial"] = code
@@ -191,3 +249,5 @@ def disconnect():
                     if code not in disconnected_students:
                         disconnected_students[code] = {}
                     disconnected_students[code][user_id] = user["disconnected_at"]
+                elif (code := user.get("tutorial")) and user.get("role") == "staff":
+                    disconnected_staff[code] = user["disconnected_at"]
