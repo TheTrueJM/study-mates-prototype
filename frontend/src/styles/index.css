@@ -487,18 +487,29 @@ body {
   letter-spacing: 0.1em;
 }
 
-/* QR Placeholder */
-.qr-placeholder {
-  width: 12rem;
-  height: 12rem;
+/* QR Code Container */
+.qr-code-container {
+  --qr-size: 12rem; /* Change this value to resize the QR code */
+  
+  width: var(--qr-size);
+  height: var(--qr-size);
+  min-width: var(--qr-size);
+  min-height: var(--qr-size);
   border: var(--border-width) solid #ccc;
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: var(--color-gray);
-  color: #888;
-  font-size: 0.875rem;
+  padding: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.qr-code-container .qr-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 /* Group Card (group formation result cards) */
@@ -620,6 +631,10 @@ body {
   }
 
   .join-code .code-value { font-size: 1.75rem; }
+
+  .qr-code-container {
+    --qr-size: 8rem;
+  }
 
   .qr-placeholder {
     width: 8rem;

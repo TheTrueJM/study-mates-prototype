@@ -1,5 +1,6 @@
 // LobbyLayout - Staff sees tutorial code and students joining in real-time
 import Button from '../../components/Button';
+import QRCode from '../../static/Application-QR.svg';
 
 export default function LobbyLayout({ tutorialCode, students = {}, onGrouping }) {
   const studentList = Object.values(students || {}).map(s => s.name || 'Unknown');
@@ -13,7 +14,9 @@ export default function LobbyLayout({ tutorialCode, students = {}, onGrouping })
           <div className="join-code">
             <div className="code-value">{tutorialCode}</div>
           </div>
-          <div className="qr-placeholder">[QR CODE]</div>
+          <div className="qr-code-container">
+            <img src={QRCode} alt="Tutorial QR Code" className="qr-image" />
+          </div>
         </div>
       </div>
 
