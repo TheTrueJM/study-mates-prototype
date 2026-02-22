@@ -7,7 +7,7 @@ export default function GroupLayout({ state = 'groups', username, groupNumber, g
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
-    
+
 
   const toggleMember = (name) => {
     setExpandedMember(expandedMember === name ? null : name);
@@ -32,10 +32,8 @@ export default function GroupLayout({ state = 'groups', username, groupNumber, g
 
             <div className="flex-col gap-xs" style={{ display: 'flex' }}>
               {groupMembers.map((member) => (
-                <div key={member} className="member-card">
-                  <div className="member-name">{member}</div>
-                <div 
-                  key={member.name} 
+                <div
+                  key={member.name}
                   className="member-card"
                   style={{ cursor: 'pointer' }}
                   onClick={() => toggleMember(member.name)}
@@ -59,3 +57,4 @@ export default function GroupLayout({ state = 'groups', username, groupNumber, g
         </div>
     </>
   );
+}

@@ -67,6 +67,7 @@ function Tutorial() {
     };
 
     const onLeftTutorial = () => {
+    };
     const onTutorialDeleted = () => {
       navigate("/staff/");
     };
