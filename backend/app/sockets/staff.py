@@ -1,5 +1,7 @@
 import logging
-import uuid import random import math
+import uuid
+import random
+import math
 import numpy as np
 from functools import wraps
 
@@ -198,7 +200,7 @@ def start_grouping(user_id, code, tutorial):
                         rematches += 1
                     score += connections[candidate][member]
 
-                # Penalise score from student rematches 
+                # Penalise score from student rematches
                 if rematches: score *=  0.4 - (0.4 * (rematches / group_size)) # NOTE This is a Magic Number
 
                 if score > best_score:
@@ -215,7 +217,7 @@ def start_grouping(user_id, code, tutorial):
             tutorial["groups"][group_id].append(id)
             tutorial["students"][id]["group"] = group_id
             tutorial["previous_matches"].setdefault(id, set()).update(member_ids)
-            
+
         group_id += 1
 
     utils._emit_tutorial_update(code)
@@ -232,7 +234,7 @@ def _build_matrix(ids, students):
         for j in range(i + 1, student_count):
             s2 = students.get(ids[j], {})
 
-            w_currentGPA = s1.get("currentGPA", 4.5) - s2.get("currentGPA", 4.5) 
+            w_currentGPA = s1.get("currentGPA", 4.5) - s2.get("currentGPA", 4.5)
             w_currentGPA = 1 / (1 + abs(w_currentGPA))
 
             w_goalGPA = s1.get("goalGPA", 4.0) - s2.get("goalGPA", 4.0)
@@ -248,7 +250,7 @@ def _build_matrix(ids, students):
     for i in range(len(ids)):
         for j in range(i + 1, len(ids)):
             matrix[i][j] = matrix[j][i] = matrix[i][j] / max_weight
-    
+
     return matrix
 
 

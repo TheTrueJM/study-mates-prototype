@@ -32,9 +32,20 @@ _DAY = {
     "SUN": "Sunday",
 }
 _TIME = {"M": "Morning", "A": "Afternoon", "E": "Evening"}
+_day_idx = {k: i for i, k in enumerate(_DAY.keys())}
+_time_idx = {k: i for i, k in enumerate(_TIME.keys())}
 _fmt_avail = lambda c: (
     f"{_DAY.get(c[:3], c[:3])}-{_TIME.get(c[3:], c[3:])}" if len(c) == 4 else c
 )
+_fmt_to_code = {v: k for k, v in _DAY.items()}
+_time_to_code = {v: k for k, v in _TIME.items()}
+
+
+def _sort_avail(codes):
+    return sorted(
+        codes, key=lambda c: (_day_idx.get(c[:3], 9), _time_idx.get(c[3:], 9))
+    )
+
 
 # {
 #   code: {
@@ -152,7 +163,9 @@ def _emit_tutorial_update(code):
                     "name": tutorial["students"][sid].get("name"),
                     "availability": [
                         _fmt_avail(a)
-                        for a in tutorial["students"][sid].get("availability", [])
+                        for a in _sort_avail(
+                            tutorial["students"][sid].get("availability", [])
+                        )
                     ],
                 }
                 for sid in group
