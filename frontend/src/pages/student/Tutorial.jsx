@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import { getSocket } from '../../socket';
+import { useAuth } from '../../hooks/useAuth';
 import LobbyLayout from './LobbyLayout';
 import GroupLayout from './GroupLayout';
 
 function Tutorial() {
   const navigate = useNavigate();
+  const { setStudent } = useAuth();
 
   const [username, setUsername] = useState('Unknown');
 
@@ -61,18 +63,21 @@ function Tutorial() {
 
     const onTutorialEnded = () => {
       localStorage.removeItem("tutorial_code");
-      navigate("/join");
+      setStudent(null);
+      navigate("/");
     };
 
     const onSessionCleared = () => {
       localStorage.removeItem("tutorial_code");
-      navigate("/join");
+      setStudent(null);
+      navigate("/");
     };
 
     const onError = (err) => {
       if (err && err.message) {
         localStorage.removeItem("tutorial_code");
-        navigate("/join");
+        setStudent(null);
+        navigate("/");
       }
     };
 

@@ -22,6 +22,20 @@ disconnected_staff = dict()  # { code: disconnected_at, ... }
 RECONNECT_GRACE_PERIOD = 5.0  # seconds
 STAFF_RECONNECT_GRACE_PERIOD = 30.0  # seconds
 
+_DAY = {
+    "MON": "Monday",
+    "TUE": "Tuesday",
+    "WED": "Wednesday",
+    "THU": "Thursday",
+    "FRI": "Friday",
+    "SAT": "Saturday",
+    "SUN": "Sunday",
+}
+_TIME = {"M": "Morning", "A": "Afternoon", "E": "Evening"}
+_fmt_avail = lambda c: (
+    f"{_DAY.get(c[:3], c[:3])}-{_TIME.get(c[3:], c[3:])}" if len(c) == 4 else c
+)
+
 # {
 #   code: {
 #       staff: UUID,
@@ -136,7 +150,10 @@ def _emit_tutorial_update(code):
             [
                 {
                     "name": tutorial["students"][sid].get("name"),
-                    "availability": tutorial["students"][sid].get("availability", []),
+                    "availability": [
+                        _fmt_avail(a)
+                        for a in tutorial["students"][sid].get("availability", [])
+                    ],
                 }
                 for sid in group
                 if sid in tutorial["students"]
