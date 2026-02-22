@@ -150,8 +150,8 @@ def _join_tutorial(user_id, code, namespace):
         if user_id not in tutorial["students"]:
             tutorial["students"][user_id] = {
                 "name": _generate_name(tutorial),
-                "currentGPA": session.get("currentGPA"),
-                "goalGPA": session.get("goalGPA"),
+                "currentGPA": session.get("currentGPA", 4.5),
+                "goalGPA": session.get("goalGPA", 4.0),
                 "availability": session.get("availability", []),
                 "group": None
             }

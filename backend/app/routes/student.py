@@ -14,12 +14,13 @@ def details():
 
     try:
         current = float(data.get("currentGPA", 4.5))
-        current = max(0, min(current, 7))
         goal = float(data.get("goalGPA", 4.0))
-        goal = max(0, min(goal, 7))
         availability = parse_availability(data.get("availability"))
     except ValueError:
         return jsonify({"error": "Invalid details provided"}), 400
+    
+    if current < 0 or current > 7 or goal < 0 or goal > 7:
+        return jsonify({"error": "Invalid GPA. Values must be between 0.0 and 7.0"}), 400
 
     session["currentGPA"] = current
     session["goalGPA"] = goal

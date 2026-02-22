@@ -41,6 +41,16 @@ function TutorialSetup() {
     e.preventDefault();
     if (!socketInstance) return;
 
+    if (!Number.isInteger(parseFloat(groupSize)) || parseFloat(groupSize) < 2 || parseFloat(groupSize) > 10) {
+      alert("Please enter a valid group size (between 2 and 10 students).");
+      return;
+    }
+
+    if (isNaN(parseFloat(discussionTime)) || parseFloat(discussionTime) < 1 || parseFloat(discussionTime) > 60) {
+      alert("Please enter a valid discussion time (between 1 and 60 minutes).");
+      return;
+    }
+
     socketInstance.emit("create_tutorial", {
       name: name,
       group_size: groupSize,

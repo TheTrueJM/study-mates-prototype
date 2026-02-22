@@ -102,8 +102,7 @@ def create_tutorial(data):
 
     name = data.get("name")
     group_size = int(data.get("group_size")) or None
-    # TODO: Discussion Questions, Discussion Time
-    discussion_time = int(data.get("discussion_time", 10)) * 60 or 600
+    discussion_time = math.ceil(float(data.get("time", 10)) * 60) or 600
 
     if not group_size or group_size < 2:
         emit("error", ERR_INVALID_GROUP_SIZE, to=request.sid, namespace="/staff")
@@ -183,7 +182,7 @@ def start_grouping(user_id, code, tutorial):
 
     group_id = 1
     unmatched = set(enumerate(students))
-    rematch_rate = (0.5 / (group_size ** 1.1))
+    rematch_rate = (0.5 / (group_size ** 1.1)) # NOTE This is a Magic Number
     while unmatched:
         # Pick a starting student
         group = [unmatched.pop()]
@@ -202,7 +201,7 @@ def start_grouping(user_id, code, tutorial):
                     score += connections[candidate][member]
 
                 # Penalise score from student rematches 
-                if rematches: score *=  0.4 - (0.4 * (rematches / group_size))
+                if rematches: score *=  0.4 - (0.4 * (rematches / group_size)) # NOTE This is a Magic Number
 
                 if score > best_score:
                     best_score = score
@@ -230,18 +229,18 @@ def _build_matrix(ids, students):
     max_weight = 0
 
     for i in range(student_count):
-        s1 = ids[i]
-        s1_availability = set(students[s1]["availability"])
+        s1 = students.get(ids[i], {})
+        s1_availability = set(s1.get("availability", []))
         for j in range(i + 1, student_count):
-            s2 = ids[j]
+            s2 = students.get(ids[j], {})
 
-            w_currentGPA = students[s1]["currentGPA"] - students[s2]["currentGPA"] 
+            w_currentGPA = s1.get("currentGPA", 4.5) - s2.get("currentGPA", 4.5) 
             w_currentGPA = 1 / (1 + abs(w_currentGPA))
 
-            w_goalGPA = students[s1]["goalGPA"] - students[s2]["goalGPA"]
+            w_goalGPA = s1.get("goalGPA", 4.0) - s2.get("goalGPA", 4.0)
             w_goalGPA = 1 / (1 + abs(w_goalGPA))
 
-            w_availability = 0.2 * sum(1 for time in students[s2]["availability"] if time in s1_availability)
+            w_availability = 0.2 * sum(1 for time in s2.get("availability", []) if time in s1_availability)
 
             weight = w_currentGPA + w_goalGPA + w_availability
             matrix[i][j] = matrix[j][i] = weight
@@ -297,7 +296,7 @@ def stop_timer(user_id, code, tutorial):
 @socketio.on("reset_timer", namespace="/staff")
 @_with_tutorial_auth
 def reset_timer(user_id, code, tutorial, data):
-    new_time = math.ceil(float(data.get("time", 10))) * 60 or 600
+    new_time = math.ceil(float(data.get("time", 10)) * 60) or 600
     tutorial["timer"]["duration"] = new_time
     tutorial["timer"]["remaining"] = new_time
     tutorial["timer"]["running"] = False
