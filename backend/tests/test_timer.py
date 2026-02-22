@@ -18,10 +18,13 @@ def test_create_tutorial_with_timer(client, socketio_client):
 
     utils.users[uuid]["role"] = "staff"
 
-    sio.emit(
-        "create_tutorial",
-        {"name": "TimerTest", "group_size": 2, "discussion_time": 15},
-        namespace=namespace,
+    sio.emit("create_tutorial",
+        {
+            "name": "TimerTest",
+            "group_size": 2,
+            "discussion_time": 15
+        },
+        namespace=namespace
     )
 
     time.sleep(0.3)
@@ -49,11 +52,7 @@ def test_create_tutorial_default_timer(client, socketio_client):
     uuid = response.get("uuid")
     utils.users[uuid]["role"] = "staff"
 
-    sio.emit(
-        "create_tutorial",
-        {"name": "DefaultTimer", "group_size": 2},
-        namespace=namespace,
-    )
+    sio.emit("create_tutorial", {"name": "DefaultTimer", "group_size": 2}, namespace=namespace)
     time.sleep(0.3)
 
     code = utils.users[uuid].get("tutorial")
@@ -74,11 +73,7 @@ def test_start_stop_timer(client, socketio_client):
     uuid = response.get("uuid")
     utils.users[uuid]["role"] = "staff"
 
-    sio.emit(
-        "create_tutorial",
-        {"name": "StopStartTest", "group_size": 2},
-        namespace=namespace,
-    )
+    sio.emit("create_tutorial", {"name": "StopStartTest", "group_size": 2}, namespace=namespace)
     time.sleep(0.3)
 
     code = utils.users[uuid].get("tutorial")
@@ -117,11 +112,7 @@ def test_reset_timer(client, socketio_client):
     uuid = response.get("uuid")
     utils.users[uuid]["role"] = "staff"
 
-    sio.emit(
-        "create_tutorial",
-        {"name": "ResetTest", "group_size": 2, "discussion_time": 5},
-        namespace=namespace,
-    )
+    sio.emit("create_tutorial", {"name": "ResetTest", "group_size": 2, "discussion_time": 5}, namespace=namespace)
     time.sleep(0.3)
 
     code = utils.users[uuid].get("tutorial")
@@ -144,30 +135,20 @@ def test_reset_timer(client, socketio_client):
 
 def test_timer_included_in_update(app, socketio_client):
     staff_client = app.test_client()
-    set_session(
-        staff_client, name="Staff", currentGPA=0.0, goalGPA=0.0, availability=""
-    )
+    set_session(staff_client, name="Staff", currentGPA=0.0, goalGPA=0.0, availability="")
 
-    staff_sio = socketio_client(
-        namespace="/staff", test_client=staff_client, disconnect=False
-    )
+    staff_sio = socketio_client(namespace="/staff", test_client=staff_client, disconnect=False)
     response = get_last_received(staff_sio, namespace="/staff")
     staff_uuid = response.get("uuid")
     utils.users[staff_uuid]["role"] = "staff"
 
-    staff_sio.emit(
-        "create_tutorial",
-        {"name": "UpdateTest", "group_size": 2, "discussion_time": 10},
-        namespace="/staff",
-    )
+    staff_sio.emit("create_tutorial", {"name": "UpdateTest", "group_size": 2, "discussion_time": 10}, namespace="/staff")
     time.sleep(0.3)
 
     code = utils.users[staff_uuid].get("tutorial")
 
     student_client = app.test_client()
-    set_session(
-        student_client, name="Student", currentGPA=5.0, goalGPA=6.0, availability="Mon"
-    )
+    set_session(student_client, name="Student", currentGPA=5.0, goalGPA=6.0, availability="Mon")
 
     student_sio = socketio_client(test_client=student_client, disconnect=False)
     response = get_last_received(student_sio, name="session")
@@ -179,9 +160,7 @@ def test_timer_included_in_update(app, socketio_client):
     staff_sio.emit("start_discussion", namespace="/staff")
     time.sleep(0.3)
 
-    staff_response = get_last_received(
-        staff_sio, namespace="/staff", name="tutorial_update"
-    )
+    staff_response = get_last_received(staff_sio, namespace="/staff", name="tutorial_update")
     assert staff_response is not None
     assert "timer" in staff_response
     assert staff_response["timer"]["running"] == True
@@ -207,11 +186,7 @@ def test_timer_decrements(client, socketio_client):
     uuid = response.get("uuid")
     utils.users[uuid]["role"] = "staff"
 
-    sio.emit(
-        "create_tutorial",
-        {"name": "DecrementTest", "group_size": 2, "discussion_time": 5},
-        namespace=namespace,
-    )
+    sio.emit("create_tutorial", {"name": "DecrementTest", "group_size": 2, "discussion_time": 5}, namespace=namespace)
     time.sleep(0.3)
 
     code = utils.users[uuid].get("tutorial")
@@ -228,9 +203,7 @@ def test_timer_decrements(client, socketio_client):
     time.sleep(2.5)
 
     remaining_after_15 = tutorial["timer"]["remaining"]
-    assert remaining_after_15 < initial_remaining, (
-        f"Timer did not decrease: {remaining_after_15} vs {initial_remaining}"
-    )
+    assert remaining_after_15 < initial_remaining, f"Timer did not decrease: {remaining_after_15} vs {initial_remaining}"
     assert remaining_after_15 >= 0, f"Timer went negative: {remaining_after_15}"
 
     sio.emit("stop_timer", namespace=namespace)
@@ -242,9 +215,7 @@ def test_timer_decrements(client, socketio_client):
     remaining_after_stop = tutorial["timer"]["remaining"]
     time.sleep(2)
 
-    assert tutorial["timer"]["remaining"] == remaining_after_stop, (
-        "Timer continued after stopping"
-    )
+    assert tutorial["timer"]["remaining"] == remaining_after_stop, ("Timer continued after stopping")
 
     sio.disconnect(namespace=namespace)
 
@@ -258,8 +229,7 @@ def test_reset_lobby_stops_timer(client, socketio_client):
     uuid = response.get("uuid")
     utils.users[uuid]["role"] = "staff"
 
-    sio.emit(
-        "create_tutorial",
+    sio.emit("create_tutorial",
         {"name": "ResetLobbyTest", "group_size": 2, "discussion_time": 10},
         namespace=namespace,
     )

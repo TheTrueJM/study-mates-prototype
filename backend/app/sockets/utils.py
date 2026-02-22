@@ -13,8 +13,8 @@ from .errors import ERR_TUTORIAL_NOT_FOUND
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-users = dict()  # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code, disconnected_at: float|None}, ... }
-sessions = dict()  # { sID: UUID }
+users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code, disconnected_at: float|None}, ... }
+sessions = dict() # { sID: UUID }
 tutorials = dict()
 disconnected_students = dict()  # { code: { user_id: disconnected_at, ... } }
 disconnected_staff = dict()  # { code: disconnected_at, ... }
@@ -44,7 +44,7 @@ STAFF_RECONNECT_GRACE_PERIOD = 30.0  # seconds
 
 def _generate_code(length=6):
     while True:
-        code = "".join(random.choices(string.ascii_uppercase, k=length))
+        code  = ''.join(random.choices(string.ascii_uppercase, k=length))
         if code not in tutorials:
             return code
 
@@ -88,126 +88,21 @@ def _cleanup_stale_users(code):
 
 def _generate_name(tutorial):
     DESCRIPTORS = (
-        "agile",
-        "anonymous",
-        "blazing",
-        "blissful",
-        "bold",
-        "brave",
-        "bright",
-        "calm",
-        "cheerful",
-        "clever",
-        "colorful",
-        "cosmic",
-        "curious",
-        "daring",
-        "dazzling",
-        "energetic",
-        "epic",
-        "friendly",
-        "frosty",
-        "gentle",
-        "glowing",
-        "golden",
-        "graceful",
-        "happy",
-        "hasty",
-        "heroic",
-        "hidden",
-        "jolly",
-        "joyful",
-        "kind",
-        "legendary",
-        "lively",
-        "lunar",
-        "midnight",
-        "mighty",
-        "mysterious",
-        "mythic",
-        "nimble",
-        "noble",
-        "peaceful",
-        "playful",
-        "powerful",
-        "quick",
-        "radiant",
-        "rapid",
-        "resilient",
-        "royal",
-        "shiny",
-        "silent",
-        "silver",
-        "smart",
-        "sneaky",
-        "stealthy",
-        "stellar",
-        "strong",
-        "swift",
-        "valiant",
-        "vibrant",
-        "wild",
-        "wise",
-        "witty",
+        'agile', 'anonymous', 'blazing', 'blissful', 'bold', 'brave', 'bright', 'calm', 'cheerful',
+        'clever', 'colorful', 'cosmic',  'curious', 'daring', 'dazzling', 'energetic', 'epic',
+        'friendly', 'frosty', 'gentle', 'glowing', 'golden', 'graceful', 'happy', 'hasty', 'heroic',
+        'hidden', 'jolly', 'joyful', 'kind', 'legendary', 'lively', 'lunar', 'midnight', 'mighty',
+        'mysterious', 'mythic', 'nimble', 'noble', 'peaceful', 'playful', 'powerful', 'quick',
+        'radiant', 'rapid', 'resilient', 'royal', 'shiny', 'silent', 'silver', 'smart', 'sneaky',
+        'stealthy', 'stellar', 'strong', 'swift', 'valiant', 'vibrant', 'wild', 'wise', 'witty'
     )
     ANIMALS = (
-        "armadillo",
-        "badger",
-        "bear",
-        "beaver",
-        "cat",
-        "chameleon",
-        "cheetah",
-        "chicken",
-        "cockatoo",
-        "coyote",
-        "jackal",
-        "crow",
-        "dog",
-        "dolphin",
-        "duck",
-        "eagle",
-        "falcon",
-        "fish",
-        "flamingo",
-        "fox",
-        "hawk",
-        "hedgehog",
-        "horse",
-        "jaguar",
-        "jellyfish",
-        "kangaroo",
-        "koala",
-        "leopard",
-        "lion",
-        "lizard",
-        "meerkat",
-        "otter",
-        "owl",
-        "panda",
-        "panther",
-        "parrot",
-        "penguin",
-        "rabbit",
-        "raccoon",
-        "raven",
-        "salamander",
-        "seal",
-        "serpent",
-        "shark",
-        "sheep",
-        "sloth",
-        "snake",
-        "squirrel",
-        "swan",
-        "tiger",
-        "tortoise",
-        "turtle",
-        "wallaby",
-        "walrus",
-        "wolf",
-        "wombat",
-        "zebra",
+        'armadillo', 'badger', 'bear', 'beaver', 'cat', 'chameleon', 'cheetah', 'chicken', 'cockatoo',
+        'coyote', 'jackal', 'crow', 'dog', 'dolphin', 'duck', 'eagle', 'falcon', 'fish', 'flamingo',
+        'fox', 'hawk', 'hedgehog', 'horse', 'jaguar', 'jellyfish', 'kangaroo', 'koala', 'leopard',
+        'lion', 'lizard', 'meerkat', 'otter', 'owl', 'panda', 'panther', 'parrot', 'penguin', 'rabbit',
+        'raccoon', 'raven', 'salamander', 'seal', 'serpent', 'shark', 'sheep', 'sloth', 'snake',
+        'squirrel', 'swan', 'tiger', 'tortoise', 'turtle', 'wallaby', 'walrus', 'wolf', 'wombat', 'zebra'
     )
     names = {student["name"] for student in tutorial["students"].values()}
     while True:
@@ -257,7 +152,7 @@ def _emit_tutorial_update(code):
             "group_members": members,
             "questions": tutorial["questions"],
             "timer": tutorial.get("timer"),
-            "tutorial_code": code,
+            "tutorial_code": code
         }
         emit("student_update", payload, room=student_id, namespace="/")
 
@@ -265,7 +160,7 @@ def _emit_tutorial_update(code):
 def _join_tutorial(user_id, code, namespace):
     join_room(user_id, namespace=namespace)
 
-    if not (tutorial := tutorials.get(code)) and namespace != "/staff":
+    if not (tutorial := tutorials.get(code)) and namespace!="/staff":
         emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid, namespace=namespace)
         return
 
@@ -286,7 +181,7 @@ def _join_tutorial(user_id, code, namespace):
                 "currentGPA": session.get("currentGPA", 4.5),
                 "goalGPA": session.get("goalGPA", 4.0),
                 "availability": session.get("availability", []),
-                "group": None,
+                "group": None
             }
             session.pop("student_details", None)
             session.pop("currentGPA", None)
@@ -304,7 +199,6 @@ def multi_namespace_event(event, namespaces):
         for ns in namespaces:
             socketio.on(event, namespace=ns)(f)
         return f
-
     return decorator
 
 
