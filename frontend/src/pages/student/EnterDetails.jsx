@@ -35,12 +35,12 @@ function EnterDetails() {
   };
 
   const handleConfirm = async () => {
-    if (isNaN(parseFloat(goalGPA)) ) {
+    if (isNaN(parseFloat(goalGPA)) || parseFloat(goalGPA) < 0 || parseFloat(goalGPA) > 7.0) {
       alert("Please enter a valid goal GPA.");
       return;
     }
 
-    if (isNaN(parseFloat(currentGPA)) && !noGPAYet) {
+    if ((isNaN(parseFloat(currentGPA)) && !noGPAYet) || parseFloat(currentGPA) < 0 || parseFloat(currentGPA) > 7.0) {
       alert("Please enter a valid current GPA or select no GPA.");
       return;
     }
@@ -101,6 +101,9 @@ function EnterDetails() {
           label="Goal GPA for this Unit"
           type="number"
           value={goalGPA}
+          min={0}
+          max={7}
+          step={0.1}
           onChange={setGoalGPA}
           placeholder="e.g. 4.0"
         />
@@ -109,6 +112,9 @@ function EnterDetails() {
           label="Current or Recent GPA"
           type="number"
           value={currentGPA}
+          min={0}
+          max={7}
+          step={0.1}
           onChange={setCurrentGPA}
           placeholder="e.g. 4.0"
           disabled={noGPAYet}
