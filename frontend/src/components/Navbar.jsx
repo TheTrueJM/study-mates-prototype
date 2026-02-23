@@ -10,6 +10,7 @@ function Navbar() {
 
 
   const showStaffLogin = location.pathname === "/";
+  const showBackToStudent = location.pathname === "/staff/login";
 
   const backToStaff = location.pathname === "/staff/"; 
   const onTutorial = location.pathname.startsWith("/staff/tutorial");
@@ -29,6 +30,11 @@ function Navbar() {
         {showStaffLogin && (
           <Link to="/staff/login" className="nav-action">
             Staff Login
+          </Link>
+        )}
+                {showBackToStudent && (
+          <Link to="/" className="nav-action">
+            Back to Student
           </Link>
         )}
       </div>
