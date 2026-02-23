@@ -6,31 +6,31 @@ from .database import db, Staff, DiscussionCategory, DiscussionQuestion
 
 DISCUSSION = {
     "academic": [
-        "What are your career goals after graduation?",
-        "What study techniques work best for you?",
-        "What aspect of this degree interests you most?",
-        "How do you prefer to communicate and organise work in a team?",
-        "What's one academic challenge you're currently working to improve?",
-        "What responsibility do you think you personally hold in making a group succeed?",
-        "Do you like to get work done fast, or do you tend to leave it to the due date?"
-        ],
+        "What are your career goals after graduation, and how do you plan to achieve them?",
+        "Which study techniques work best for you, and why?",
+        "What aspect of your degree interests you the most?",
+        "How do you prefer to communicate and organize work when collaborating in a team?",
+        "What is an academic challenge you are currently working to overcome?",
+        "What personal responsibility do you feel you hold in ensuring a group's success?",
+        "Do you prefer to complete work quickly, or do you tend to wait until the deadline approaches?"
+    ],
     "casual": [
-        "What is your favourite video game?",
-        "What fictional world would you actually choose to live in, and why?",
-        "What is something small that can always improve your moood?",
-        "How do you like to unwind after a long day?",
-        "What is your favourite food?",
-        "Who is your most played music artist?",
-        "Where is your dream holiday destination?"
+        "What is your favorite video game, and what do you enjoy most about it?",
+        "If you could live in any fictional world, which would you choose and why?",
+        "What is something small that can always improve your mood?",
+        "How do you like to relax or unwind after a long day?",
+        "What is your favorite food, and how often could you eat it?",
+        "Who is your most frequently listened to musician?",
+        "What is your dream holiday destination, and what makes it appealing to you?"
     ],
     "study": [
-        "What unit did you enjoy the most?",
-        "What is your favourite study spot, and why?",
-        "What is one piece of advice you would give to someone starting this course?",
-        "What's a mistake you made academically that ended up helping you grow?",
-        "When did you realise you wanted to study your course?",
-        "Who is your favourite productive/educational YouTuber?",
-        "What is your favourite part of university"
+        "Which unit or subject did you enjoy the most, and why?",
+        "What is your favorite study spot, and what makes it ideal for you?",
+        "What one piece of advice would you give to someone starting this course, and why?",
+        "Can you share a mistake you made academically that ended up helping you grow?",
+        "When did you realize that you wanted to study your chosen course?",
+        "Who is your favorite productive or educational YouTube channel, and why?",
+        "What is your favorite part of university life, and what do you hope to gain from it?"
     ]
 }
 
