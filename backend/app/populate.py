@@ -8,12 +8,16 @@ DISCUSSION = {
     "academic": [
         "What are your career goals after graduation?",
         "What study techniques work best for you?",
-        "What aspect of this course interests you most?",
-        "How do you prefer to collaborate on group projects?",
+        "What aspect of this degree interests you most?",
+        "How do you prefer to communicate and organise work in a team?",
+        "What's one academic challenge you're currently working to improve?",
+        "What responsibility do you think you personally hold in making a group succeed?",
         "Do you like to get work done fast, or do you tend to leave it to the due date?"
         ],
     "casual": [
         "What is your favourite video game?",
+        "What fictional world would you actually choose to live in, and why?",
+        "What is something small that can always improve your moood?",
         "How do you like to unwind after a long day?",
         "What is your favourite food?",
         "Who is your most played music artist?",
@@ -21,6 +25,9 @@ DISCUSSION = {
     ],
     "study": [
         "What unit did you enjoy the most?",
+        "What is your favourite study spot, and why?",
+        "What is one piece of advice you would give to someone starting this course?",
+        "What's a mistake you made academically that ended up helping you grow?",
         "When did you realise you wanted to study your course?",
         "Who is your favourite productive/educational YouTuber?",
         "What is your favourite part of university"
