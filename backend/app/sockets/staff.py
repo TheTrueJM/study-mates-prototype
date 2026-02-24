@@ -234,7 +234,7 @@ def _build_matrix(ids, students):
         for j in range(i + 1, student_count):
             s2 = students.get(ids[j], {})
 
-            w_currentGPA = s1.get("currentGPA", 4.5) - s2.get("currentGPA", 4.5)
+            w_currentGPA = s1.get("currentGPA", 4.5) - s2.get("currentGPA", 4.5) 
             w_currentGPA = 1 / (1 + abs(w_currentGPA))
 
             w_goalGPA = s1.get("goalGPA", 4.0) - s2.get("goalGPA", 4.0)
