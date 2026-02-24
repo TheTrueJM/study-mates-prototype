@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import Button from '../../components/Button';
 
 export default function GroupLayout({ state = 'groups', username, groupNumber, groupMembers = [], questions = [], timeRemaining = 0, isRunning = false }) {
   const [expandedMember, setExpandedMember] = useState(null);
+  const [showQuestionsModal, setShowQuestionsModal] = useState(false);
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -50,11 +52,43 @@ export default function GroupLayout({ state = 'groups', username, groupNumber, g
           </>
         )}
 
-        <div className="divider mt-md">
-          <p style={{ fontSize: '0.875rem', color: '#888' }}>
-            Discuss the Topics and Questions to get to know your Group Members!
-          </p>
-        </div>
+        {state === 'discussion' && (
+          <div className="divider mt-md">
+            <Button variant="secondary" onClick={() => setShowQuestionsModal(true)} fullWidth>
+              View Discussion Topics
+            </Button>
+
+            <p className="mt-sm" style={{ fontSize: '0.875rem', color: '#888' }}>
+              Discuss the Topics and Questions to get to know your Group Members!
+            </p>
+          </div>
+        )}
+
+        {showQuestionsModal && (
+          <div className="modal-overlay" onClick={() => setShowQuestionsModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Discussion Topics/Questions</h2>
+                <button className="modal-close" onClick={() => setShowQuestionsModal(false)}>&times;</button>
+              </div>
+              <div className="modal-body">
+                {questions.length === 0 ? (
+                  <p style={{ color: '#888' }}>No topics available yet.</p>
+                ) : (
+                  <div className="flex-col gap-xs" style={{ display: 'flex' }}>
+                    {questions.map((question, index) => (
+                      <div key={index} className="question-item">
+                        <div className="question-number">{index + 1}</div>
+                        <div>{question}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
     </>
   );
 }
+
