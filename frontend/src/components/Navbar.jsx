@@ -14,7 +14,7 @@ function Navbar() {
 
   const backToStaff = location.pathname.startsWith("/staff/");
   const onTutorial = location.pathname.startsWith("/staff/tutorial/") || location.pathname.startsWith("/tutorial/");
-
+  const showFeedback = location.pathname.startsWith("/");
   return (
     <nav className="nav">
       
@@ -37,6 +37,18 @@ function Navbar() {
             Back to Student
           </Link>
         )}
+
+        {showFeedback && (
+          <a
+            href="https://forms.office.com/r/4x1A33ZKUX"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-action nav-feedback"
+          >
+            Give Feedback
+          </a>
+        )}
+        
       </div>
     </nav>
   );
