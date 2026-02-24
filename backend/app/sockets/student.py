@@ -5,7 +5,7 @@ from flask import request, session
 from flask_socketio import emit
 from .. import socketio
 from . import utils
-from .errors import ERR_CODE_REQUIRED, ERR_SESSION_NOT_FOUND, ERR_TUTORIAL_NOT_FOUND
+from .errors import ERR_CODE_REQUIRED, ERR_SESSION_NOT_FOUND, ERR_TUTORIAL_NOT_FOUND, ERR_NOT_IN_TUTORIAL
 
 logger = logging.getLogger(__name__)
 
@@ -60,15 +60,15 @@ def join_tutorial(data):
 @socketio.on("fetch_tutorial")
 def fetch_tutorial():
     if not (user_id := utils.sessions.get(request.sid)):
-        emit("error", {"message": "Session not found"}, to=request.sid)
+        emit("error", ERR_SESSION_NOT_FOUND, to=request.sid)
         return
 
     if not (code := utils.users.get(user_id, {}).get("tutorial")):
-        emit("error", {"message": "Not in a tutorial"}, to=request.sid)
+        emit("error", ERR_NOT_IN_TUTORIAL, to=request.sid)
         return
 
     if not utils.tutorials.get(code):
-        emit("error", {"message": "Tutorial not found"}, to=request.sid)
+        emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid)
         return
 
     utils._emit_tutorial_update(code)
@@ -77,7 +77,7 @@ def fetch_tutorial():
 @socketio.on("reset_session")
 def reset_session():
     if not (user_id := utils.sessions.get(request.sid)):
-        emit("error", {"message": "Session not found"}, to=request.sid)
+        emit("error", ERR_SESSION_NOT_FOUND, to=request.sid)
         return
 
     code = utils.users.get(user_id, {}).get("tutorial")

@@ -8,7 +8,7 @@ import time
 from flask import session, request
 from flask_socketio import emit, join_room
 from .. import socketio
-from .errors import ERR_TUTORIAL_NOT_FOUND
+from .errors import ERR_TUTORIAL_NOT_FOUND, ERR_SESSION_NOT_FOUND, ERR_UNAUTHORISED
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ def _cleanup_stale_users(code):
             sid: ts for sid, ts in disconnected.items() if ts > student_threshold
         }
 
-        students = tutorial["students"]
+        students = tutorial.get("students", {})
         for student_id in stale_ids:
             if users.get(student_id) and users[student_id].get("sessions"):
                 continue
@@ -129,7 +129,7 @@ def _generate_name(tutorial):
         'raccoon', 'raven', 'salamander', 'seal', 'serpent', 'shark', 'sheep', 'sloth', 'snake',
         'squirrel', 'swan', 'tiger', 'tortoise', 'turtle', 'wallaby', 'walrus', 'wolf', 'wombat', 'zebra'
     )
-    names = {student["name"] for student in tutorial["students"].values()}
+    names = {student["name"] for student in tutorial.get("students", {}).values()}
     while True:
         name = f"{random.choice(DESCRIPTORS).title()}-{random.choice(ANIMALS).title()}"
         if name not in names:
@@ -139,48 +139,50 @@ def _generate_name(tutorial):
 def _emit_tutorial_update(code):
     tutorial = tutorials.get(code)
     if not tutorial:
+        emit("error", ERR_TUTORIAL_NOT_FOUND, room=code, namespace="/")
         return
 
     _cleanup_stale_users(code)
 
     staff_payload = {
         "tutorial_code": code,
-        "name": tutorial["name"],
-        "state": tutorial["state"],
-        "students": tutorial["students"],
-        "groups": tutorial["groups"],
-        "questions": tutorial["questions"],
+        "name": tutorial.get("name"),
+        "state": tutorial.get("state"),
+        "students": tutorial.get("students", {}),
+        "groups": tutorial.get("groups", {}),
+        "questions": tutorial.get("questions", []),
         "timer": tutorial.get("timer"),
     }
     emit("tutorial_update", staff_payload, room=code, namespace="/staff")
 
-    for student_id, data in tutorial["students"].items():
+    for student_id, data in tutorial.get("students", {}).items():
         group_number = data.get("group")
-        group = tutorial["groups"].get(group_number)
+        group = tutorial.get("groups", {}).get(group_number)
+        students = tutorial.get("students", {})
         members = (
             [
                 {
-                    "name": tutorial["students"][sid].get("name"),
+                    "name": students.get(sid, {}).get("name"),
                     "availability": [
                         _fmt_avail(a)
                         for a in _sort_avail(
-                            tutorial["students"][sid].get("availability", [])
+                            students.get(sid, {}).get("availability", [])
                         )
                     ],
                 }
                 for sid in group
-                if sid in tutorial["students"]
+                if sid in students
             ]
             if group
             else None
         )
         payload = {
-            "username": data["name"],
-            "name": tutorial["name"],
-            "state": tutorial["state"],
+            "username": data.get("name"),
+            "name": tutorial.get("name"),
+            "state": tutorial.get("state"),
             "group_number": group_number,
             "group_members": members,
-            "questions": tutorial["questions"],
+            "questions": tutorial.get("questions", []),
             "timer": tutorial.get("timer"),
             "tutorial_code": code
         }
@@ -200,12 +202,16 @@ def _join_tutorial(user_id, code, namespace):
             disconnected_students.get(code, {}).pop(user_id, None)
         elif code and user.get("role") == "staff":
             disconnected_staff.pop(code, None)
+    else:
+        emit("error", ERR_SESSION_NOT_FOUND, to=request.sid, namespace=namespace)
+        return
 
-    if code:
-        users[user_id]["tutorial"] = code
+    if code and user:
+        user["tutorial"] = code
 
-    if users[user_id]["role"] == "student":
-        if user_id not in tutorial["students"]:
+    if user and user.get("role") == "student" and tutorial:
+        tutorial.setdefault("students", {})
+        if user_id not in tutorial.get("students", {}):
             tutorial["students"][user_id] = {
                 "name": _generate_name(tutorial),
                 "currentGPA": session.get("currentGPA", 4.5),
@@ -218,8 +224,12 @@ def _join_tutorial(user_id, code, namespace):
             session.pop("goalGPA", None)
             session.pop("availability", None)
         join_room(code, namespace=namespace)
-    elif users[user_id]["role"] == "staff":
+    elif user and user.get("role") == "staff":
         join_room(code, namespace=namespace)
+    else: # no tutorial
+        emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid, namespace=namespace)
+        user["tutorial"] = None
+        return
 
     _emit_tutorial_update(code)
 

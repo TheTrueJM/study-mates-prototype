@@ -24,6 +24,10 @@ export function getSocket(namespace = "/") {
     }
   });
 
+  socket.on("error", (error) => {
+    console.error("Socket error:", error);
+  });
+
   sockets[namespace] = socket;
   return socket;
 }
