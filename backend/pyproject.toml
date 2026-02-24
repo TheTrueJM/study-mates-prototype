@@ -27,4 +27,4 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "sqlalchemy>=2.0.46",
 ]
-requires-python = "==3.13.12"
+requires-python = "==3.13.5"
