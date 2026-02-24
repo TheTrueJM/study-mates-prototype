@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from flask_login import LoginManager
-from flask.sessions import SecureCookieSessionInterface
 from werkzeug.middleware.proxy_fix import ProxyFix
 from .database import db, Staff
 from .routes import staff_bp, student_bp, util_bp
@@ -26,44 +25,30 @@ socketio = SocketIO(
 )
 
 
-class PartitionedSessionInterface(SecureCookieSessionInterface):
-    def save_session(self, app, session, response):
-        super().save_session(app, session, response)
-
-        session_cookie_name = app.config.get("SESSION_COOKIE_NAME", "session")
-
-        headers = response.headers.getlist("Set-Cookie")
-        response.headers.remove("Set-Cookie")
-
-        for header in headers:
-            if header.startswith(f"{session_cookie_name}="):
-                if "Partitioned" not in header:
-                    header += "; Partitioned"
-            response.headers.add("Set-Cookie", header)
-
-
 def create_app():
     app = Flask(__name__)
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "insecure-key")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///study_mates.sqlite")
-
+    
+    # Configure session cookie for cross-site usage when using HTTPS
+    # Use secure cookies when any frontend origin is https
     has_https_origin = any(o.startswith("https://") for o in FRONTEND_ORIGINS)
     app.config["SESSION_COOKIE_SAMESITE"] = "None"
     app.config["SESSION_COOKIE_SECURE"] = bool(has_https_origin)
-
-    app.session_interface = PartitionedSessionInterface()
+    app.config["SESSION_COOKIE_PARTITIONED"] = True
 
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
     db.init_app(app)
-    CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True)
-    socketio.init_app(app, cors_allowed_origins=FRONTEND_ORIGINS)
+    CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True) # Update Origins
+    socketio.init_app(app)
 
     with app.app_context():
         db.create_all()
         populate_all()
 
+    # Register blueprints
     app.register_blueprint(staff_bp, url_prefix="/staff")
     app.register_blueprint(student_bp)
     app.register_blueprint(util_bp)
