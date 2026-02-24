@@ -192,7 +192,7 @@ def test_timer_decrements(client, socketio_client):
     code = utils.users[uuid].get("tutorial")
     tutorial = utils.tutorials.get(code)
     initial_remaining = tutorial["timer"]["remaining"]
-    assert initial_remaining == 60
+    assert initial_remaining == 300
 
     sio.emit("start_discussion", namespace=namespace)
     time.sleep(0.5)

@@ -200,7 +200,7 @@ def start_grouping(user_id, code, tutorial):
                         rematches += 1
                     score += connections[candidate][member]
 
-                # Penalise score from student rematches 
+                # Penalise score from student rematches
                 if rematches: score *=  0.4 - (0.4 * (rematches / group_size)) # NOTE This is a Magic Number
 
                 if score > best_score:
@@ -217,7 +217,7 @@ def start_grouping(user_id, code, tutorial):
             tutorial["groups"][group_id].append(id)
             tutorial["students"][id]["group"] = group_id
             tutorial["previous_matches"].setdefault(id, set()).update(member_ids)
-            
+
         group_id += 1
 
     utils._emit_tutorial_update(code)
@@ -250,7 +250,7 @@ def _build_matrix(ids, students):
     for i in range(len(ids)):
         for j in range(i + 1, len(ids)):
             matrix[i][j] = matrix[j][i] = matrix[i][j] / max_weight
-    
+
     return matrix
 
 
@@ -333,3 +333,35 @@ def leave_tutorial():
 
     leave_room(code, namespace="/staff")
     emit("left_tutorial", to=request.sid, namespace="/staff")
+
+
+@socketio.on("delete_tutorial", namespace="/staff")
+def delete_tutorial():
+    user_id = utils.sessions.get(request.sid)
+    if not user_id:
+        return
+
+    code = utils.users.get(user_id, {}).get("tutorial")
+    if not code:
+        return
+
+    tutorial = utils.tutorials.get(code)
+    if not tutorial or tutorial.get("staff") != user_id:
+        return
+
+    tutorial["timer"]["running"] = False
+    timer.stop(code)
+
+    emit("tutorial_ended", room=code, namespace="/")
+    emit("session_cleared", {"message": "Session cleared"}, room=code, namespace="/")
+
+    student_ids = list(tutorial.get("students", {}).keys())
+    for student_id in student_ids:
+        if student_id in utils.users:
+            utils.users[student_id]["tutorial"] = None
+
+    utils.tutorials.pop(code, None)
+    utils.users[user_id]["tutorial"] = None
+    utils.disconnected_staff.pop(code, None)
+
+    emit("tutorial_deleted", {"code": code}, to=request.sid, namespace="/staff")
