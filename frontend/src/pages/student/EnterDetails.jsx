@@ -95,7 +95,7 @@ function EnterDetails() {
 
   return (
     <div className="container container-md mt-lg">
-      <Card title="Tutorial Session ABCD-1234">
+      <Card title="Tutorial Session">
         {/* GPA inputs */}
         <Input
           label="Goal GPA for this Unit"

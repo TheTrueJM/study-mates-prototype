@@ -8,25 +8,33 @@ function Navbar() {
   const { staffAuth, _ } = useAuth();
   const location = useLocation();
 
-  const showBackToStudent = location.pathname === "/staff/login" && !staffAuth;
+
   const showStaffLogin = location.pathname === "/";
+  const showBackToStudent = location.pathname === "/staff/login";
+
+  const backToStaff = location.pathname.startsWith("/staff/");
+  const onTutorial = location.pathname.startsWith("/staff/tutorial/") || location.pathname.startsWith("/tutorial/");
 
   return (
     <nav className="nav">
+      
       <div className="nav-inner">
-        <Link to="/" className="nav-brand">
+        {onTutorial ? (
+          <span className="nav-brand">Study Mates</span> // Not clickable
+          ) : (
+          <Link to={backToStaff ? "/staff/" : "/"} className="nav-brand">
           Study Mates
-        </Link>
-
+          </Link>
+        )}
+          
+        {showStaffLogin && (
+          <Link to="/staff/login" className="nav-action">
+            Staff Login
+          </Link>
+        )}
         {showBackToStudent && (
           <Link to="/" className="nav-action">
             Back to Student
-          </Link>
-        )}
-
-        {showStaffLogin && !staffAuth && (
-          <Link to="/staff/login" className="nav-action">
-            Staff Login
           </Link>
         )}
       </div>
