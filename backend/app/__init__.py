@@ -25,20 +25,22 @@ socketio = SocketIO(
     logger=True, cors_allowed_origins=FRONTEND_ORIGINS, async_mode="eventlet"
 )
 
+
 class PartitionedSessionInterface(SecureCookieSessionInterface):
     def save_session(self, app, session, response):
         super().save_session(app, session, response)
 
+        session_cookie_name = app.config.get("SESSION_COOKIE_NAME", "session")
+
         headers = response.headers.getlist("Set-Cookie")
         response.headers.remove("Set-Cookie")
-
-        session_cookie_name = app.session_cookie_name
 
         for header in headers:
             if header.startswith(f"{session_cookie_name}="):
                 if "Partitioned" not in header:
                     header += "; Partitioned"
             response.headers.add("Set-Cookie", header)
+
 
 def create_app():
     app = Flask(__name__)
