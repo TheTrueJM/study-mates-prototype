@@ -34,7 +34,6 @@ def _with_tutorial_auth(f):
             return
 
         if not (code := utils.users.get(user_id, {}).get("tutorial")):
-            from pudb import set_trace; set_trace()
             emit("error", ERR_NO_ACTIVE_TUTORIAL, to=request.sid, namespace="/staff")
             return
 
@@ -43,7 +42,6 @@ def _with_tutorial_auth(f):
             return
 
         if tutorial["staff"] != user_id:
-            from pudb import set_trace; set_trace()
             emit("error", ERR_UNAUTHORISED, to=request.sid, namespace="/staff")
             return
 
@@ -96,7 +94,6 @@ def create_tutorial(data):
     user_id = utils.sessions.get(request.sid)
 
     if utils.users.get(user_id, {}).get("role") != "staff":
-        from pudb import set_trace; set_trace()
         emit("error", ERR_UNAUTHORISED, to=request.sid, namespace="/staff")
         return
     elif utils.users.get(user_id, {}).get("tutorial") is not None:

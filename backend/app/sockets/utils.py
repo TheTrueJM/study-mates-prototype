@@ -227,7 +227,6 @@ def _join_tutorial(user_id, code, namespace):
     elif user and user.get("role") == "staff":
         join_room(code, namespace=namespace)
     else: # no tutorial
-        from pudb import set_trace; set_trace()
         emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid, namespace=namespace)
         user["tutorial"] = None
         return
