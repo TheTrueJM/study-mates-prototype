@@ -344,6 +344,12 @@ body {
     opacity: 0.85;
 }
 
+.nav-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
 .nav-action {
     border: var(--border-width) solid white;
     border-radius: 8px;

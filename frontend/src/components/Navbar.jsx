@@ -27,16 +27,27 @@ function Navbar() {
           </Link>
         )}
           
-        {showStaffLogin && (
-          <Link to="/staff/login" className="nav-action">
-            Staff Login
-          </Link>
-        )}
-        {showBackToStudent && (
-          <Link to="/" className="nav-action">
-            Back to Student
-          </Link>
-        )}
+        <div className="nav-actions">
+          <a
+            href="https://forms.office.com/r/4x1A33ZKUX"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-action"
+          >
+            Give Feedback
+          </a>
+
+          {showStaffLogin && (
+            <Link to="/staff/login" className="nav-action">
+              Staff Login
+            </Link>
+          )}
+          {showBackToStudent && (
+            <Link to="/" className="nav-action">
+              Back to Student
+            </Link>
+          )}
+        </div>
       </div>
     </nav>
   );
