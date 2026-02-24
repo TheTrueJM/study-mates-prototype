@@ -108,9 +108,9 @@ function Tutorial() {
         title={tutorialName}
         actions={
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <button onClick={handleClose}>Close Tutorial</button>
+            <Button variant="outline" onClick={handleClose}>Close Tutorial</Button>
             {(tutorialState === "groups" || tutorialState === "discussion") && (
-              <Button variant="outline" onClick={handleLobby}>
+              <Button onClick={handleLobby}>
                 Back to Lobby
               </Button>
             )}
