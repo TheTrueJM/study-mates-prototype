@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
+import Button from '../../components/Button';
 import { getSocket } from '../../socket';
 import { useAuth } from '../../hooks/useAuth';
 import LobbyLayout from './LobbyLayout';
 import GroupLayout from './GroupLayout';
 
 function Tutorial() {
+  const [socketInstance, setSocketInstance] = useState(null);
   const navigate = useNavigate();
   const { setStudent } = useAuth();
 
@@ -25,6 +27,7 @@ function Tutorial() {
 
   useEffect(() => {
     const socket = getSocket();
+    setSocketInstance(socket);
 
     const tutorialCode = localStorage.getItem("tutorial_code");
     if (tutorialCode) {
@@ -98,9 +101,20 @@ function Tutorial() {
     };
   }, [navigate, tutorialCode]);
 
+  const handleLeave = () => {
+    socketInstance.emit("reset_session");
+  };
+
   return (
     <div className="container container-sm mt-lg">
-      <Card title={tutorialName}>
+      <Card
+        title={tutorialName}
+        actions={
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Button variant="outline" onClick={handleLeave}>Leave Tutorial</Button>
+          </div>
+        }
+      >
         {/* tutorial components split across separate files */}
         {tutorialState === 'lobby' && <LobbyLayout username={username} />}
         {(tutorialState === 'groups' ||tutorialState === 'discussion') && (
