@@ -1,7 +1,8 @@
-from flask import Flask
+from flask import Flask, request, jsonify
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from flask_login import LoginManager
+from werkzeug.middleware.proxy_fix import ProxyFix
 from .database import db, Staff
 from .routes import staff_bp, student_bp, util_bp
 from .populate import populate_all
@@ -35,6 +36,9 @@ def create_app():
     has_https_origin = any(o.startswith("https://") for o in FRONTEND_ORIGINS)
     app.config["SESSION_COOKIE_SAMESITE"] = "None"
     app.config["SESSION_COOKIE_SECURE"] = bool(has_https_origin)
+    app.config["SESSION_COOKIE_PARTITIONED"] = True
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
     db.init_app(app)
     CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True) # Update Origins
@@ -50,13 +54,19 @@ def create_app():
     app.register_blueprint(util_bp)
 
     from .sockets.timer import timer
-
     timer.app_ctx = app
     timer.socketio = socketio
 
     from . import sockets
 
     login_manager = LoginManager()
+
+    @login_manager.unauthorized_handler
+    def unauthorized():
+        if request.is_json or request.path.startswith('/api'):
+            return jsonify(error="Unauthorized"), 401
+        return login_manager.unauthorized()
+
     login_manager.login_view = "staff.login"
     login_manager.init_app(app)
 
