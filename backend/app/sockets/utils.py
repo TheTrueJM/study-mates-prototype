@@ -219,10 +219,10 @@ def _join_tutorial(user_id, code, namespace):
                 "availability": session.get("availability", []),
                 "group": None
             }
-            session.pop("student_details", None)
-            session.pop("currentGPA", None)
-            session.pop("goalGPA", None)
-            session.pop("availability", None)
+            #session.pop("student_details", None)
+            #session.pop("currentGPA", None)
+            #session.pop("goalGPA", None)
+            #session.pop("availability", None)
         join_room(code, namespace=namespace)
     elif user and user.get("role") == "staff":
         join_room(code, namespace=namespace)
