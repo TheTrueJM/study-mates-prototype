@@ -257,6 +257,15 @@ def _compute_pair_compatibility(student_a, student_b):
     return w_currentGPA + w_goalGPA + w_availability
 
 
+def _is_student_disconnected(student_id, code):
+    return bool(
+        code and
+        student_id is not None and
+        (disconnected := disconnected_students.get(code)) and
+        (disconnect_time := disconnected.get(student_id)) is not None and
+        time.time() < disconnect_time + RECONNECT_GRACE_PERIOD
+    )
+
 def _assign_late_joiner_to_group(tutorial, user_id):
     students = tutorial.get("students", {})
     groups = tutorial.get("groups", {})
@@ -298,21 +307,41 @@ def _emit_tutorial_update(code):
 
     _cleanup_stale_users(code)
 
+    students = {
+        sid: data
+        for sid, data in tutorial.get("students", {}).items()
+        if not _is_student_disconnected(sid, code)
+    }
+
+    groups = {}
+    for group_id, member_ids in tutorial.get("groups", {}).items():
+        active_member_ids = [
+            sid
+            for sid in member_ids
+            if sid in students and not _is_student_disconnected(sid, code)
+        ]
+        if active_member_ids:
+            groups[group_id] = active_member_ids
+
     staff_payload = {
         "tutorial_code": code,
         "name": tutorial.get("name"),
         "state": tutorial.get("state"),
-        "students": tutorial.get("students", {}),
-        "groups": tutorial.get("groups", {}),
+        "students": students,
+        "groups": groups,
         "questions": tutorial.get("questions", []),
         "timer": tutorial.get("timer"),
     }
     emit("tutorial_update", staff_payload, room=code, namespace="/staff")
 
     for student_id, data in tutorial.get("students", {}).items():
+        if _is_student_disconnected(student_id, code):
+            continue
+
         group_number = data.get("group")
         group = tutorial.get("groups", {}).get(group_number)
         students = tutorial.get("students", {})
+
         members = (
             [
                 {
@@ -325,7 +354,7 @@ def _emit_tutorial_update(code):
                     ],
                 }
                 for sid in group
-                if sid in students
+                if sid in students and not _is_student_disconnected(sid, code)
             ]
             if group
             else None
@@ -352,8 +381,19 @@ def _join_tutorial(user_id, code, namespace):
 
     if user := users.get(user_id):
         user["disconnected_at"] = None
-        if code and user.get("role") == "student":
+        if code and user.get("role") == "student" and tutorial:
             disconnected_students.get(code, {}).pop(user_id, None)
+            old_group = tutorial.get("students", {}).get(user_id, {}).get("group")
+            if old_group is not None:
+                groups = tutorial.get("groups", {})
+                if old_group in groups:
+                    group_members = groups[old_group]
+                    while user_id in group_members:
+                        group_members.remove(user_id)
+                students = tutorial.get("students", {})
+                if user_id in students:
+                    students[user_id]["group"] = None
+
         elif code and user.get("role") == "staff":
             disconnected_staff.pop(code, None)
     else:
@@ -366,9 +406,9 @@ def _join_tutorial(user_id, code, namespace):
     if user and user.get("role") == "student" and tutorial:
         tutorial.setdefault("students", {})
 
-        auto_assigned = False
+        is_new_student = user_id not in tutorial.get("students", {})
 
-        if user_id not in tutorial.get("students", {}):
+        if is_new_student:
             tutorial["students"][user_id] = {
                 "name": _generate_name(tutorial),
                 "currentGPA": session.get("currentGPA", 4.5),
@@ -381,9 +421,18 @@ def _join_tutorial(user_id, code, namespace):
             session.pop("goalGPA", None)
             session.pop("availability", None)
 
-            state = tutorial.get("state")
+        auto_assigned = False
+        state = tutorial.get("state")
+        if user_id in tutorial.get("students", {}):
+            student_data = tutorial["students"].get(user_id, {})
+
             if state in ("groups", "discussion"):
-                auto_assigned = _assign_late_joiner_to_group(tutorial, user_id)
+                if (
+                    is_new_student
+                    or student_data.get("group") is None
+                    or student_data.get("group") not in tutorial.get("groups", {})
+                ):
+                    auto_assigned = _assign_late_joiner_to_group(tutorial, user_id)
 
         join_room(code, namespace=namespace)
     elif user and user.get("role") == "staff":
