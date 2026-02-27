@@ -269,33 +269,16 @@ def _is_student_disconnected(student_id, code):
 def _assign_late_joiner_to_group(tutorial, user_id):
     students = tutorial.get("students", {})
     groups = tutorial.get("groups", {})
-
-    if not groups:
+    if not groups or not (student_data := students.get(user_id)):
         return False
-
-    student_data = students.get(user_id)
-    if not student_data:
-        return False
-
-    best_group_id = None
-    best_score = -1
-
-    for group_id, member_ids in groups.items():
-        if not member_ids:
-            continue
-        score = sum(
-            _compute_pair_compatibility(student_data, students.get(sid, {}))
-            for sid in member_ids
-        )
-        if score > best_score:
-            best_score = score
-            best_group_id = group_id
-
-    if best_group_id:
+    if best_group_id := max(
+        (gid for gid, mids in groups.items() if mids),
+        key=lambda gid: sum(_compute_pair_compatibility(student_data, students.get(sid, {})) for sid in groups[gid]),
+        default=None
+    ):
         groups[best_group_id].append(user_id)
         students[user_id]["group"] = best_group_id
         return True
-
     return False
 
 
@@ -383,16 +366,10 @@ def _join_tutorial(user_id, code, namespace):
         user["disconnected_at"] = None
         if code and user.get("role") == "student" and tutorial:
             disconnected_students.get(code, {}).pop(user_id, None)
-            old_group = tutorial.get("students", {}).get(user_id, {}).get("group")
-            if old_group is not None:
-                groups = tutorial.get("groups", {})
-                if old_group in groups:
-                    group_members = groups[old_group]
-                    while user_id in group_members:
-                        group_members.remove(user_id)
-                students = tutorial.get("students", {})
-                if user_id in students:
-                    students[user_id]["group"] = None
+            if (student := tutorial.get("students", {}).get(user_id, {})) and (old_group := student.get("group")) is not None:
+                if (group_members := tutorial.get("groups", {}).get(old_group)):
+                    group_members[:] = [m for m in group_members if m != user_id]
+                student["group"] = None
 
         elif code and user.get("role") == "staff":
             disconnected_staff.pop(code, None)
