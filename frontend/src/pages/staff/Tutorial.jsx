@@ -100,9 +100,11 @@ function Tutorial() {
   const handleGrouping = () => socketInstance.emit('start_grouping');
   const handleDiscussion = () => socketInstance.emit('start_discussion');
   const handleClose = () => {
-    socketInstance.emit("leave_tutorial");
-    navigate("/staff/");
-    socketInstance.emit("delete_tutorial");
+    if (confirm("Are you sure you want to close this tutorial?")) {
+      socketInstance.emit("leave_tutorial");
+      navigate("/staff/");
+      socketInstance.emit("delete_tutorial");
+    }
   };
   const handleTimerStart = () => socketInstance.emit('start_timer');
   const handleTimerStop = () => socketInstance.emit('stop_timer');
