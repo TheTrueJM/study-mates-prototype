@@ -33,7 +33,7 @@ function JoinTutorial() {
       return;
     }
 
-    localStorage.setItem("tutorial_code", code);
+    localStorage.setItem("tutorial_code", code.trim().toUpperCase());
     
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
@@ -50,12 +50,12 @@ function JoinTutorial() {
       });
 
     try {
-      await apiPost(`/join/${code}`, {});
+      await apiPost(`/join/${code.trim().toUpperCase()}`, {});
 
       // Update frontend state with tutorial code
       setStudent({
         ...studentDetails,
-        tutorialCode: code
+        tutorialCode: code.trim().toUpperCase()
       });
 
       const onError = (err) => {
@@ -63,7 +63,7 @@ function JoinTutorial() {
         socketInstance.off("error", onError);
       };
 
-      socketInstance.emit("join_tutorial", { code });
+      socketInstance.emit("join_tutorial", { code: code.trim().toUpperCase() });
       socketInstance.on("error", onError);
     } catch (err) {
       alert(err.message);
