@@ -148,6 +148,7 @@ def _emit_tutorial_update(code):
         "tutorial_code": code,
         "name": tutorial.get("name"),
         "state": tutorial.get("state"),
+        "group_size": tutorial.get("group_size"),
         "students": tutorial.get("students", {}),
         "groups": tutorial.get("groups", {}),
         "questions": tutorial.get("questions", []),

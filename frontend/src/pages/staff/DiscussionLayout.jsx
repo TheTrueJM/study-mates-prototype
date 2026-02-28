@@ -1,9 +1,7 @@
 // DiscussionBoard - Staff shows the discussion questions and the timer to students
-import React from 'react';
-import Input from '../../components/Input';
 import Button from '../../components/Button';
 
-export default function DiscussionLayout({ questions = [], timeRemaining = 0, isRunning = false, resetTime = 10, setResetTime = () => {}, onResetTimer, onStartTimer, onStopTimer, onGrouping }) {
+export default function DiscussionLayout({ questions = [], timeRemaining = 0, isRunning = false, onStartTimer, onStopTimer, onGrouping }) {
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -20,24 +18,6 @@ export default function DiscussionLayout({ questions = [], timeRemaining = 0, is
         <div className="timer-display">
           <div className="timer-value">{formatTime(timeRemaining)}</div>
           <div className="timer-status">{isRunning ? 'Timer running' : 'Timer ready'}</div>
-        </div>
-      </div>
-
-      {/* Timer controls */}
-      <div className="form-group">
-        <div className="flex gap-sm items-center">
-          <input
-            type="number"
-            className="input"
-            value={resetTime}
-            min="1"
-            max="60"
-            placeholder="10..."
-            onChange={(e) => setResetTime(Number(e.target.value))}
-            style={{ width: '80px' }}
-          />
-          <span>minutes</span>
-          <Button variant="outline" onClick={onResetTimer}>Reset Timer</Button>
         </div>
       </div>
 
