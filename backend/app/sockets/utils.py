@@ -304,7 +304,6 @@ def _join_tutorial(user_id, code, namespace):
             session.pop("goalGPA", None)
             session.pop("availability", None)
 
-        auto_assigned = False
         state = tutorial.get("state")
         if user_id in tutorial.get("students", {}):
             student_data = tutorial["students"].get(user_id, {})
@@ -315,7 +314,7 @@ def _join_tutorial(user_id, code, namespace):
                     or student_data.get("group") is None
                     or student_data.get("group") not in tutorial.get("groups", {})
                 ):
-                    auto_assigned = _assign_late_joiner_to_group(tutorial, user_id)
+                    _assign_late_joiner_to_group(tutorial, user_id)
 
         join_room(code, namespace=namespace)
     elif user and user.get("role") == "staff":
