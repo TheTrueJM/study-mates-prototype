@@ -33,6 +33,7 @@ function JoinTutorial() {
       return;
     }
 
+    code = code.trim().toUpperCase();
     localStorage.setItem("tutorial_code", code);
     
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
