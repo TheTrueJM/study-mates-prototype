@@ -135,23 +135,6 @@ def _generate_name(tutorial):
         if name not in names:
             return name
 
-
-def _compute_pair_compatibility(student_a, student_b):
-    a_currentGPA = student_a.get("currentGPA", 4.5)
-    b_currentGPA = student_b.get("currentGPA", 4.5)
-    w_currentGPA = 1 / (1 + abs(a_currentGPA - b_currentGPA))
-
-    a_goalGPA = student_a.get("goalGPA", 4.0)
-    b_goalGPA = student_b.get("goalGPA", 4.0)
-    w_goalGPA = 1 / (1 + abs(a_goalGPA - b_goalGPA))
-
-    a_availability = set(student_a.get("availability", []))
-    b_availability = set(student_b.get("availability", []))
-    w_availability = 0.2 * sum(1 for t in b_availability if t in a_availability)
-
-    return w_currentGPA + w_goalGPA + w_availability
-
-
 def _is_student_disconnected(student_id, code):
     return bool(
         code
@@ -165,20 +148,13 @@ def _is_student_disconnected(student_id, code):
 def _assign_late_joiner_to_group(tutorial, user_id):
     students = tutorial.get("students", {})
     groups = tutorial.get("groups", {})
-    if not groups or not (student_data := students.get(user_id)):
+    if not groups or not students.get(user_id):
         return False
-    if best_group_id := max(
-        (gid for gid, mids in groups.items() if mids),
-        key=lambda gid: sum(
-            _compute_pair_compatibility(student_data, students.get(sid, {}))
-            for sid in groups[gid]
-        ),
-        default=None,
-    ):
-        groups[best_group_id].append(user_id)
-        students[user_id]["group"] = best_group_id
-        return True
-    return False
+    group_ids = list(groups.keys())
+    best_group = group_ids[-1]
+    groups[best_group].append(user_id)
+    students[user_id]["group"] = best_group
+    return True
 
 
 def _emit_tutorial_update(code):
