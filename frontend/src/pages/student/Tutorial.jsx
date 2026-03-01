@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { getSocket } from '../../socket';
@@ -33,7 +33,7 @@ function Tutorial() {
     const socket = getSocket();
     setSocketInstance(socket);
 
-    const tutorialCode = localStorage.getItem("tutorial_code");
+    const tutorialCode = localStorage.getItem("code");
     if (tutorialCode && !hasJoinedRef.current) {
       socket.emit("join_tutorial", { code: tutorialCode });
       hasJoinedRef.current = true;
@@ -71,12 +71,14 @@ function Tutorial() {
 
     const onTutorialEnded = () => {
       localStorage.removeItem("code");
+      localStorage.removeItem("studentDetails");
       setStudent(null);
       navigate("/");
     };
 
     const onSessionCleared = () => {
       localStorage.removeItem("code");
+      localStorage.removeItem("studentDetails");
       setStudent(null);
       navigate("/");
     };

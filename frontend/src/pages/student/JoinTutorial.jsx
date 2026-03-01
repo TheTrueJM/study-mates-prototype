@@ -42,6 +42,7 @@ function JoinTutorial() {
     }
 
     localStorage.setItem("tutorial_code", code);
+    localStorage.setItem("code", code);
     
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
