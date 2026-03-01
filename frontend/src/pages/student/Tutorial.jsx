@@ -26,18 +26,24 @@ function Tutorial() {
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
+    console.log("[FRONTEND DEBUG] Tutorial component mounted");
     const socket = getSocket();
     setSocketInstance(socket);
 
     const tutorialCode = localStorage.getItem("tutorial_code");
+    console.log("[FRONTEND DEBUG] tutorialCode from localStorage:", tutorialCode);
     if (tutorialCode) {
+      console.log("[FRONTEND DEBUG] Emitting join_tutorial with code:", tutorialCode);
       socket.emit("join_tutorial", { code: tutorialCode });
     } else {
+      console.log("[FRONTEND DEBUG] Emitting fetch_tutorial");
       socket.emit("fetch_tutorial");
     }
 
     const onStudentUpdate = (tutorial) => {
       if (!tutorial) return;
+
+      console.log("[FRONTEND DEBUG] student_update received:", JSON.stringify(tutorial, null, 2));
 
       setUsername(tutorial.username || 'Unknown');
 

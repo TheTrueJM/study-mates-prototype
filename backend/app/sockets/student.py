@@ -5,7 +5,12 @@ from flask import request, session
 from flask_socketio import emit
 from .. import socketio
 from . import utils
-from .errors import ERR_CODE_REQUIRED, ERR_SESSION_NOT_FOUND, ERR_TUTORIAL_NOT_FOUND, ERR_NOT_IN_TUTORIAL
+from .errors import (
+    ERR_CODE_REQUIRED,
+    ERR_SESSION_NOT_FOUND,
+    ERR_TUTORIAL_NOT_FOUND,
+    ERR_NOT_IN_TUTORIAL,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -21,28 +26,22 @@ def connect(auth):
 
     code = session.get("tutorial_code") or existing_tutorial
 
-    if not user_id: user_id = str(uuid.uuid4())
+    if not user_id:
+        user_id = str(uuid.uuid4())
 
     if user_id not in utils.users:
-        utils.users[user_id] = {
-            "sessions": set(),
-            "role": role,
-            "tutorial": None
-        }
+        utils.users[user_id] = {"sessions": set(), "role": role, "tutorial": None}
 
     utils.users[user_id]["sessions"].add(request.sid)
     utils.sessions[request.sid] = user_id
 
-    emit("session",
-        {
-            "uuid": user_id,
-            "role": role,
-            "tutorial": utils.users[user_id]["tutorial"]
-        }
+    emit(
+        "session",
+        {"uuid": user_id, "role": role, "tutorial": utils.users[user_id]["tutorial"]},
     )
 
     utils._join_tutorial(user_id, code, namespace="/")
-    
+
 
 @socketio.on("join_tutorial")
 def join_tutorial(data):
@@ -80,11 +79,38 @@ def reset_session():
         emit("error", ERR_SESSION_NOT_FOUND, to=request.sid)
         return
 
+    print(f"[DEBUG reset_session] user_id={user_id}")
     code = utils.users.get(user_id, {}).get("tutorial")
+    print(f"[DEBUG reset_session] code={code}")
     if code and code in utils.tutorials:
         tutorial = utils.tutorials[code]
+        print(
+            f"[DEBUG reset_session] Before removal, tutorial students: {list(tutorial.get('students', {}).keys())}"
+        )
+        print(
+            f"[DEBUG reset_session] Before removal, tutorial groups: {tutorial.get('groups', {})}"
+        )
         if user_id in tutorial.get("students", {}):
+            old_group = tutorial["students"][user_id].get("group")
+            print(f"[DEBUG reset_session] Student {user_id} had group={old_group}")
             tutorial["students"].pop(user_id, None)
+
+            # Clean up from groups
+            for group_id, members in tutorial.get("groups", {}).items():
+                if user_id in members:
+                    print(
+                        f"[DEBUG reset_session] Removing {user_id} from group {group_id}"
+                    )
+                    members[:] = [m for m in members if m != user_id]
+                    print(
+                        f"[DEBUG reset_session] Group {group_id} members after: {members[:]}"
+                    )
+        print(
+            f"[DEBUG reset_session] After removal, tutorial students: {list(tutorial.get('students', {}).keys())}"
+        )
+        print(
+            f"[DEBUG reset_session] After removal, tutorial groups: {tutorial.get('groups', {})}"
+        )
         utils._emit_tutorial_update(code)
 
     utils.users[user_id]["tutorial"] = None
