@@ -3,7 +3,10 @@ import React, { createContext, useState, useCallback, useEffect } from 'react';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [studentDetails, setStudentDetails] = useState(null);
+  const [studentDetails, setStudentDetails] = useState(() => {
+    const saved = localStorage.getItem("studentDetails");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [staffStatus, setStaffStatus] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
 
@@ -40,6 +43,9 @@ export function AuthProvider({ children }) {
 
   const setStudent = useCallback((details) => {
     setStudentDetails(details);
+    if (details) {
+      localStorage.setItem("studentDetails", JSON.stringify(details));
+    }
     setStaffStatus(false);
   }, []);
 
@@ -59,6 +65,7 @@ export function AuthProvider({ children }) {
       console.error('Logout error:', error);
     }
 
+    localStorage.removeItem("studentDetails");
     setStudentDetails(null);
     setStaffStatus(null);
   }, []);

@@ -49,8 +49,8 @@ def _with_tutorial_auth(f):
 
 
 @socketio.on("connect", namespace="/staff")
-def connect(auth: dict = {}):
-    user_id = auth.get("uuid") or str(uuid.uuid4())
+def connect(auth: dict = None):
+    user_id = (auth or {}).get("uuid") or str(uuid.uuid4())
 
     existing_tutorial = None
     if user_id in utils.users:
@@ -62,7 +62,7 @@ def connect(auth: dict = {}):
             "tutorial": None
         }
 
-    code = auth.get("code") or existing_tutorial
+    code = (auth or {}).get("code") or existing_tutorial
 
     utils.users[user_id]["sessions"].add(request.sid)
     utils.sessions[request.sid] = user_id
@@ -76,7 +76,12 @@ def connect(auth: dict = {}):
         namespace="/staff"
     )
 
-    utils._join_tutorial(user_id, code, None, namespace="/staff")
+    if code:
+        tutorial = utils.tutorials.get(code)
+        if tutorial and tutorial.get("staff") == user_id:
+            utils._join_tutorial(user_id, code, None, namespace="/staff")
+        else:
+            utils.users[user_id]["tutorial"] = None
 
 
 # -----------------------------
@@ -92,7 +97,15 @@ def create_tutorial(data):
         emit("error", ERR_UNAUTHORISED, to=request.sid, namespace="/staff")
         return
     elif utils.users.get(user_id, {}).get("tutorial") is not None:
-        emit("error", ERR_ALREADY_IN_TUTORIAL, to=request.sid, namespace="/staff")
+        emit(
+            "error",
+            {
+                **ERR_ALREADY_IN_TUTORIAL,
+                "tutorial_code": utils.users[user_id].get("tutorial"),
+            },
+            to=request.sid,
+            namespace="/staff",
+        )
         return
 
     name = data.get("name")

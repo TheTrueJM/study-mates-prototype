@@ -246,12 +246,6 @@ def _join_tutorial(user_id, code, details, namespace):
         user["disconnected_at"] = None
         if code and user.get("role") == "student" and tutorial:
             disconnected_students.get(code, {}).pop(user_id, None)
-            if (student := tutorial.get("students", {}).get(user_id, {})) and (
-                old_group := student.get("group")
-            ) is not None:
-                if group_members := tutorial.get("groups", {}).get(old_group):
-                    group_members[:] = [m for m in group_members if m != user_id]
-                student["group"] = None
 
         elif code and user.get("role") == "staff":
             disconnected_staff.pop(code, None)
@@ -281,7 +275,13 @@ def _join_tutorial(user_id, code, details, namespace):
             student_data = tutorial["students"].get(user_id, {})
 
             if state in ("groups", "discussion"):
-                if (
+                prev_group = user.get("last_group")
+
+                if prev_group and prev_group in tutorial.get("groups", {}):
+                    tutorial["students"][user_id]["group"] = prev_group
+                    if user_id not in tutorial["groups"][prev_group]:
+                        tutorial["groups"][prev_group].append(user_id)
+                elif (
                     is_new_student
                     or student_data.get("group") is None
                     or student_data.get("group") not in tutorial.get("groups", {})
