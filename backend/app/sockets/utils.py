@@ -185,6 +185,7 @@ def _emit_tutorial_update(code):
         "tutorial_code": code,
         "name": tutorial.get("name"),
         "state": tutorial.get("state"),
+        "group_size": tutorial.get("group_size"),
         "students": students,
         "groups": groups,
         "questions": tutorial.get("questions", []),
@@ -275,10 +276,6 @@ def _join_tutorial(user_id, code, namespace):
                 "availability": session.get("availability", []),
                 "group": None
             }
-            session.pop("student_details", None)
-            session.pop("currentGPA", None)
-            session.pop("goalGPA", None)
-            session.pop("availability", None)
 
         state = tutorial.get("state")
         if user_id in tutorial.get("students", {}):
