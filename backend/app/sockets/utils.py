@@ -275,7 +275,12 @@ def _join_tutorial(user_id, code, details, namespace):
             student_data = tutorial["students"].get(user_id, {})
 
             if state in ("groups", "discussion"):
-                if (
+                prev_group = user.get("last_group")
+
+                if prev_group and prev_group in tutorial.get("groups", {}):
+                    tutorial["students"][user_id]["group"] = prev_group
+                    tutorial["groups"][prev_group].append(user_id)
+                elif (
                     is_new_student
                     or student_data.get("group") is None
                     or student_data.get("group") not in tutorial.get("groups", {})

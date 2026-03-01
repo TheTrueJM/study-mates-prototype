@@ -12,9 +12,12 @@ function TutorialSetup() {
   const [name, setName] = useState("");
   const [groupSize, setGroupSize] = useState(6);
   const [discussionTime, setDiscussionTime] = useState(5);
+  const [hasExistingTutorial, setHasExistingTutorial] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    localStorage.removeItem("code");
+
     const socket = getStaffSocket();
     setSocketInstance(socket);
 
@@ -24,22 +27,49 @@ function TutorialSetup() {
 
     const onSession = (data) => {
       if (data && data.code) {
+        setHasExistingTutorial(true);
         navigate(`/staff/tutorial/${data.code}`);
+      }
+    };
+
+    const onAlreadyInTutorial = (errorData) => {
+      if (errorData && errorData.tutorial_code) {
+        navigate(`/staff/tutorial/${errorData.tutorial_code}`);
       }
     };
 
     socket.on("tutorial_created", onTutorialCreated);
     socket.on("session", onSession);
+    socket.on("error", onAlreadyInTutorial);
 
     return () => {
       socket.off("tutorial_created", onTutorialCreated);
       socket.off("session", onSession);
+      socket.off("error", onAlreadyInTutorial);
     };
   }, [navigate]);
+
+  useEffect(() => {
+    if (hasExistingTutorial) {
+      return;
+    }
+    const timer = setTimeout(() => {
+      const code = localStorage.getItem("code");
+      if (code) {
+        navigate(`/staff/tutorial/${code}`);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [hasExistingTutorial]);
 
   const handleBegin = (e) => {
     e.preventDefault();
     if (!socketInstance) return;
+
+    if (hasExistingTutorial) {
+      alert("You already have an active tutorial. Please close it before creating a new one.");
+      return;
+    }
 
     if (!Number.isInteger(parseFloat(groupSize)) || parseFloat(groupSize) < 2 || parseFloat(groupSize) > 10) {
       alert("Please enter a valid group size (between 2 and 10 students).");

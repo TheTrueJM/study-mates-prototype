@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 @socketio.on("connect")
-def connect(auth: dict = {}):
-    user_id = auth.get("uuid") or str(uuid.uuid4())
+def connect(auth: dict = None):
+    user_id = (auth or {}).get("uuid") or str(uuid.uuid4())
 
     existing_tutorial = None
     if user_id in utils.users:
@@ -25,7 +25,11 @@ def connect(auth: dict = {}):
             "tutorial": None
         }
 
-    code = auth.get("code") or existing_tutorial
+    code = (
+        (auth or {}).get("code")
+        or existing_tutorial
+        or request.cookies.get("tutorial_code")
+    )
 
     utils.users[user_id]["sessions"].add(request.sid)
     utils.sessions[request.sid] = user_id
@@ -92,6 +96,11 @@ def reset_session():
     if code and code in utils.tutorials:
         tutorial = utils.tutorials[code]
         if user_id in tutorial.get("students", {}):
+            student_data = tutorial["students"].get(user_id, {})
+            group_id = student_data.get("group")
+
+            utils.users[user_id]["last_group"] = group_id
+
             tutorial["students"].pop(user_id, None)
 
             # Clean up from groups
