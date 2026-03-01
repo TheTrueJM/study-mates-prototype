@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { getSocket } from '../../socket';
@@ -27,14 +27,17 @@ function Tutorial() {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
 
+  const hasJoinedRef = useRef(false);
+
   useEffect(() => {
     const socket = getSocket();
     setSocketInstance(socket);
 
-    const storageCode = localStorage.getItem("code");
-    if (storageCode) {
-      socket.emit("join_tutorial", { code: storageCode });
-    } else {
+    const tutorialCode = localStorage.getItem("tutorial_code");
+    if (tutorialCode && !hasJoinedRef.current) {
+      socket.emit("join_tutorial", { code: tutorialCode });
+      hasJoinedRef.current = true;
+    } else if (!tutorialCode) {
       socket.emit("fetch_tutorial");
     }
 
@@ -101,7 +104,7 @@ function Tutorial() {
       socket.off('session_cleared', onSessionCleared);
       socket.off('error', onError);
     };
-  }, [navigate, tutorialCode]);
+  }, [navigate]);
 
   const handleLeave = () => {
     socketInstance.emit("reset_session");
