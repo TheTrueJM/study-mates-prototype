@@ -50,11 +50,11 @@ function Navbar() {
 
       {showAboutModal && (
         <Modal title="Study Mates - About Us" onClose={() => setShowAboutModal(false)}>
-          <div className="mb-sm">
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit, dignissimos repellat aspernatur, harum maxime rem similique nesciunt voluptate fuga numquam dolorum dolores, quos error excepturi necessitatibus veritatis laboriosam dicta ipsam.
+          <p className="mb-sm">
+            <strong>Study Mates</strong> began as a Hackathon prototype last year, created to reduce problems many students in situations and assessments involving group work. Too often, your group is decided by the first table you sit at or the friends you've made in previous classes, but you rarely get an opportunity to make more meaningful connections. This can lead to mismatched expectations, clashing schedules, and uneven workloads. We believe group formation should be intentional and you're own choice, not down to luck. <strong>Study Mates</strong> was built to create fairer, more balanced teams while helping students connect with more people in their class.
             <br/><br/>
-            Lorem, ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit, dignissimos repellat aspernatur, harum maxime rem similique nesciunt voluptate fuga numquam dolorum dolores, quos error excepturi necessitatibus veritatis laboriosam dicta ipsam.
-          </div>
+            Our platform groups students based on expected assessment GPA, current academic performance, and shared availability, increasing compatibility and accountability from the start. <strong>Study Mates</strong> runs three unique rounds of grouping so you can meet with a large range of students in the classroom. This approach encourages broader networking, diverse perspectives, and stronger academic balance by combining smart matching with structured rotation. 
+          </p>
           <div className="divider flex gap-md justify-center">
             <div className="qr-code-container">
               <img src={QRCode} alt="Tutorial QR Code" className="qr-image" />
