@@ -31,7 +31,12 @@ function Tutorial() {
     const socket = getSocket();
     setSocketInstance(socket);
 
-    socket.emit('fetch_tutorial');
+    const storageCode = localStorage.getItem("code");
+    if (storageCode) {
+      socket.emit("join_tutorial", { code: storageCode });
+    } else {
+      socket.emit("fetch_tutorial");
+    }
 
     const onStudentUpdate = (tutorial) => {
       if (!tutorial) return;

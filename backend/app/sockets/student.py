@@ -93,6 +93,12 @@ def reset_session():
         tutorial = utils.tutorials[code]
         if user_id in tutorial.get("students", {}):
             tutorial["students"].pop(user_id, None)
+
+            # Clean up from groups
+            for group_id, members in tutorial.get("groups", {}).items():
+                if user_id in members:
+                    members[:] = [m for m in members if m != user_id]
+        
         utils._emit_tutorial_update(code)
 
     utils.users[user_id]["tutorial"] = None

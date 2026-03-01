@@ -34,21 +34,23 @@ export default function GroupLayout({ state = 'groups', username, groupNumber, g
             )}
 
             <div className="flex-col gap-xs" style={{ display: 'flex' }}>
-              {groupMembers.map((member) => (
-                <div
-                  key={member.name}
-                  className={`member-card ${member.name === username ? 'current-user' : ''}`}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() => toggleMember(member.name)}
-                >
-                  <div className="member-name">{member.name}</div>
-                  {expandedMember === member.name && member.availability && (
-                    <div className="member-availability" style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
-                      <strong>Availability:</strong> {member.availability.join(', ') || 'None specified'}
-                    </div>
-                  )}
-                </div>
-              ))}
+              {groupMembers
+                .filter((member, index, self) => index === self.findIndex(m => m.name === member.name))
+                .map((member) => (
+                  <div
+                    key={member.name}
+                    className={`member-card ${member.name === username ? 'current-user' : ''}`}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => toggleMember(member.name)}
+                  >
+                    <div className="member-name">{member.name}</div>
+                    {expandedMember === member.name && member.availability && (
+                      <div className="member-availability" style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
+                        <strong>Availability:</strong> {member.availability.join(', ') || 'None specified'}
+                      </div>
+                    )}
+                  </div>
+                ))}
             </div>
           </>
         )}
