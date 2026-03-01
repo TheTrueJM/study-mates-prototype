@@ -13,8 +13,8 @@ from .errors import ERR_TUTORIAL_NOT_FOUND, ERR_SESSION_NOT_FOUND, ERR_UNAUTHORI
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-users = dict()  # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code, disconnected_at: float|None}, ... }
-sessions = dict()  # { sID: UUID }
+users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code, disconnected_at: float|None}, ... }
+sessions = dict() # { sID: UUID }
 tutorials = dict()
 disconnected_students = dict()  # { code: { user_id: disconnected_at, ... } }
 disconnected_staff = dict()  # { code: disconnected_at, ... }
@@ -69,7 +69,7 @@ def _sort_avail(codes):
 
 def _generate_code(length=6):
     while True:
-        code = "".join(random.choices(string.ascii_uppercase, k=length))
+        code  = ''.join(random.choices(string.ascii_uppercase, k=length))
         if code not in tutorials:
             return code
 
@@ -113,133 +113,27 @@ def _cleanup_stale_users(code):
 
 def _generate_name(tutorial):
     DESCRIPTORS = (
-        "agile",
-        "anonymous",
-        "blazing",
-        "blissful",
-        "bold",
-        "brave",
-        "bright",
-        "calm",
-        "cheerful",
-        "clever",
-        "colorful",
-        "cosmic",
-        "curious",
-        "daring",
-        "dazzling",
-        "energetic",
-        "epic",
-        "friendly",
-        "frosty",
-        "gentle",
-        "glowing",
-        "golden",
-        "graceful",
-        "happy",
-        "hasty",
-        "heroic",
-        "hidden",
-        "jolly",
-        "joyful",
-        "kind",
-        "legendary",
-        "lively",
-        "lunar",
-        "midnight",
-        "mighty",
-        "mysterious",
-        "mythic",
-        "nimble",
-        "noble",
-        "peaceful",
-        "playful",
-        "powerful",
-        "quick",
-        "radiant",
-        "rapid",
-        "resilient",
-        "royal",
-        "shiny",
-        "silent",
-        "silver",
-        "smart",
-        "sneaky",
-        "stealthy",
-        "stellar",
-        "strong",
-        "swift",
-        "valiant",
-        "vibrant",
-        "wild",
-        "wise",
-        "witty",
+        'agile', 'anonymous', 'blazing', 'blissful', 'bold', 'brave', 'bright', 'calm', 'cheerful',
+        'clever', 'colorful', 'cosmic',  'curious', 'daring', 'dazzling', 'energetic', 'epic',
+        'friendly', 'frosty', 'gentle', 'glowing', 'golden', 'graceful', 'happy', 'hasty', 'heroic',
+        'hidden', 'jolly', 'joyful', 'kind', 'legendary', 'lively', 'lunar', 'midnight', 'mighty',
+        'mysterious', 'mythic', 'nimble', 'noble', 'peaceful', 'playful', 'powerful', 'quick',
+        'radiant', 'rapid', 'resilient', 'royal', 'shiny', 'silent', 'silver', 'smart', 'sneaky',
+        'stealthy', 'stellar', 'strong', 'swift', 'valiant', 'vibrant', 'wild', 'wise', 'witty'
     )
     ANIMALS = (
-        "armadillo",
-        "badger",
-        "bear",
-        "beaver",
-        "cat",
-        "chameleon",
-        "cheetah",
-        "chicken",
-        "cockatoo",
-        "coyote",
-        "jackal",
-        "crow",
-        "dog",
-        "dolphin",
-        "duck",
-        "eagle",
-        "falcon",
-        "fish",
-        "flamingo",
-        "fox",
-        "hawk",
-        "hedgehog",
-        "horse",
-        "jaguar",
-        "jellyfish",
-        "kangaroo",
-        "koala",
-        "leopard",
-        "lion",
-        "lizard",
-        "meerkat",
-        "otter",
-        "owl",
-        "panda",
-        "panther",
-        "parrot",
-        "penguin",
-        "rabbit",
-        "raccoon",
-        "raven",
-        "salamander",
-        "seal",
-        "serpent",
-        "shark",
-        "sheep",
-        "sloth",
-        "snake",
-        "squirrel",
-        "swan",
-        "tiger",
-        "tortoise",
-        "turtle",
-        "wallaby",
-        "walrus",
-        "wolf",
-        "wombat",
-        "zebra",
+        'armadillo', 'badger', 'bear', 'beaver', 'cat', 'chameleon', 'cheetah', 'chicken', 'cockatoo',
+        'coyote', 'jackal', 'crow', 'dog', 'dolphin', 'duck', 'eagle', 'falcon', 'fish', 'flamingo',
+        'fox', 'hawk', 'hedgehog', 'horse', 'jaguar', 'jellyfish', 'kangaroo', 'koala', 'leopard',
+        'lion', 'lizard', 'meerkat', 'otter', 'owl', 'panda', 'panther', 'parrot', 'penguin', 'rabbit',
+        'raccoon', 'raven', 'salamander', 'seal', 'serpent', 'shark', 'sheep', 'sloth', 'snake',
+        'squirrel', 'swan', 'tiger', 'tortoise', 'turtle', 'wallaby', 'walrus', 'wolf', 'wombat', 'zebra'
     )
     names = {student["name"] for student in tutorial.get("students", {}).values()}
     while True:
         name = f"{random.choice(DESCRIPTORS).title()}-{random.choice(ANIMALS).title()}"
         if name not in names:
             return name
-
 
 def _is_student_disconnected(student_id, code):
     return bool(
@@ -252,23 +146,14 @@ def _is_student_disconnected(student_id, code):
 
 
 def _assign_late_joiner_to_group(tutorial, user_id):
-    print(f"[DEBUG _assign_late_joiner] Called for user {user_id}")
     students = tutorial.get("students", {})
     groups = tutorial.get("groups", {})
-    print(f"[DEBUG _assign_late_joiner] Students: {list(students.keys())}")
-    print(f"[DEBUG _assign_late_joiner] Groups before: {groups}")
     if not groups or not students.get(user_id):
-        print(f"[DEBUG _assign_late_joiner] Early exit - no groups or student")
         return False
     group_ids = list(groups.keys())
     best_group = group_ids[-1]
-    print(f"[DEBUG _assign_late_joiner] Assigning {user_id} to group {best_group}")
     groups[best_group].append(user_id)
     students[user_id]["group"] = best_group
-    print(f"[DEBUG _assign_late_joiner] Groups after: {groups}")
-    print(
-        f"[DEBUG _assign_late_joiner] Student group set to: {students[user_id].get('group')}"
-    )
     return True
 
 
@@ -345,7 +230,7 @@ def _emit_tutorial_update(code):
             "group_members": members,
             "questions": tutorial.get("questions", []),
             "timer": tutorial.get("timer"),
-            "tutorial_code": code,
+            "tutorial_code": code
         }
         emit("student_update", payload, room=student_id, namespace="/")
 
@@ -353,16 +238,9 @@ def _emit_tutorial_update(code):
 def _join_tutorial(user_id, code, namespace):
     join_room(user_id, namespace=namespace)
 
-    if not (tutorial := tutorials.get(code)) and namespace != "/staff":
+    if not (tutorial := tutorials.get(code)) and namespace!="/staff":
         emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid, namespace=namespace)
         return
-
-    print(
-        f"[DEBUG _join_tutorial] user_id={user_id}, code={code}, namespace={namespace}"
-    )
-    print(
-        f"[DEBUG _join_tutorial] Current tutorial groups: {tutorial.get('groups', {}) if tutorial else 'NO TUTORIAL'}"
-    )
 
     if user := users.get(user_id):
         user["disconnected_at"] = None
@@ -371,20 +249,9 @@ def _join_tutorial(user_id, code, namespace):
             if (student := tutorial.get("students", {}).get(user_id, {})) and (
                 old_group := student.get("group")
             ) is not None:
-                print(f"[DEBUG] Rejoining student {user_id}, old_group={old_group}")
-                print(
-                    f"[DEBUG] All groups before removal: {tutorial.get('groups', {})}"
-                )
                 if group_members := tutorial.get("groups", {}).get(old_group):
-                    print(
-                        f"[DEBUG] Removing {user_id} from old_group {old_group}, members before: {group_members[:]}"
-                    )
                     group_members[:] = [m for m in group_members if m != user_id]
-                    print(
-                        f"[DEBUG] Members after removal from old_group: {group_members[:]}"
-                    )
                 student["group"] = None
-                print(f"[DEBUG] Set student['group'] to None")
 
         elif code and user.get("role") == "staff":
             disconnected_staff.pop(code, None)
@@ -406,7 +273,7 @@ def _join_tutorial(user_id, code, namespace):
                 "currentGPA": session.get("currentGPA", 4.5),
                 "goalGPA": session.get("goalGPA", 4.0),
                 "availability": session.get("availability", []),
-                "group": None,
+                "group": None
             }
             session.pop("student_details", None)
             session.pop("currentGPA", None)
@@ -416,26 +283,19 @@ def _join_tutorial(user_id, code, namespace):
         state = tutorial.get("state")
         if user_id in tutorial.get("students", {}):
             student_data = tutorial["students"].get(user_id, {})
-            print(f"[DEBUG] Student {user_id} exists in tutorial")
-            print(f"[DEBUG] is_new_student={is_new_student}, state={state}")
-            print(f"[DEBUG] student_data group: {student_data.get('group')}")
 
             if state in ("groups", "discussion"):
-                condition_new = is_new_student
-                condition_none = student_data.get("group") is None
-                condition_invalid = student_data.get("group") not in tutorial.get(
-                    "groups", {}
-                )
-                print(
-                    f"[DEBUG] Late joiner conditions: new={condition_new}, none={condition_none}, invalid={condition_invalid}"
-                )
-                if condition_new or condition_none or condition_invalid:
+                if (
+                    is_new_student
+                    or student_data.get("group") is None
+                    or student_data.get("group") not in tutorial.get("groups", {})
+                ):
                     _assign_late_joiner_to_group(tutorial, user_id)
 
         join_room(code, namespace=namespace)
     elif user and user.get("role") == "staff":
         join_room(code, namespace=namespace)
-    else:  # no tutorial
+    else: # no tutorial
         emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid, namespace=namespace)
         user["tutorial"] = None
         return
@@ -448,7 +308,6 @@ def multi_namespace_event(event, namespaces):
         for ns in namespaces:
             socketio.on(event, namespace=ns)(f)
         return f
-
     return decorator
 
 
