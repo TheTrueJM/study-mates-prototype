@@ -11,7 +11,7 @@ function TutorialSetup() {
   const [socketInstance, setSocketInstance] = useState(null);
   const [name, setName] = useState("");
   const [groupSize, setGroupSize] = useState(6);
-  const [discussionTime, setDiscussionTime] = useState(10);
+  const [discussionTime, setDiscussionTime] = useState(5);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,8 +23,8 @@ function TutorialSetup() {
     };
 
     const onSession = (data) => {
-      if (data && data.tutorial) {
-        navigate(`/staff/tutorial/${data.tutorial}`);
+      if (data && data.code) {
+        navigate(`/staff/tutorial/${data.code}`);
       }
     };
 
@@ -54,7 +54,7 @@ function TutorialSetup() {
     socketInstance.emit("create_tutorial", {
       name: name,
       group_size: groupSize,
-      discussion_time: discussionTime,
+      time: discussionTime,
     });
   };
 
@@ -96,7 +96,7 @@ function TutorialSetup() {
           max="60"
           value={discussionTime}
           onChange={setDiscussionTime}
-          placeholder="10..."
+          placeholder="5..."
         />
 
         <div className="mt-md">

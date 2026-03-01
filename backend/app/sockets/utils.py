@@ -1,13 +1,12 @@
 import random
 import string
-import uuid
-import threading
 import logging
 import time
 
-from flask import session, request
+from flask import request
 from flask_socketio import emit, join_room
 from .. import socketio
+from ..enums import parse_availability
 from .errors import ERR_TUTORIAL_NOT_FOUND, ERR_SESSION_NOT_FOUND, ERR_UNAUTHORISED
 
 logging.basicConfig(level=logging.INFO)
@@ -236,7 +235,7 @@ def _emit_tutorial_update(code):
         emit("student_update", payload, room=student_id, namespace="/")
 
 
-def _join_tutorial(user_id, code, namespace):
+def _join_tutorial(user_id, code, details, namespace):
     join_room(user_id, namespace=namespace)
 
     if not (tutorial := tutorials.get(code)) and namespace!="/staff":
@@ -271,9 +270,9 @@ def _join_tutorial(user_id, code, namespace):
         if is_new_student:
             tutorial["students"][user_id] = {
                 "name": _generate_name(tutorial),
-                "currentGPA": session.get("currentGPA", 4.5),
-                "goalGPA": session.get("goalGPA", 4.0),
-                "availability": session.get("availability", []),
+                "currentGPA": details.get("currentGPA", 4.5) or 4.5,
+                "goalGPA": details.get("goalGPA", 4.0) or 4.0,
+                "availability": parse_availability(details.get("availability") or []),
                 "group": None
             }
 

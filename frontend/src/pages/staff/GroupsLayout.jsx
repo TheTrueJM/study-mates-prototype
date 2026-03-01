@@ -1,5 +1,4 @@
 // GroupsLayout - Staff sees formed groups and can choose to reform them or start the discussion
-import React from 'react';
 import Button from '../../components/Button';
 
 export default function GroupsLayout({ groups = [], students = {}, onGrouping, onDiscussion }) {

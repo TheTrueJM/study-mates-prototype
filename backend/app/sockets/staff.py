@@ -8,8 +8,7 @@ from functools import wraps
 from sqlalchemy.sql.expression import func
 from ..database import DiscussionQuestion
 
-
-from flask import request, session
+from flask import request
 from flask_socketio import emit, join_room, leave_room
 from .. import socketio
 from . import utils
@@ -50,24 +49,20 @@ def _with_tutorial_auth(f):
 
 
 @socketio.on("connect", namespace="/staff")
-def connect(auth):
-    user_id = auth.get("uuid") if auth else None
-    role = session.get("role", "staff")
+def connect(auth: dict = {}):
+    user_id = auth.get("uuid") or str(uuid.uuid4())
 
     existing_tutorial = None
-    if user_id and user_id in utils.users:
+    if user_id in utils.users:
         existing_tutorial = utils.users[user_id].get("tutorial")
-
-    code = session.get("tutorial_code") or existing_tutorial
-
-    if not user_id: user_id = str(uuid.uuid4())
-
-    if user_id not in utils.users:
+    else:
         utils.users[user_id] = {
             "sessions": set(),
-            "role": role,
+            "role": "staff",
             "tutorial": None
         }
+
+    code = auth.get("code") or existing_tutorial
 
     utils.users[user_id]["sessions"].add(request.sid)
     utils.sessions[request.sid] = user_id
@@ -75,13 +70,13 @@ def connect(auth):
     emit("session",
         {
             "uuid": user_id,
-            "role": role,
-            "tutorial": utils.users[user_id]["tutorial"]
+            "role": "staff",
+            "code": utils.users[user_id]["tutorial"]
         },
         namespace="/staff"
     )
 
-    utils._join_tutorial(user_id, code, namespace="/staff")
+    utils._join_tutorial(user_id, code, None, namespace="/staff")
 
 
 # -----------------------------
@@ -102,7 +97,7 @@ def create_tutorial(data):
 
     name = data.get("name")
     group_size = int(data.get("group_size")) or None
-    discussion_time = math.ceil(float(data.get("time", 10)) * 60) or 600
+    discussion_time = math.ceil(float(data.get("time", 5)) * 60) or 300
 
     if not group_size or group_size < 2:
         emit("error", ERR_INVALID_GROUP_SIZE, to=request.sid, namespace="/staff")
@@ -149,6 +144,24 @@ def reset_lobby(user_id, code, tutorial):
     utils._emit_tutorial_update(code)
 
 
+@socketio.on("update_settings", namespace="/staff")
+@_with_tutorial_auth
+def update_settings(user_id, code, tutorial, data):
+    new_group_size = int(data.get("group_size")) or None
+    new_discussion_time = math.ceil(float(data.get("time", 5)) * 60) or 300
+
+    if not new_group_size or new_group_size < 2:
+        emit("error", ERR_INVALID_GROUP_SIZE, to=request.sid, namespace="/staff")
+        return
+
+    tutorial["group_size"] = new_group_size
+    tutorial["timer"]["duration"] = new_discussion_time
+    tutorial["timer"]["remaining"] = new_discussion_time
+    tutorial["timer"]["running"] = False
+    timer.stop(code)
+    utils._emit_tutorial_update(code)
+
+
 @socketio.on("fetch_tutorial", namespace="/staff")
 @_with_tutorial_auth
 def fetch_tutorial(user_id, code, tutorial):
@@ -171,11 +184,6 @@ def start_grouping(user_id, code, tutorial):
     students = list(tutorial["students"].keys())
 
     connections: np.ndarray = _build_matrix(students, tutorial["students"])
-
-    # Print the graph weights for debugging purposes
-    # for i, s1 in enumerate(students):
-    #     for j, s2 in enumerate(students):
-    #         if i != j: print(f"{tutorial['students'][s1]['name']} vs {tutorial['students'][s2]['name']}: {matrix[i][j]:.2f}")
 
     tutorial["groups"].clear()
     tutorial["state"] = "groups"
@@ -296,7 +304,7 @@ def stop_timer(user_id, code, tutorial):
 @socketio.on("reset_timer", namespace="/staff")
 @_with_tutorial_auth
 def reset_timer(user_id, code, tutorial, data):
-    new_time = math.ceil(float(data.get("time", 10)) * 60) or 600
+    new_time = math.ceil(float(data.get("time", 5)) * 60) or 300
     tutorial["timer"]["duration"] = new_time
     tutorial["timer"]["remaining"] = new_time
     tutorial["timer"]["running"] = False

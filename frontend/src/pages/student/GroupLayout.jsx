@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Button from '../../components/Button';
+import Modal from '../../components/Modal';
 
 export default function GroupLayout({ state = 'groups', username, groupNumber, groupMembers = [], questions = [], timeRemaining = 0, isRunning = false }) {
   const [expandedMember, setExpandedMember] = useState(null);
@@ -67,28 +68,20 @@ export default function GroupLayout({ state = 'groups', username, groupNumber, g
         )}
 
         {showQuestionsModal && (
-          <div className="modal-overlay" onClick={() => setShowQuestionsModal(false)}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>Discussion Topics/Questions</h2>
-                <button className="modal-close" onClick={() => setShowQuestionsModal(false)}>&times;</button>
-              </div>
-              <div className="modal-body">
-                {questions.length === 0 ? (
-                  <p style={{ color: '#888' }}>No topics available yet.</p>
-                ) : (
-                  <div className="flex-col gap-xs" style={{ display: 'flex' }}>
-                    {questions.map((question, index) => (
-                      <div key={index} className="question-item">
-                        <div className="question-number">{index + 1}</div>
-                        <div>{question}</div>
-                      </div>
-                    ))}
+          <Modal title="Discussion Topics/Questions" onClose={() => setShowQuestionsModal(false)}>
+            {questions.length === 0 ? (
+              <p style={{ color: '#888' }}>No topics available yet.</p>
+            ) : (
+              <div className="flex-col gap-xs" style={{ display: 'flex' }}>
+                {questions.map((question, index) => (
+                  <div key={index} className="question-item">
+                    <div className="question-number">{index + 1}</div>
+                    <div>{question}</div>
                   </div>
-                )}
+                ))}
               </div>
-            </div>
-          </div>
+            )}
+          </Modal>
         )}
     </>
   );

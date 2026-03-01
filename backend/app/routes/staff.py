@@ -1,24 +1,12 @@
-from flask import Blueprint, session, request, redirect, url_for, send_file, render_template, jsonify
+from flask import Blueprint, request, jsonify
 from flask_bcrypt import generate_password_hash, check_password_hash
 from flask_login import login_required, login_user, logout_user, current_user
-from ..database import db, Staff, AccountInvite
 import random, string
 
-import os
+from ..database import db, Staff, AccountInvite
 
 
 staff_bp = Blueprint("staff", __name__, url_prefix="/staff")
-
-
-@staff_bp.route("/tutorial/<code>", methods=["GET"])
-@login_required
-def tutorial(code):
-    ## To-Do: Kick back to Index if Tutorial doesn't exist on server
-    session["tutorial_code"] = code
-
-    client_path = os.path.join(os.getcwd(), "../frontend/public/staff/tutorial.html")
-    return send_file(client_path)
-
 
 
 @staff_bp.route("/login", methods=["POST"])
@@ -41,10 +29,15 @@ def login():
     
     login_user(staff)
 
-    session["role"] = "staff"
-    session["tutorial_code"] = None
-
     return jsonify({"message": "Login successful"}), 200
+
+
+@staff_bp.route("/status", methods=["GET"])
+def status():
+    # Check staff authentication status
+    if current_user.is_authenticated:
+        return jsonify({"role": "staff", "authenticated": True}), 200
+    return jsonify({"role": "student", "authenticated": False}), 200
 
 
 @staff_bp.route("/logout")
@@ -54,79 +47,68 @@ def logout():
     return jsonify({"message": "Logout successful"}), 200
 
 
+# ===== Staff Account Invitation & Registration ===== #
 
-@staff_bp.route("/invite", methods=["GET", "POST"])
-@login_required
-def generate_invite():
-    if request.method == "POST":
-        code = _generate_invite_code()
+# @staff_bp.route("/invite", methods=["GET", "POST"])
+# @login_required
+# def generate_invite():
+#     if request.method == "POST":
+#         code = _generate_invite_code()
 
-        if code:
-            invite = AccountInvite(code=code, staff=current_user)
-            db.session.add(invite)
-            db.session.commit()
+#         if code:
+#             invite = AccountInvite(code=code, staff=current_user)
+#             db.session.add(invite)
+#             db.session.commit()
 
-            invite_url = url_for("staff.register", code=code, _external=True)
-            print(invite_url)
+#             invite_url = url_for("staff.register", code=code, _external=True)
+#             print(invite_url)
 
-    client_path = os.path.join(os.getcwd(), "../frontend/public/staff/invites.html")
-    return send_file(client_path)
+#     client_path = os.path.join(os.getcwd(), "../frontend/public/staff/invites.html")
+#     return send_file(client_path)
 
-def _generate_invite_code(length = 20):
-    codes: list[AccountInvite] = AccountInvite.query.with_entities(AccountInvite.code).all()
-    for _ in range(1 + len(codes) * 2):
-        code = ''.join(random.choices(string.ascii_letters, k=length))
-        if code not in codes:
-            return code
-    return None
+# def _generate_invite_code(length = 20):
+#     codes: list[AccountInvite] = AccountInvite.query.with_entities(AccountInvite.code).all()
+#     for _ in range(1 + len(codes) * 2):
+#         code = ''.join(random.choices(string.ascii_letters, k=length))
+#         if code not in codes:
+#             return code
+#     return None
 
 
-@staff_bp.route("/register/<code>", methods=["GET", "POST"])
-def register(code: str):
-    invite = AccountInvite.query.filter_by(code=code).first()
+# @staff_bp.route("/register/<code>", methods=["GET", "POST"])
+# def register(code: str):
+#     invite = AccountInvite.query.filter_by(code=code).first()
 
-    if not invite or not invite.active:
-        # flash("This invitation link is invalid or has already been used.", "danger")
-        return redirect(url_for("staff.login"))
+#     if not invite or not invite.active:
+#         return jsonify({"error": "This invitation is invalid or has already been used"}), 400
     
-    if current_user.is_authenticated:
-        # flash("You are already logged in.", "info")
-        return redirect(url_for("staff.index"))
+#     if current_user.is_authenticated:
+#         return jsonify({"error": "Your are already authenticated"}), 401
     
-    error: str = None
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+#     data = request.get_json()
 
-        # Check if staff already exists
-        staff: Staff | None = Staff.query.filter_by(username=username).first()
+#     if not isinstance(data, dict):
+#         return jsonify({"error": "Invalid login data or format"}), 400
+    
+#     username = data.get("username")
+#     password = data.get("password")
 
-        if isinstance(staff, Staff):
-            error = "Username already taken"
-        elif not username:
-            error = "Must provide a username"
-        elif not password:
-            error = "Must provide a password"
-        
-        if error:
-            # flash(error, "danger")
-            pass
-        else:
-            # Create new user
-            staff = Staff(
-                username=username,
-                password_hash=generate_password_hash(password),
-            )
-            db.session.add(staff)
-            # Expire invite
-            invite.active = False
-            db.session.commit()
+#     staff: Staff | None =  Staff.query.filter_by(username=username).first()
 
-            login_user(staff)
-            # flash("Register successful", "success")
+#     # Validate staff identity and password
+#     if isinstance(staff, Staff):
+#         return jsonify({"error": "Staff username is already taken"}), 400
+#     if not username or not password:
+#         return jsonify({"error": "Must provide a username and password"}), 400
 
-            return redirect(url_for("staff.index"))
-        
-    # return render_template("auth.html", form=register_form, heading="Register")
-    client_path = os.path.join(os.getcwd(), "../frontend/public/staff/register.html")
-    return send_file(client_path)
+#     staff = Staff(
+#         username=username,
+#         password_hash=generate_password_hash(password),
+#     )
+#     db.session.add(staff)
+#     invite.active = False # Expire invite
+#     db.session.commit()
+
+#     login_user(staff)
+
+#     return jsonify({"message": "Register successful"}), 200

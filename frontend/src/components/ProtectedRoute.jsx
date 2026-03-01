@@ -15,7 +15,7 @@ export function ProtectedStudentRoute({ children, requiresJoin = false }) {
   }
 
   //  Student must have joined a tutorial
-  if (requiresJoin && !studentDetails.tutorialCode) {
+  if (requiresJoin && !studentDetails.code) {
     return <Navigate to="/join" replace />;
   }
 
@@ -24,13 +24,13 @@ export function ProtectedStudentRoute({ children, requiresJoin = false }) {
 
 // ProtectedStaffRoute - Requires staff authentication
 export function ProtectedStaffRoute({ children }) {
-  const { staffAuth, isValidating } = useAuth();
+  const { staffStatus, isValidating } = useAuth();
 
   if (isValidating) {
     return <div>Loading...</div>;
   }
 
-  if (!staffAuth) {
+  if (!staffStatus) {
     return <Navigate to="/staff/login" replace />;
   }
 

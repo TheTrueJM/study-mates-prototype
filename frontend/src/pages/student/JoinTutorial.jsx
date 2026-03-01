@@ -1,8 +1,8 @@
 // JoinTutorial - Student enters a tutorial code and joins a session
 
 import { useState, useEffect } from 'react';
-import Button from '../../components/Button';
 import { useNavigate } from 'react-router-dom';
+import Button from '../../components/Button';
 import { useAuth } from '../../hooks/useAuth';
 import { getSocket } from '../../socket';
 
@@ -33,29 +33,11 @@ function JoinTutorial() {
       return;
     }
 
-    localStorage.setItem("tutorial_code", code.trim().toUpperCase());
-    
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-
-    const apiPost = (endpoint, payload) =>
-      fetch(`${BACKEND_URL}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      }).then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || res.statusText);
-        return data;
-      });
-
     try {
-      await apiPost(`/join/${code.trim().toUpperCase()}`, {});
-
       // Update frontend state with tutorial code
       setStudent({
         ...studentDetails,
-        tutorialCode: code.trim().toUpperCase()
+        code: code.trim().toUpperCase()
       });
 
       const onError = (err) => {
@@ -63,7 +45,7 @@ function JoinTutorial() {
         socketInstance.off("error", onError);
       };
 
-      socketInstance.emit("join_tutorial", { code: code.trim().toUpperCase() });
+      socketInstance.emit("join_tutorial", { code: code.trim().toUpperCase(), details: studentDetails });
       socketInstance.on("error", onError);
     } catch (err) {
       alert(err.message);

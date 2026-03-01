@@ -2,12 +2,12 @@ from flask import Flask, request, jsonify
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from flask_login import LoginManager
-from werkzeug.middleware.proxy_fix import ProxyFix
+import os
+
 from .database import db, Staff
-from .routes import staff_bp, student_bp, util_bp
+from .routes import staff_bp, student_bp
 from .populate import populate_all
 
-import os
 
 _env_frontend = os.getenv("FRONTEND_ORIGINS")
 if _env_frontend:
@@ -17,7 +17,6 @@ else:
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://study-mates-deployment.vercel.app",
-        "https://study-mates-deployment-studymates-projects-4d298d59.vercel.app"
     ]
 
 socketio = SocketIO(
@@ -30,18 +29,9 @@ def create_app():
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "insecure-key")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///study_mates.sqlite")
-    
-    # Configure session cookie for cross-site usage when using HTTPS
-    # Use secure cookies when any frontend origin is https
-    has_https_origin = any(o.startswith("https://") for o in FRONTEND_ORIGINS)
-    app.config["SESSION_COOKIE_SAMESITE"] = "None"
-    app.config["SESSION_COOKIE_SECURE"] = bool(has_https_origin)
-    app.config["SESSION_COOKIE_PARTITIONED"] = True
-
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
 
     db.init_app(app)
-    CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True) # Update Origins
+    CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True)
     socketio.init_app(app)
 
     with app.app_context():
@@ -51,7 +41,6 @@ def create_app():
     # Register blueprints
     app.register_blueprint(staff_bp, url_prefix="/staff")
     app.register_blueprint(student_bp)
-    app.register_blueprint(util_bp)
 
     from .sockets.timer import timer
     timer.app_ctx = app
