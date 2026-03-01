@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { getSocket } from '../../socket';
@@ -30,6 +30,8 @@ function Tutorial() {
   useEffect(() => {
     const socket = getSocket();
     setSocketInstance(socket);
+
+    socket.emit('fetch_tutorial');
 
     const onStudentUpdate = (tutorial) => {
       if (!tutorial) return;

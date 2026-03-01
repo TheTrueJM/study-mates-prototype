@@ -15,7 +15,7 @@ export function ProtectedStudentRoute({ children, requiresJoin = false }) {
   }
 
   //  Student must have joined a tutorial
-  if (requiresJoin && !studentDetails.tutorialCode) {
+  if (requiresJoin && !studentDetails.code) {
     return <Navigate to="/join" replace />;
   }
 

@@ -23,8 +23,8 @@ function TutorialSetup() {
     };
 
     const onSession = (data) => {
-      if (data && data.tutorial) {
-        navigate(`/staff/tutorial/${data.tutorial}`);
+      if (data && data.code) {
+        navigate(`/staff/tutorial/${data.code}`);
       }
     };
 

@@ -50,7 +50,7 @@ def _with_tutorial_auth(f):
 
 @socketio.on("connect", namespace="/staff")
 def connect(auth: dict = {}):
-    user_id = auth.get("uuid", str(uuid.uuid4()))
+    user_id = auth.get("uuid") or str(uuid.uuid4())
 
     existing_tutorial = None
     if user_id in utils.users:
@@ -62,7 +62,7 @@ def connect(auth: dict = {}):
             "tutorial": None
         }
 
-    code = auth.get("code", existing_tutorial)
+    code = auth.get("code") or existing_tutorial
 
     utils.users[user_id]["sessions"].add(request.sid)
     utils.sessions[request.sid] = user_id
