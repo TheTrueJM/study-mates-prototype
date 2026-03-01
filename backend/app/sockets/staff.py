@@ -8,8 +8,7 @@ from functools import wraps
 from sqlalchemy.sql.expression import func
 from ..database import DiscussionQuestion
 
-
-from flask import request, session
+from flask import request
 from flask_socketio import emit, join_room, leave_room
 from .. import socketio
 from . import utils
@@ -50,24 +49,20 @@ def _with_tutorial_auth(f):
 
 
 @socketio.on("connect", namespace="/staff")
-def connect(auth):
-    user_id = auth.get("uuid") if auth else None
-    role = session.get("role", "staff")
+def connect(auth: dict = {}):
+    user_id = auth.get("uuid") or str(uuid.uuid4())
 
     existing_tutorial = None
-    if user_id and user_id in utils.users:
+    if user_id in utils.users:
         existing_tutorial = utils.users[user_id].get("tutorial")
-
-    code = session.get("tutorial_code") or existing_tutorial
-
-    if not user_id: user_id = str(uuid.uuid4())
-
-    if user_id not in utils.users:
+    else:
         utils.users[user_id] = {
             "sessions": set(),
-            "role": role,
+            "role": "staff",
             "tutorial": None
         }
+
+    code = auth.get("code") or existing_tutorial
 
     utils.users[user_id]["sessions"].add(request.sid)
     utils.sessions[request.sid] = user_id
@@ -75,13 +70,13 @@ def connect(auth):
     emit("session",
         {
             "uuid": user_id,
-            "role": role,
-            "tutorial": utils.users[user_id]["tutorial"]
+            "role": "staff",
+            "code": utils.users[user_id]["tutorial"]
         },
         namespace="/staff"
     )
 
-    utils._join_tutorial(user_id, code, namespace="/staff")
+    utils._join_tutorial(user_id, code, None, namespace="/staff")
 
 
 # -----------------------------

@@ -36,7 +36,7 @@ function Login() {
       await apiPost("/staff/login", { username, password });
       
       // Update frontend state
-      setStaff(username);
+      setStaff();
       
       navigate("/staff/");
     } catch (err) {

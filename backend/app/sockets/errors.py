@@ -6,3 +6,4 @@ ERR_UNAUTHORISED = {"errno": 5, "message": "Unauthorized. You do not have permis
 ERR_ALREADY_IN_TUTORIAL = {"errno": 6, "message": "You are already in a tutorial. Please leave your current session before joining another."}
 ERR_INVALID_GROUP_SIZE = {"errno": 7, "message": "Invalid group size. Group size must be at least 2 students."}
 ERR_NOT_IN_TUTORIAL = {"errno": 8, "message": "You are not currently in a tutorial session."}
+ERR_INVALID_GPA = {"errno": 9, "message": "Invalid GPA. Values must be between 0.0 and 7.0."}

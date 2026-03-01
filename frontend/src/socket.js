@@ -8,19 +8,21 @@ export function getSocket(namespace = "/") {
   }
 
   const uuid = localStorage.getItem("uuid");
+  const code = localStorage.getItem("code");
   const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
   const url = namespace === "/" ? `${BACKEND_URL}` : `${BACKEND_URL}${namespace}`;
 
   const socket = io(url, {
-    auth: { uuid },
+    auth: { uuid, code },
     withCredentials: true,
     transports: ["websocket"],
     path: '/socket.io',
   });
   
   socket.on("session", (data) => {
-    if (data && data.uuid) {
-      localStorage.setItem("uuid", data.uuid);
+    if (data) {
+      if (data.uuid) { localStorage.setItem("uuid", data.uuid); }
+      if (data.code) { localStorage.setItem("code", data.code); }
     }
   });
 
