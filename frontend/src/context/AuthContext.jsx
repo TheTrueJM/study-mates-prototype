@@ -4,32 +4,31 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [studentDetails, setStudentDetails] = useState(null);
-  const [staffAuth, setStaffAuth] = useState(null);
+  const [staffStatus, setStaffStatus] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
 
-  // Validate session on app load
+  // Validate staff authentication on app load
   useEffect(() => {
-    validateSession();
+    validateStaffStatus();
   }, []);
 
-  const validateSession = useCallback(async () => {
+  const validateStaffStatus = useCallback(async () => {
     setIsValidating(true);
     const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 
     try {
-      const res = await fetch(`${BACKEND_URL}/session`, {
+      const res = await fetch(`${BACKEND_URL}/staff/status`, {
         credentials: 'include',
       });
 
       if (res.ok) {
         const data = await res.json();
         
-        if (data.role === 'student' && data.details) {
-          setStudentDetails(data.details);
-          setStaffAuth(null);
-        } else if (data.role === 'staff' && data.authenticated) {
-          setStaffAuth({ username: data.username });
-          setStudentDetails(null);
+        if (data.authenticated) {
+          setStaffStatus(true)
+          setStudentDetails(null)
+        } else {
+          setStaffStatus(false)
         }
       }
     } catch (error) {
@@ -41,11 +40,11 @@ export function AuthProvider({ children }) {
 
   const setStudent = useCallback((details) => {
     setStudentDetails(details);
-    setStaffAuth(null);
+    setStaffStatus(false);
   }, []);
 
-  const setStaff = useCallback((username) => {
-    setStaffAuth({ username });
+  const setStaff = useCallback(() => {
+    setStaffStatus(true);
     setStudentDetails(null);
   }, []);
 
@@ -61,19 +60,19 @@ export function AuthProvider({ children }) {
     }
 
     setStudentDetails(null);
-    setStaffAuth(null);
+    setStaffStatus(null);
   }, []);
 
   return (
     <AuthContext.Provider
       value={{
         studentDetails,
-        staffAuth,
+        staffStatus,
         isValidating,
         setStudent,
         setStaff,
         logout,
-        validateSession,
+        validateStaffStatus,
       }}
     >
       {children}

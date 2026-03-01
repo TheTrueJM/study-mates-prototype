@@ -8,13 +8,15 @@ import LobbyLayout from './LobbyLayout';
 import GroupLayout from './GroupLayout';
 
 function Tutorial() {
-  const [socketInstance, setSocketInstance] = useState(null);
+  const { code } = useParams();
   const navigate = useNavigate();
+
+  const [socketInstance, setSocketInstance] = useState(null);
   const { setStudent } = useAuth();
 
   const [username, setUsername] = useState('Unknown');
 
-  const [tutorialCode, setTutorialCode] = useState('');
+  const [tutorialCode, setTutorialCode] = useState(code || '');
   const [tutorialState, setTutorialState] = useState('lobby');
   const [tutorialName, setTutorialName] = useState('QUT Tutorial');
 
@@ -29,19 +31,12 @@ function Tutorial() {
     const socket = getSocket();
     setSocketInstance(socket);
 
-    const tutorialCode = localStorage.getItem("tutorial_code");
-    if (tutorialCode) {
-      socket.emit("join_tutorial", { code: tutorialCode });
-    } else {
-      socket.emit("fetch_tutorial");
-    }
-
     const onStudentUpdate = (tutorial) => {
       if (!tutorial) return;
 
       setUsername(tutorial.username || 'Unknown');
 
-      setTutorialCode(tutorial.tutorial_code || '');
+      setTutorialCode(tutorial.tutorial_code || code || '');
       setTutorialState(tutorial.state || 'lobby');
       setTutorialName(`${tutorial.name || 'QUT Tutorial'}${tutorialCode ? ` - ${tutorialCode}` : ''}`);
 
@@ -65,20 +60,20 @@ function Tutorial() {
     };
 
     const onTutorialEnded = () => {
-      localStorage.removeItem("tutorial_code");
+      localStorage.removeItem("code");
       setStudent(null);
       navigate("/");
     };
 
     const onSessionCleared = () => {
-      localStorage.removeItem("tutorial_code");
+      localStorage.removeItem("code");
       setStudent(null);
       navigate("/");
     };
 
     const onError = (err) => {
       if (err && err.message) {
-        localStorage.removeItem("tutorial_code");
+        localStorage.removeItem("code");
         setStudent(null);
         navigate("/");
       }

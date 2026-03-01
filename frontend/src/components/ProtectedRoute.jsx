@@ -24,13 +24,13 @@ export function ProtectedStudentRoute({ children, requiresJoin = false }) {
 
 // ProtectedStaffRoute - Requires staff authentication
 export function ProtectedStaffRoute({ children }) {
-  const { staffAuth, isValidating } = useAuth();
+  const { staffStatus, isValidating } = useAuth();
 
   if (isValidating) {
     return <div>Loading...</div>;
   }
 
-  if (!staffAuth) {
+  if (!staffStatus) {
     return <Navigate to="/staff/login" replace />;
   }
 

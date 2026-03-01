@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
-import Button from '../../components/Button';
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 const TIMES = ["Morning", "Afternoon", "Evening"];
@@ -74,18 +74,16 @@ function EnterDetails() {
       });
 
     try {
-      await apiPost("/details", {
-        currentGPA: noGPAYet ? 4.5 : currentGPA,
-        goalGPA,
-        availability
-      });
-      
-      // Update frontend state
-      setStudent({
+      const details = {
         currentGPA: noGPAYet ? 4.5 : parseFloat(currentGPA),
         goalGPA: parseFloat(goalGPA),
         availability
-      });
+      }
+
+      await apiPost("/validate_details", details);
+      
+      // Update frontend state
+      setStudent(details);
       
       navigate("/join");
     } catch (err) {
