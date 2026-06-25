@@ -1,8 +1,8 @@
-# In backend-v2/app/sockets/timer.py
-
 import time
 import threading
-from app.sockets import tutorials
+
+from sockets import tutorials
+from ..enums import TutorialState
 
 class TutorialTimer:
     def __init__(self, tutorial_code, socketio):
@@ -83,7 +83,7 @@ class TutorialTimer:
                         {"phase": "discussion"},
                         room=f"tutorial_{self.tutorial_code}"
                     )
-                    tutorials[self.tutorial_code]["state"] = "groups"
+                    tutorials[self.tutorial_code]["state"] = TutorialState.AWAITING
     
     def stop(self):
         self.running = False

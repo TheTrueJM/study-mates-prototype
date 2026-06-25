@@ -1,41 +1,39 @@
-# In backend-v2/app/sockets/student.py
-
-import uuid
 from flask import session
-from app.sockets import tutorials
-from app.sockets.utils import generate_student_uuid, generate_student_name
-from app.enums import TutorialState
+import time
+
+from sockets import tutorials
+from .utils import generate_student_uuid, generate_student_name
+from ..enums import TutorialState
 
 def register_student_events(socketio):
     @socketio.on("authenticate_student")
     def handle_authenticate_student(data):
-        """Handle student authentication via Socket.IO"""
         tutorial_code = data.get("tutorial_code")
         
         if not tutorial_code:
             socketio.emit("authentication_failed", {"reason": "No tutorial code provided"})
             return
         
-        # Check if tutorial exists and is active
-        if tutorial_code not in tutorials or tutorials[tutorial_code]["ended"]:
-            socketio.emit("authentication_failed", {"reason": "Tutorial not found or has ended"})
+        if tutorial_code not in tutorials:
+            socketio.emit("error", {"message": "Tutorial not found"})
+            return
+        
+        if tutorials[tutorial_code]["state"] == TutorialState.ENDED:
+            socketio.emit("error", {"message": "Tutorial ended"})
             return
         
         # Generate UUID and name
-        student_uuid = generate_student_uuid()
-        student_name = generate_student_name()
+        student_uuid = generate_unqiue_uuid(tutorial_code)
+        student_name = generate_unqiue_name(tutorial_code)
         
         # Create student record
-        tutorial = tutorials[tutorial_code]
-        tutorial["students"][student_uuid] = {
+        tutorials[tutorial_code]["students"][student_uuid] = {
             "name": student_name,
             "currentGPA": None,
-            "goalGPA": None,
+            "goalGrade": None,
             "availability": {},
             "shared_attributes": [],
             "group": None,
-            "joined_at": int(time.time()),
-            "last_updated": int(time.time()),
             "details_complete": False
         }
         
@@ -52,9 +50,9 @@ def register_student_events(socketio):
             "tutorial_code": tutorial_code
         })
     
+
     @socketio.on("reauthenticate_student")
     def handle_reauthenticate_student(data):
-        """Handle student reauthentication"""
         session_id = data.get("session_id")
         
         # Look up UUID from session (first-party signed cookie)
@@ -71,8 +69,12 @@ def register_student_events(socketio):
                 tutorial_code = code
                 break
         
-        if not tutorial_code or tutorials[tutorial_code]["ended"]:
-            socketio.emit("reauthentication_failed", {"reason": "Session expired or tutorial ended"})
+        if tutorial_code not in tutorials:
+            socketio.emit("error", {"message": "Tutorial not found"})
+            return
+        
+        if tutorials[tutorial_code]["state"] == TutorialState.ENDED:
+            socketio.emit("error", {"message": "Tutorial ended"})
             return
         
         # Restore to same room
@@ -86,9 +88,9 @@ def register_student_events(socketio):
             "tutorial_code": tutorial_code
         })
     
+
     @socketio.on("join_tutorial")
     def handle_join_tutorial(data):
-        """Handle student joining a tutorial"""
         code = data.get("code")
         
         if not code:
@@ -110,9 +112,9 @@ def register_student_events(socketio):
             "round": tutorial["round"]
         })
     
+
     @socketio.on("update_details")
     def handle_update_details(data):
-        """Handle student updating their details"""
         student_uuid = session.get("student_uuid")
         
         if not student_uuid:
@@ -137,8 +139,8 @@ def register_student_events(socketio):
         # Update attributes
         if "currentGPA" in data:
             student_record["currentGPA"] = data["currentGPA"]
-        if "goalGPA" in data:
-            student_record["goalGPA"] = data["goalGPA"]
+        if "goalGrade" in data:
+            student_record["goalGrade"] = data["goalGrade"]
         if "availability" in data:
             student_record["availability"] = data["availability"]
         if "sharedAttributes" in data:
@@ -150,20 +152,19 @@ def register_student_events(socketio):
         
         if "currentGPA" in available_attrs and not student_record["currentGPA"]:
             details_complete = False
-        if "goalGPA" in available_attrs and not student_record["goalGPA"]:
+        if "goalGrade" in available_attrs and not student_record["goalGrade"]:
             details_complete = False
         
         student_record["details_complete"] = details_complete
-        student_record["last_updated"] = int(time.time())
         
         # Broadcast updated students list to all clients
         socketio.emit("students_updated", {
             "students": list(tutorial["students"].values())
         }, room=f"tutorial_{tutorial_code}")
     
+
     @socketio.on("enter_tutorial")
     def handle_enter_tutorial():
-        """Handle student entering tutorial lobby"""
         student_uuid = session.get("student_uuid")
         
         if not student_uuid:
@@ -194,9 +195,24 @@ def register_student_events(socketio):
             "round": tutorial["round"]
         })
     
+
     @socketio.on("rejoin_tutorial")
     def handle_rejoin_tutorial():
         """Handle student rejoining after tutorial ended"""
         # This is a placeholder - actual implementation would be handled by
         # the authenticate_student event which will start from scratch
         pass
+
+
+def generate_unqiue_uuid(tutorial_code):
+    uuid = generate_student_uuid()
+    while uuid in tutorials[tutorial_code]["students"]:
+        uuid = generate_student_uuid()
+    return uuid
+
+def generate_unqiue_name(tutorial_code):
+    names = {student["name"] for student in tutorials[tutorial_code].get("students", {}).values()}
+    name = generate_student_name()
+    while name in names:
+        name = generate_student_name()
+    return name

@@ -1,8 +1,13 @@
 from flask_bcrypt import generate_password_hash
+from dotenv import load_dotenv
 import os
 
 from .database import db, Staff, DiscussionCategory, DiscussionQuestion
 
+
+load_dotenv()
+USERNAME = os.getenv("ADMIN_USERNAME", "StaffAdmin")
+PASSWORD = os.getenv("ADMIN_PASSWORD", "We'reGettingHacked!")
 
 DISCUSSION = {
     "academic": [
@@ -60,8 +65,8 @@ def create_staff_admin():
     if Staff.query.first():
         return
 
-    username = os.getenv("ADMIN_USERNAME", "StaffAdmin")
-    password_hash = generate_password_hash(os.getenv("ADMIN_PASSWORD", "We'reGettingHacked!"))
+    username = USERNAME
+    password_hash = generate_password_hash(PASSWORD)
     db.session.add(Staff(username=username, password_hash=password_hash))
     db.session.commit()
 

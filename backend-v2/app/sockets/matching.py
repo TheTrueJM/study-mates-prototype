@@ -14,11 +14,11 @@ def calculate_edge_weight(student_a, student_b):
         gpa_weight = max(0, 5 - (diff * 5))  # 5 if same, 0 if diff >= 1.0
         weight += gpa_weight
     
-    # Goal GPA similarity (max weight: 5)
-    if student_a.get("goalGPA") and student_b.get("goalGPA"):
-        diff = abs(student_a["goalGPA"] - student_b["goalGPA"])
-        goal_weight = max(0, 5 - (diff * 5))
-        weight += goal_weight
+    # Goal Grade similarity (max weight: 5)
+    if student_a.get("goalGrade") and student_b.get("goalGrade"):
+        diff = abs(student_a["goalGrade"] - student_b["goalGrade"])
+        grade_weight = max(0, 5 - (diff * 5))
+        weight += grade_weight
     
     # Availability overlap (max weight: 1 per shared slot)
     if student_a.get("availability") and student_b.get("availability"):
@@ -39,7 +39,7 @@ def calculate_edge_weight(student_a, student_b):
     
     return weight
 
-def form_groups(tutorial_code, group_size, previous_matches=None):
+def form_groups(tutorial_code, group_size):
     """Form groups using graph-based algorithm"""
     from app.sockets import tutorials
     
@@ -71,7 +71,7 @@ def form_groups(tutorial_code, group_size, previous_matches=None):
     # Algorithm state
     unmatched = set(s["uuid"] for s in students)
     groups = {}  # group_id -> [uuids]
-    previous_matches = previous_matches or {}  # uuid -> set of matched uuids
+    previous_matches = tutorials[tutorial_code].get("previous_matches", {})  # uuid -> set of matched uuids
     threshold = max(0.45, 0.75 - (tutorial["round"] * 0.1))  # decreases each round
     
     while unmatched:
