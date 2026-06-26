@@ -2,7 +2,7 @@ from flask import session, request
 from sqlalchemy import func
 import jwt, time, math
 
-from . import tutorials, users
+from sockets import tutorials, users
 from .utils import generate_tutorial_code
 from ..enums import TutorialState
 from ..database.models import DiscussionQuestion
