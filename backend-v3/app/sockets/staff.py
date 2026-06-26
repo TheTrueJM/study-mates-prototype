@@ -1,16 +1,18 @@
 from flask import request
 from flask_socketio import emit, join_room, leave_room
 # from flask_jwt_extended import jwt_required
+from sqlalchemy import func
 from functools import wraps
-import math
+import time, math
 
 from .utils import tutorials, users, sessions, generate_unique_user_uuid, generate_unique_tutorial_code, emit_tutorial_update
 from .timer import timer
 from .matching import form_groups
 from ..enums import TutorialState
+from ..database import DiscussionQuestion
 
 
-def _with_tutorial_auth(f):
+def with_tutorial_auth(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if not (user_id := sessions.get(request.sid)):
@@ -25,18 +27,18 @@ def _with_tutorial_auth(f):
             emit("error", {"message": "Tutorial Not Found"}, to=request.sid, namespace="/staff")
             return
 
-        if tutorial["staff"] != user_id:
+        if tutorial.get("staff") != user_id:
             emit("error", {"message": "Not Authorised"}, to=request.sid, namespace="/staff")
             return
 
-        return f(user_id, code, tutorial, *args, **kwargs)
+        return f(user_id, code, *args, **kwargs)
     return wrapper
 
 
 def register_staff_events(socketio):
     @socketio.on("connect", namespace="/staff")
     def connect(auth: dict = None):
-        # TODO Validate JWT (for all requests or maybe just this?)
+        # TODO Validate JWT (for all requests as wrapper or maybe just this?)
 
         user_id = auth.get("uuid") if isinstance(auth, dict) else None
 
@@ -47,13 +49,18 @@ def register_staff_events(socketio):
                 "tutorial": None
             }
 
+        join_room(user_id, namespace="/staff")
+
         tutorial_code = auth.get("code") if isinstance(auth, dict) else None
         if tutorial_code:
             previous_tutorial = users[user_id]["tutorial"]
-            if previous_tutorial and previous_tutorial in tutorials:
-                pass # TODO End Previous Tutorial
+            if previous_tutorial and previous_tutorial != tutorial_code and previous_tutorial in tutorials:
+                end_tutorial(user_id, previous_tutorial)
+            
             if tutorial_code in tutorials:
                 join_tutorial(user_id, tutorial_code)
+            else:
+                users[user_id]["tutorial"] = None
 
         users[user_id]["role"] = "staff"
         users[user_id]["sessions"].add(request.sid)
@@ -127,16 +134,17 @@ def register_staff_events(socketio):
                 "duration": discussion_time,
                 "remaining": discussion_time,
                 "running": False
-            }
+            },
+            "last_activity": int(time.time())
         }
 
         users[user_id]["tutorial"] = code
-        join_room(code, namespace="/staff")
+        join_tutorial(user_id, code)
 
-        emit("tutorial_created", {"tutorial_code": code}, namespace="/staff")
+        emit("tutorial_created", {"tutorial_code": code}, to=request.sid, namespace="/staff")
 
     @socketio.on("update_settings", namespace="/staff")
-    @_with_tutorial_auth
+    @with_tutorial_auth
     def update_settings(user_id, code, data):
         # TODO Improve Validation Modularity of with Tutorial Creation
         new_group_size = data.get("group_size")
@@ -178,21 +186,21 @@ def register_staff_events(socketio):
 
 
     @socketio.on("return_lobby", namespace="/staff")
-    @_with_tutorial_auth
+    @with_tutorial_auth
     def return_lobby(user_id, code):
-        tutorial = tutorials[code]
-        tutorial["state"] = TutorialState.LOBBY
-        tutorial["groups"].clear()
-        tutorial["questions"].clear()
-        tutorial["timer"]["running"] = False
+        tutorials[code]["state"] = TutorialState.LOBBY
+        tutorials[code]["groups"].clear()
+        tutorials[code]["questions"].clear()
+        tutorials[code]["timer"]["running"] = False
         timer.stop(code)
 
-        for student_id in tutorial["students"]:
-            tutorial["students"][student_id]["group"] = None
+        for student_id in tutorials[code]["students"]:
+            tutorials[code]["students"][student_id]["group"] = None
 
         emit_tutorial_update(code)
 
     @socketio.on("start_grouping")
+    @with_tutorial_auth
     def start_grouping(user_id, code):
         tutorials[code]["questions"].clear()
         tutorials[code]["timer"]["running"] = False
@@ -203,27 +211,96 @@ def register_staff_events(socketio):
 
         try:
             groups = form_groups(tutorials[code])
-        
-            # for group_id, members in groups.items():
-            #     for member_uuid in members:
-            #         if member_uuid not in tutorials[tutorial_code]["previous_matches"]:
-            #             tutorials[tutorial_code]["previous_matches"][member_uuid] = set()
-            #         # Add all other members of this group to previous matches
-            #         for other_member_uuid in members:
-            #             if other_member_uuid != member_uuid:
-            #                 tutorials[tutorial_code]["previous_matches"][member_uuid].add(other_member_uuid)
+
+            for group_id, members in groups.items():
+                for member_id in members:
+                    tutorials[code]["groups"][group_id].append(member_id)
+                    tutorials[code]["students"][member_id]["group"] = group_id
+
+                    tutorials[code]["previous_matches"].setdefault(member_id, set())
+                    for other_member_id in members:
+                        if other_member_id != member_id:
+                            tutorials[code]["previous_matches"][member_id].add(other_member_id)
         
         except Exception as e:
             socketio.emit("error", {"message": e.message}, to=request.sid, namespace="/staff")
             return
 
-        # Emit groups formed event
-        # socketio.emit("groups_formed", {"groups": groups}, room=f"tutorial_{tutorial_code}")
+        emit_tutorial_update(code)
+
+
+    @socketio.on("start_discussion", namespace="/staff")
+    @with_tutorial_auth
+    def start_discussion(user_id, code):
+        tutorials[code]["state"] = TutorialState.DISCUSSION
+        tutorials[code]["timer"]["remaining"] = tutorials[code]["timer"]["duration"]
+        tutorials[code]["timer"]["running"] = True
+        timer.start(code)
+
+        academic = DiscussionQuestion.query.filter_by(category_name="academic").order_by(func.random()).first()
+        casual = DiscussionQuestion.query.filter_by(category_name="casual").order_by(func.random()).first()
+        study = DiscussionQuestion.query.filter_by(category_name="study").order_by(func.random()).first()
+
+        questions = [academic.question, casual.question, study.question]
+        tutorials[code]["questions"] = questions
+
+        emit_tutorial_update(code)
+
+
+    @socketio.on("start_timer", namespace="/staff")
+    @with_tutorial_auth
+    def start_timer(user_id, code):
+        tutorials[code]["timer"]["running"] = True
+        timer.start(code)
+        emit_tutorial_update(code)
+
+    @socketio.on("stop_timer", namespace="/staff")
+    @with_tutorial_auth
+    def stop_timer(user_id, code):
+        tutorials[code]["timer"]["running"] = False
+        timer.stop(code)
+        emit_tutorial_update(code)
+
+    @socketio.on("reset_timer", namespace="/staff")
+    @with_tutorial_auth
+    def reset_timer(user_id, code, data):
+        # TODO Copy Validation Strategy from Creation/Update
+        try:
+            new_time = math.ceil(float(data.get("time")) * 60)
+        except Exception:
+            new_time = 5 * 60
+        
+        tutorials[code]["timer"]["duration"] = new_time
+        tutorials[code]["timer"]["remaining"] = new_time
+        tutorials[code]["timer"]["running"] = False
+        timer.stop(code)
+        emit_tutorial_update(code)
+
+
+    @socketio.on("end_tutorial", namespace="/staff")
+    @with_tutorial_auth
+    def end_tutorial(user_id, code):
+        tutorials[code]["timer"]["running"] = False
+        timer.stop(code)
+
+        tutorials[code]["state"] = TutorialState.ENDED
+        emit("tutorial_ended", room=code, namespace="/")
+
+        student_ids = list(tutorials[code].get("students", {}).keys())
+        for student_id in student_ids:
+            if student_id in users:
+                users[student_id]["tutorial"] = None
+                # TODO Leave Tutorial Rooms on Student End?
+                emit("left_tutorial", room=student_id, namespace="/")
+
+        users[user_id]["tutorial"] = None
+        del tutorials[code]
+
+        leave_room(code, namespace="/staff")
+        emit("left_tutorial", to=request.sid, namespace="/staff")
 
 
 def join_tutorial(user_id, code):
-    join_room(user_id, namespace="/staff")
-
     if not (user := users.get(user_id)) or not isinstance(user, dict):
         emit("error", {"message": "User Session Not Found"}, to=request.sid, namespace="/staff")
         return

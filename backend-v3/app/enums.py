@@ -49,11 +49,11 @@ class MeetingMode(Enum):
 
 
 class AttributeType(Enum):
-    CURRENT_GPA = "currentGPA"
-    GOAL_GRADE = "goalGrade"
+    CURRENT_GPA = "current_gpa"
+    GOAL_GRADE = "goal_grade"
     AVAILABILITY = "availability"
     COMMUNICATION = "communication"
-    MEETING_MODE = "meetingMode"
+    MEETING_MODE = "meeting_mode"
     YEAR = "year"
     SEMESTER = "semester"
     ACCESSIBILITY = "accessibility"
@@ -61,7 +61,7 @@ class AttributeType(Enum):
 
 VALID_GRADES = {grade.value for grade in GradeType}
 VALID_AVAILABILITY_CODES = {day.value + time.value for day in Day for time in TimePeriod}
-VALID_COMMUNICATION_METHOD = {method.value for method in CommunicationMethod}
+VALID_COMMUNICATION_METHODS = {method.value for method in CommunicationMethod}
 VALID_MEETING_MODE = {mode.value for mode in MeetingMode}
 
 VALID_ATTRIBUTES = {attribute.value for attribute in AttributeType}
@@ -79,3 +79,13 @@ def parse_availability(availability_raw) -> list[str]:
         return list()
 
     return list(codes & VALID_AVAILABILITY_CODES)
+
+def parse_communication(communication_raw) -> list[str]:
+    if isinstance(communication_raw, list):
+        methods = {method.strip().lower() for method in communication_raw if isinstance(method, str) and method.strip()}
+    elif isinstance(communication_raw, str) and communication_raw.strip():
+        methods = {method.strip().lower() for method in communication_raw.split(",") if method.strip()}
+    else:
+        return list()
+
+    return list(methods & VALID_COMMUNICATION_METHODS)

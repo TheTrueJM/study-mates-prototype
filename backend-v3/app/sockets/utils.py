@@ -85,7 +85,9 @@ def emit_tutorial_update(code):
         # TODO Update Error Messages
         emit("error", {"message": "Tutorial Not Found"}, room=code, namespace="/")
         return
-
+    
+    tutorials[code]["last_activity"] = int(time.time())
+                    
     students = tutorial.get("students", {})
     groups = tutorial.get("groups", {})
 

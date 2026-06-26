@@ -1,0 +1,12 @@
+eventlet
+flask
+flask-bcrypt
+flask-jwt-extended
+flask-login
+flask-socketio
+flask-sqlalchemy
+sqlalchemy
+numpy
+pudb
+pytest
+python-dotenv
