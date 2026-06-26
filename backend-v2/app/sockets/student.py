@@ -1,7 +1,7 @@
 from flask import session
 import time
 
-from sockets import tutorials
+from . import tutorials
 from .utils import generate_student_uuid, generate_student_name
 from ..enums import TutorialState
 
@@ -23,14 +23,14 @@ def register_student_events(socketio):
             return
         
         # Generate UUID and name
-        student_uuid = generate_unqiue_uuid(tutorial_code)
-        student_name = generate_unqiue_name(tutorial_code)
+        student_uuid = generate_unique_uuid()
+        student_name = generate_unique_name()
         
         # Create student record
         tutorials[tutorial_code]["students"][student_uuid] = {
             "name": student_name,
             "currentGPA": None,
-            "goalGrade": None,
+            "goalGPA": None,
             "availability": {},
             "shared_attributes": [],
             "group": None,
@@ -204,13 +204,13 @@ def register_student_events(socketio):
         pass
 
 
-def generate_unqiue_uuid(tutorial_code):
+def generate_unique_uuid(tutorial_code):
     uuid = generate_student_uuid()
     while uuid in tutorials[tutorial_code]["students"]:
         uuid = generate_student_uuid()
     return uuid
 
-def generate_unqiue_name(tutorial_code):
+def generate_unique_name(tutorial_code):
     names = {student["name"] for student in tutorials[tutorial_code].get("students", {}).values()}
     name = generate_student_name()
     while name in names:

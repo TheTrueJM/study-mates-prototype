@@ -1,7 +1,7 @@
 import time
 import threading
 
-from sockets import tutorials
+from . import tutorials
 from ..enums import TutorialState
 
 class TutorialTimer:
@@ -83,7 +83,7 @@ class TutorialTimer:
                         {"phase": "discussion"},
                         room=f"tutorial_{self.tutorial_code}"
                     )
-                    tutorials[self.tutorial_code]["state"] = TutorialState.AWAITING
+                    tutorials[self.tutorial_code]["state"] = TutorialState.GROUPS
     
     def stop(self):
         self.running = False

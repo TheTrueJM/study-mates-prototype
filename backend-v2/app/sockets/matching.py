@@ -1,8 +1,8 @@
-# In backend-v2/app/sockets/matching.py
-
 import random
 from collections import deque
+
 from app.enums import AttributeType
+
 
 def calculate_edge_weight(student_a, student_b):
     """Calculate similarity weight between two students"""

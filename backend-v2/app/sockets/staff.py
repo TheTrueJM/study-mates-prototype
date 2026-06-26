@@ -2,7 +2,7 @@ from flask import session, request
 from sqlalchemy import func
 import jwt, time, math
 
-from sockets import tutorials, users
+from . import tutorials, users
 from .utils import generate_tutorial_code
 from ..enums import TutorialState
 from ..database.models import DiscussionQuestion
@@ -44,7 +44,7 @@ def register_staff_events(socketio):
             socketio.emit("error", {"message": "Invalid data"})
             return
         
-        tutorial_code = generate_unqiue_code()
+        tutorial_code = generate_unique_code()
         tutorial_name = data.get("name", "")
         group_size = data.get("group_size")
         available_attributes = data.get("available_attributes")
@@ -133,7 +133,7 @@ def register_staff_events(socketio):
                         tutorials[tutorial_code]["previous_matches"][member_uuid].add(other_member_uuid)
         
         # Clear discussion questions
-        tutorial["questions"].clear()
+        tutorials[tutorial_code]["questions"].clear()
 
         # Emit groups formed event
         socketio.emit("groups_formed", {"groups": groups}, room=f"tutorial_{tutorial_code}")
@@ -176,7 +176,7 @@ def register_staff_events(socketio):
         study = DiscussionQuestion.query.filter_by(category_name="study").order_by(func.random()).first()
 
         questions = [academic.question, casual.question, study.question]
-        tutorial["questions"] = questions
+        tutorials[tutorial_code]["questions"] = questions
 
         # Emit discussion started event
         socketio.emit("discussion_started", {
@@ -214,11 +214,11 @@ def register_staff_events(socketio):
         
         # Emit updated state
         socketio.emit("tutorial_state", {
-            "state": tutorial["state"],
-            "students": list(tutorial["students"].values()),
-            "groups": tutorial["groups"],
-            "timer": tutorial["timer"],
-            "round": tutorial["round"]
+            "state": tutorials[tutorial_code]["state"],
+            "students": list(tutorials[tutorial_code]["students"].values()),
+            "groups": tutorials[tutorial_code]["groups"],
+            "timer": tutorials[tutorial_code]["timer"],
+            "round": tutorials[tutorial_code]["round"]
         }, room=f"tutorial_{tutorial_code}")
     
 
@@ -259,7 +259,7 @@ def register_staff_events(socketio):
         del tutorials[tutorial_code]
 
 
-def generate_unqiue_code(length = 6):
+def generate_unique_code(length = 6):
     code = generate_tutorial_code()
     while code in tutorials:
         code = generate_tutorial_code()
