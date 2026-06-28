@@ -15,7 +15,7 @@ def login():
     data = request.get_json()
 
     if not isinstance(data, dict):
-        return jsonify({"error": "Invalid login data or format"}), 400
+        return jsonify({"message": "Invalid login data or format"}), 400
     
     username = data.get("username")
     password = data.get("password")
@@ -24,9 +24,9 @@ def login():
 
     # Validate staff identity and password
     if not isinstance(staff, Staff):
-        return jsonify({"error": "Staff username not found"}), 400
+        return jsonify({"message": "Staff username not found"}), 400
     if not check_password_hash(staff.password_hash, password):
-        return jsonify({"error": "Incorrect password"}), 401
+        return jsonify({"message": "Incorrect password"}), 401
     
     # Generate JWT
     token = create_access_token(identity=staff.id)
@@ -37,12 +37,12 @@ def login():
 @staff_bp.route("/create-tutorial", methods=["POST"])
 def create_tutorial():
     # This endpoint is handled via Socket.IO events
-    return jsonify({"error": "Use Socket.IO to create tutorial"}), 400
+    return jsonify({"message": "Use Socket.IO to create tutorial"}), 400
 
 @staff_bp.route("/end-tutorial", methods=["POST"])
 def end_tutorial():
     # This endpoint is handled via Socket.IO events
-    return jsonify({"error": "Use Socket.IO to end tutorial"}), 400
+    return jsonify({"message": "Use Socket.IO to end tutorial"}), 400
 
 
 # ===== [VERY OLD] Staff Account Invitation & Registration ===== #

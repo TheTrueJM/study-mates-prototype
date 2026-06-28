@@ -83,10 +83,9 @@ def emit_tutorial_update(code):
     tutorial = tutorials.get(code)
     if not tutorial:
         # TODO Update Error Messages
-        emit("error", {"message": "Tutorial Not Found"}, room=code, namespace="/")
+        for ns in ["/", "/staff"]:
+            emit("error", {"message": "Tutorial Not Found"}, room=code, namespace=ns)
         return
-    
-    tutorials[code]["last_activity"] = int(time.time())
                     
     students = tutorial.get("students", {})
     groups = tutorial.get("groups", {})
@@ -96,10 +95,12 @@ def emit_tutorial_update(code):
         "tutorial_name": tutorial.get("name"),
         "state": tutorial.get("state"),
         "group_size": tutorial.get("group_size"),
+        "max_groups": tutorial.get("max_groups"),
+        "available_attributes": tutorial.get("available_attributes", []),
         "students": students,
         "groups": groups,
         "questions": tutorial.get("questions", []),
-        "timer": tutorial.get("timer"),
+        "timer": tutorial.get("timer", {}),
     }
     emit("tutorial_update", staff_payload, room=code, namespace="/staff")
 
@@ -128,8 +129,8 @@ def emit_tutorial_update(code):
 
         payload = {
             "username": student_data.get("name"),
-            "attributes": student_data.get("attributes"),
-            "shared_attributes": student_data.get("shared_attributes"),
+            "attributes": student_data.get("attributes", {}),
+            "shared_attributes": student_data.get("shared_attributes", []),
             "attributes_complete": student_data.get("attributes_complete"),
             "tutorial_code": code,
             "tutorial_name": tutorial.get("name"),
@@ -137,7 +138,7 @@ def emit_tutorial_update(code):
             "group_number": group_number,
             "group_members": members,
             "questions": tutorial.get("questions", []),
-            "timer": tutorial.get("timer")
+            "timer": tutorial.get("timer", {})
         }
         emit("student_update", payload, room=student_id, namespace="/")
 

@@ -83,7 +83,7 @@ def register_student_events(socketio):
         join_tutorial(user_id, code)
 
     # TODO Verify if Necessary
-    # @socketio.on("fetch_tutorial", namespace="/staff")
+    # @socketio.on("fetch_tutorial", namespace="/")
     # @with_tutorial_auth
     # def fetch_tutorial(user_id, code, tutorial):
     #     emit_tutorial_update(code)
@@ -159,9 +159,6 @@ def register_student_events(socketio):
 
         shared_attributes = set(data.get("shared_attributes")) if isinstance(data.get("shared_attributes"), list) else set()
         tutorials[code]["students"][user_id]["shared_attributes"] = list(shared_attributes & VALID_ATTRIBUTES)
-                
-        # TODO Move this elsewhere to a details confirmation (this regular update details can occur on each attribute input)
-        tutorials[code]["students"][user_id]["attributes_complete"] = True
         
         emit(
             "details_updated",
@@ -172,6 +169,20 @@ def register_student_events(socketio):
             to=request.sid, namespace="/"
         )
 
+        emit_tutorial_update(code)
+
+    @socketio.on("confirm_details")
+    @with_tutorial_auth
+    def confirm_details(user_id, code):
+        tutorials[code]["students"][user_id]["attributes_complete"] = True
+        emit(
+            "details_confirmed",
+            {
+                "attributes": tutorials[code]["students"][user_id]["attributes"],
+                "shared_attributes":tutorials[code]["students"][user_id]["shared_attributes"]
+            },
+            to=request.sid, namespace="/"
+        )
         emit_tutorial_update(code)
 
 

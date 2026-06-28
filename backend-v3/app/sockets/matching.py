@@ -6,7 +6,7 @@ from app.enums import AttributeType, GradeType, MeetingMode, VALID_GRADES
 
 def form_groups(tutorial):
     group_size = tutorial["group_size"]
-    max_groups = tutorial["max_groups"]
+    max_groups = tutorial["max_groups"] # TODO Add Max Groups Restriction
     
     student_details = tutorial["students"]
     student_ids = list(student_details.keys())

@@ -57,10 +57,9 @@ def register_staff_events(socketio):
             if previous_tutorial and previous_tutorial != tutorial_code and previous_tutorial in tutorials:
                 end_tutorial(user_id, previous_tutorial)
             
+            users[user_id]["tutorial"] = None
             if tutorial_code in tutorials:
                 join_tutorial(user_id, tutorial_code)
-            else:
-                users[user_id]["tutorial"] = None
 
         users[user_id]["role"] = "staff"
         users[user_id]["sessions"].add(request.sid)
@@ -147,6 +146,8 @@ def register_staff_events(socketio):
     @with_tutorial_auth
     def update_settings(user_id, code, data):
         # TODO Improve Validation Modularity of with Tutorial Creation
+        tutorials[code]["last_activity"] = int(time.time())
+
         new_group_size = data.get("group_size")
         new_max_groups = data.get("max_groups")
         new_available_attributes = data.get("available_attributes")
@@ -188,6 +189,8 @@ def register_staff_events(socketio):
     @socketio.on("return_lobby", namespace="/staff")
     @with_tutorial_auth
     def return_lobby(user_id, code):
+        tutorials[code]["last_activity"] = int(time.time())
+
         tutorials[code]["state"] = TutorialState.LOBBY
         tutorials[code]["groups"].clear()
         tutorials[code]["questions"].clear()
@@ -202,6 +205,8 @@ def register_staff_events(socketio):
     @socketio.on("start_grouping")
     @with_tutorial_auth
     def start_grouping(user_id, code):
+        tutorials[code]["last_activity"] = int(time.time())
+
         tutorials[code]["questions"].clear()
         tutorials[code]["timer"]["running"] = False
         timer.stop(code)
@@ -232,6 +237,8 @@ def register_staff_events(socketio):
     @socketio.on("start_discussion", namespace="/staff")
     @with_tutorial_auth
     def start_discussion(user_id, code):
+        tutorials[code]["last_activity"] = int(time.time())
+
         tutorials[code]["state"] = TutorialState.DISCUSSION
         tutorials[code]["timer"]["remaining"] = tutorials[code]["timer"]["duration"]
         tutorials[code]["timer"]["running"] = True
@@ -250,6 +257,8 @@ def register_staff_events(socketio):
     @socketio.on("start_timer", namespace="/staff")
     @with_tutorial_auth
     def start_timer(user_id, code):
+        tutorials[code]["last_activity"] = int(time.time())
+
         tutorials[code]["timer"]["running"] = True
         timer.start(code)
         emit_tutorial_update(code)
@@ -257,6 +266,8 @@ def register_staff_events(socketio):
     @socketio.on("stop_timer", namespace="/staff")
     @with_tutorial_auth
     def stop_timer(user_id, code):
+        tutorials[code]["last_activity"] = int(time.time())
+
         tutorials[code]["timer"]["running"] = False
         timer.stop(code)
         emit_tutorial_update(code)
@@ -264,6 +275,8 @@ def register_staff_events(socketio):
     @socketio.on("reset_timer", namespace="/staff")
     @with_tutorial_auth
     def reset_timer(user_id, code, data):
+        tutorials[code]["last_activity"] = int(time.time())
+
         # TODO Copy Validation Strategy from Creation/Update
         try:
             new_time = math.ceil(float(data.get("time")) * 60)
@@ -285,6 +298,7 @@ def register_staff_events(socketio):
 
         tutorials[code]["state"] = TutorialState.ENDED
         emit("tutorial_ended", room=code, namespace="/")
+        emit("tutorial_ended", room=code, namespace="/staff")
 
         student_ids = list(tutorials[code].get("students", {}).keys())
         for student_id in student_ids:
@@ -307,6 +321,10 @@ def join_tutorial(user_id, code):
 
     if user.get("role") != "staff":
         emit("error", {"message": "Invalid User Role"}, to=request.sid, namespace="/staff")
+        return
+    
+    if tutorials.get(code, {}).get("staff") != user_id:
+        emit("error", {"message": "Tutorial Managed by Another Staff User"}, to=request.sid, namespace="/staff")
         return
 
     user["tutorial"] = code

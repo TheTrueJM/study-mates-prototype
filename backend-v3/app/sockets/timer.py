@@ -83,7 +83,7 @@ class AsyncTimer:
                             "timer_notification", message, room=code, namespace="/staff"
                         )
                     else:
-                        utils._emit_tutorial_update(code)
+                        utils.emit_tutorial_update(code)
 
             eventlet.sleep(0.001)
 
