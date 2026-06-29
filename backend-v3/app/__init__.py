@@ -1,4 +1,5 @@
 from flask import Flask, Blueprint
+from flask_cors import CORS
 from flask_socketio import SocketIO
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
@@ -21,8 +22,14 @@ JWT_KEY = os.getenv("JWT_SECRET_KEY")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRY = int(os.getenv("JWT_EXPIRATION_HOURS")) if os.getenv("JWT_EXPIRATION_HOURS", "").isdigit() else 24
 
+ALL_ORIGINS = os.getenv("FRONTEND_ORIGINS")
+if ALL_ORIGINS:
+    FRONTEND_ORIGINS = [origin.strip() for origin in ALL_ORIGINS.split(',') if origin.strip()]
+else:
+    FRONTEND_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
-socketio = SocketIO(logger=LOGGER)
+
+socketio = SocketIO(logger=LOGGER, cors_allowed_origins=FRONTEND_ORIGINS, async_mode="eventlet")
 
 
 def create_app():
@@ -35,6 +42,7 @@ def create_app():
     db.init_app(app)
     socketio.init_app(app, cors_allowed_origins="*", async_mode="threading", ping_timeout=60, ping_interval=25)
 
+    CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True)
     JWTManager(app)
     
     # Register blueprints

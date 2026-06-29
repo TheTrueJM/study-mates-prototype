@@ -1,4 +1,4 @@
-export default function Modal({ isOpen, title, onClose, children }) {
+export default function Modal({ title, isOpen, onClose, children }) {
   if (!isOpen) return null;
 
   return (

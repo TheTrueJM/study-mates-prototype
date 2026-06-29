@@ -67,7 +67,7 @@ def register_student_events(socketio):
         )
 
 
-    @socketio.on("enter_tutorial")
+    @socketio.on("enter_tutorial", namespace="/")
     def enter_tutorial(data):
         user_id = sessions.get(request.sid)
         user = users.get(user_id, {})
@@ -89,7 +89,7 @@ def register_student_events(socketio):
     #     emit_tutorial_update(code)
 
 
-    @socketio.on("update_details")
+    @socketio.on("update_details", namespace="/")
     @with_tutorial_auth
     def update_details(user_id, code, data):
         if not isinstance(data, dict):
@@ -171,7 +171,7 @@ def register_student_events(socketio):
 
         emit_tutorial_update(code)
 
-    @socketio.on("confirm_details")
+    @socketio.on("confirm_details", namespace="/")
     @with_tutorial_auth
     def confirm_details(user_id, code):
         tutorials[code]["students"][user_id]["attributes_complete"] = True
@@ -186,7 +186,7 @@ def register_student_events(socketio):
         emit_tutorial_update(code)
 
 
-    @socketio.on("leave_tutorial")
+    @socketio.on("leave_tutorial", namespace="/")
     @with_tutorial_auth
     def leave_tutorial(user_id, code):
         del tutorials[code]["students"][user_id]
@@ -197,7 +197,7 @@ def register_student_events(socketio):
 
 
     # TODO Verify if Necessary
-    # @socketio.on("reset_session")
+    # @socketio.on("reset_session", namespace="/")
     # def reset_session():
     #     if not (user_id := utils.sessions.get(request.sid)):
     #         emit("error", ERR_SESSION_NOT_FOUND, to=request.sid)
@@ -253,6 +253,7 @@ def join_tutorial(user_id, code):
         late_assignment_to_group(code, user_id)
 
     join_room(code, namespace="/")
+    emit("tutorial_joined", {"tutorial_code": code}, to=request.sid, namespace="/")
 
     emit_tutorial_update(code)
 

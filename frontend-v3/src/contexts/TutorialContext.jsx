@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { getSocket, getStaffSocket, disconnectSocket, disconnectStaffSocket } from "../socket";
+
+import { getSocket, disconnectSocket } from "../socket";
 
 
 const TutorialContext = createContext(null);
@@ -12,8 +13,11 @@ export function TutorialProvider({ children }) {
   const [tutorialCode, setTutorialCode] = useState(null);
   const [tutorialName, setTutorialName] = useState(null);
   const [state, setState] = useState(null);
+  const [availableAttributes, setAvailableAttributes] = useState([]);
   const [questions, setQuestions] = useState([]);
-  const [timer, setTimer] = useState({});
+  const [timeDuration, setTimeDuration] = useState(null);
+  const [timeRemaining, setTimeRemaining] = useState(null);
+  const [timeRunning, setTimeRunning] = useState(null);
 
   const [studentName, setStudentName] = useState(null);
   const [attributes, setAttributes] = useState({});
@@ -23,7 +27,6 @@ export function TutorialProvider({ children }) {
   const [groupMembers, setGroupMembers] = useState({});
 
   const [students, setStudents] = useState({});
-  const [availableAttributes, setAvailableAttributes] = useState([]);
   const [groups, setGroups] = useState({});
   const [groupSize, setGroupSize] = useState(null);
   const [maxGroups, setMaxGroups] = useState(null);
@@ -32,9 +35,10 @@ export function TutorialProvider({ children }) {
 
 
   useEffect(() => {
-    socketRef.current = getSocket();
+    socketRef.current = getSocket("/");
 
     socketRef.current.on("session", (data) => {
+      console.log('session');
       if (data) {
         const uuid = data.user_id;
         const tutorialCode = data.code;
@@ -55,7 +59,9 @@ export function TutorialProvider({ children }) {
       setTutorialName(null);
       setState(null);
       setQuestions([]);
-      setTimer({});
+      setTimeDuration(null);
+      setTimeRemaining(null);
+      setTimeRunning(null);
 
       setStudentName(null);
       setAttributes({});
@@ -81,6 +87,10 @@ export function TutorialProvider({ children }) {
     });
 
     // Student Events
+    socketRef.current.on("tutorial_joined", (data) => {
+      navigate("/tutorial/" + data.get("tutorial_code", tutorialCode))
+    });
+
     socketRef.current.on("details_updated", (data) => {
       setAttributes(data.attributes);
       setSharedAttributes(data.sharedAttributes);
@@ -103,12 +113,36 @@ export function TutorialProvider({ children }) {
       setGroupNumber(data.get("group_number"));
       setGroupMembers(data.get("group_members"));
       setQuestions(data.get("questions"));
-      setTimer(data.get("timer"));
+
+      const timer = data.get("timer", {})
+      setTimeDuration(timer.get("duration"));
+      setTimeRemaining(timer.get("remaining"));
+      setTimeRunning(timer.get("running"));
     });
 
     // Staff Events
     socketRef.current.on("tutorial_created", (data) => {
+      const tutorial_code = data.get("tutorial_code")
+      setTutorialCode(tutorial_code);
+      navigate(`/staff/tutorial/${tutorial_code}`);
+    });
+
+    socketRef.current.on("tutorial_update", (data) => {
       setTutorialCode(data.get("tutorial_code"));
+      setTutorialName(data.get("tutorial_name"));
+      setState(data.get("state"));
+      setGroupSize(data.get("group_size"));
+      setMaxGroups(data.get("max_groups"));
+      setAvailableAttributes(data.get("available_attributes", []));
+
+      setStudents(data.get("students", {}));
+      setGroups(data.get("groups", {}));
+      setQuestions(data.get("questions", []));
+
+      const timer = data.get("timer", {})
+      setTimeDuration(timer.get("duration"));
+      setTimeRemaining(timer.get("remaining"));
+      setTimeRunning(timer.get("running"));
     });
 
     // Timer Events
@@ -119,7 +153,7 @@ export function TutorialProvider({ children }) {
     });
 
     return () => {
-      socket.off();
+      socketRef.current.off();
     };
   }, []);
 
@@ -155,6 +189,8 @@ export function TutorialProvider({ children }) {
 
   // Staff Actions
   const createTutorial = (settings) => {
+     console.log("Tutorial: ", socketRef.current);
+
     socketRef.current.emit("create_tutorial", settings);
   };
 
@@ -194,7 +230,7 @@ export function TutorialProvider({ children }) {
 
   return (
     <TutorialContext.Provider value={{
-      tutorialCode, tutorialName, state, questions, timer,
+      tutorialCode, tutorialName, state, questions, timeDuration, timeRemaining, timeRunning,
       studentName, attributes, sharedAttributes, attributesComplete, groupNumber, groupMembers,
       students, availableAttributes, groups, groupSize, maxGroups,
       switchToStaff, switchToStudent, enterTutorial, updateDetails, confirmDetails, leaveTutorial,

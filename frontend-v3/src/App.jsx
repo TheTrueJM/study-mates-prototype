@@ -19,7 +19,7 @@ import NotFound from './pages/NotFound';
 
 // ProtectedStudentRoute - Requires Student ...
 // TODO: Ensure Students Cannot Access Invalid Tutorials
-export function ProtectedStudentRoute({ childre }) {
+export function ProtectedStudentRoute({ children }) {
   return children;
 }
 
@@ -57,7 +57,7 @@ function App() {
         {/* Staff Routes */}
         <Route path="/staff/login" element={<Login />} />
         <Route path="/staff/" 
-          element={<ProtectedStaffRoute> <TutorialSetup /> </ProtectedStaffRoute>} 
+          element={<ProtectedStaffRoute> <SetupTutorial /> </ProtectedStaffRoute>} 
         />
         <Route path="/staff/tutorial/:code" 
           element={ <ProtectedStaffRoute> <StaffTutorial /> </ProtectedStaffRoute>} 

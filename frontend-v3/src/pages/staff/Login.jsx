@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { useAuth } from "../contexts/AuthContext";
+import Card from "../../components/Card";
+import Button from '../../components/Button';
+import TextInput from "../../components/TextInput";
+
+import { useAuth } from "../../contexts/AuthContext";
 
 
 export default function Login() {
@@ -15,8 +19,7 @@ export default function Login() {
 
   const { login } = useAuth();
 
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-  const LOGIN_URL = `${BACKEND_URL}/user/login`;
+  const LOGIN_URL = "/staff/login";
 
 
   const loginUser = (event) => {
@@ -27,7 +30,7 @@ export default function Login() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email: email, password: password }),
+      body: JSON.stringify({ username, password }),
     })
       .then(async response => {
         const data = await response.json();
@@ -51,48 +54,39 @@ export default function Login() {
   
   return (
     <div className="container container-sm mt-lg">
-      <div className="card">
-        <h1 className="card-header">Staff Login</h1>
-
+      <Card title="Staff Login">
         <div className="flex-col gap-md" style={{ display: 'flex' }}>
-          {/* Staff username input */}
-          <Input
+          {/* Staff Username Input */}
+          <TextInput
+            name="username"
             label="Enter Username"
             onChange={setUsername}
             placeholder="Username..."
           />
 
-          {/* Password username input */}
-          <Input
+          {/* Staff Password Input */}
+          <TextInput
+            name="password"
             label="Enter Password"
             type="password"
             onChange={setPassword}
             placeholder="Password..."
+            password={true}
           />
 
           <Button variant="primary" fullWidth onClick={loginUser}>
             Login
           </Button>
         </div>
-      </div>
+      </Card>
     </div>
-    // <main className="h-full">
-    //   <FloatSection title={"Account Login"}>
-    //     <form className="h-full flex flex-col justify-between" onSubmit={loginUser}>
-    //       <div className="formInputs mb-5">
-    //         <TextInput type="email" name="email" label="Email Address" value={email} setValue={setEmail} autoComplete="email" required={true} />
-    //         <TextInput type="password" name="password" label="Password" value={password} setValue={setPassword} autoComplete="password" required={true} />
-    //       </div>
 
-    //       <div className="text-center">
-    //         <div className={`feedback ${feedbackType}`}>{feedback}</div>
-    //         <div className="formButtons grid-cols-2">
-    //           <Link className="formButton buttonOutline col-span-2 sm:col-span-1" to="/register">Go to Register</Link>
-    //           <button type="submit" className="formButton buttonAction col-span-2 sm:col-span-1">Login</button>
-    //         </div>
-    //       </div>
-    //     </form>
-    //   </FloatSection>
-    // </main>
+    // <div className="text-center">
+    //   <div className={`feedback ${feedbackType}`}>{feedback}</div>
+    //   <div className="formButtons grid-cols-2">
+    //     <Link className="formButton buttonOutline col-span-2 sm:col-span-1" to="/register">Go to Register</Link>
+    //     <button type="submit" className="formButton buttonAction col-span-2 sm:col-span-1">Login</button>
+    //   </div>
+    // </div>
   );
 }

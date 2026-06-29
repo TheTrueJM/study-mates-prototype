@@ -135,6 +135,7 @@ def emit_tutorial_update(code):
             "tutorial_code": code,
             "tutorial_name": tutorial.get("name"),
             "state": tutorial.get("state"),
+            "available_attributes": tutorial.get("available_attributes", []),
             "group_number": group_number,
             "group_members": members,
             "questions": tutorial.get("questions", []),

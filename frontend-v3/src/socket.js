@@ -1,9 +1,6 @@
 import { io } from "socket.io-client";
 
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-
-
 let socket = null;
 let currentNamespace = null;
 
@@ -13,7 +10,7 @@ export function getSocket(namespace = "/") {
     const code = localStorage.getItem("tutorialCode");
 
     currentNamespace = namespace;
-    socket = io(BACKEND_URL + currentNamespace, {
+    socket = io("/socket.io" + currentNamespace, {
       auth: { user_id, code },
       transports: ["websocket", "polling"],
       reconnection: true,
@@ -22,6 +19,8 @@ export function getSocket(namespace = "/") {
       timeout: 20000
     });
   }
+
+  console.log("Socket: ", socket);
 
   return socket;
 }
@@ -32,7 +31,7 @@ export function disconnectSocket() {
     else if (currentNamespace === "/staff") socket.emit("end_tutorial");
 
     socket.disconnect();
-    delete socket;
+    socket = null;
     currentNamespace = null;
   }
 }

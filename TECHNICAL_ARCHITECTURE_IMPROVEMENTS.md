@@ -75,7 +75,7 @@ The original v1 codebase has critical CORS/cookie compatibility issues:
      - Generate UUID: uuid4()
      - Generate name: "Colour-Animal" format (e.g., "Blue-Elephant")
      - Create student record in tutorials[tutorial_code].students[uuid]
-     - Store in session: session["student_uuid"] = uuid
+     - Store in session: session["uuid"] = uuid
      - Emit "authenticated" with { uuid, name, tutorial_code }
      - Join socket room: tutorial_<tutorial_code>
 
@@ -92,7 +92,7 @@ The original v1 codebase has critical CORS/cookie compatibility issues:
    - Payload: { session_id: <from previous auth> }
    - OR server can detect reconnection via session cookie
 
-3. Server looks up session["student_uuid"]
+3. Server looks up session["uuid"]
    - If found and tutorial still active:
      - Restore student to same room
      - Emit "reauthenticated" with { uuid, name, tutorial_code }
@@ -140,7 +140,7 @@ Staff accounts ARE stored in the SQLite database (unlike student data):
 
 ```python
 # In backend/app/database/models.py (NEW)
-class Staff(Base):
+class Staff():
     __tablename__ = "staff"
     id = Column(Integer, primary_key=True)
     username = Column(String(80), unique=True, nullable=False)
@@ -206,7 +206,6 @@ class Staff(Base):
 ```python
 # In backend-v2/app/__init__.py or .env
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "change-in-production")
-JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_HOURS = 24
 ```
 
@@ -225,9 +224,8 @@ tutorials = {}
 # Structure:
 tutorials = {
     "tutorial_code": {  # e.g., "ABCDEF"
-        "staff_id": <staff_db_id>,           # Staff who created it
         "staff_uuid": <staff_socket_uuid>,   # Staff's socket session UUID
-        "name": "CSSE1002 Tutorial 3",       # Tutorial name
+        "name": "CS26 Tutorial 1",       # Tutorial name
         "state": "lobby",                    # See §4.2
         "group_size": 4,                     # Members per group
         "available_attributes": [            # Staff-selected attributes
@@ -249,8 +247,6 @@ tutorials = {
                     "goalGPA"
                 ],
                 "group": None,               # Group ID or None
-                "joined_at": 1690000000,     # Unix timestamp
-                "last_updated": 1690000000,  # Unix timestamp
                 "details_complete": False     # True if student submitted all entered data
             }
         },
@@ -259,31 +255,17 @@ tutorials = {
             "G2": ["uuid5", "uuid6", "uuid7", "uuid8"]
         },
         "questions": {                         # Pre-loaded discussion questions
-            "academic": [
-                "What are your career goals after graduation?",
-                "What study techniques work best for you?"
-            ],
-            "casual": [
-                "What is your favourite video game?",
-                "How do you like to unwind after a long day?"
-            ],
-            "smart": [
-                "What unit did you enjoy the most?",
-                "When did you realise you wanted to study your course?"
-            ]
+            "What study techniques work best for you?" # "academic" category
+            "How do you like to unwind after a long day?" # "casual" category
+            "When did you realise you wanted to study your course?" # "smart" category
         },
         "timer": {                             # Current timer state
             "duration": 0,                     # Seconds
             "remaining": 0,                    # Seconds
             "running": False,
-            "phase": None                      # "intro" | "discussion" | None
         },
-        "intro_duration": 30,                  # Fixed 30-second intro period
         "discussion_duration": 600,            # 10 minutes (configurable by staff)
-        "round": 0,                            # Current round number
-        "created_at": 1690000000,              # Unix timestamp
         "last_activity": 1690000000,           # Unix timestamp
-        "ended": False                         # True when tutorial is ended
     }
 }
 ```
@@ -304,7 +286,7 @@ any → ended           (staff ends tutorial or auto-expires)
 **State rules:**
 - **lobby:** Students can join and enter details. No groups formed.
 - **groups:** Groups are formed and displayed. Students are seating. No timer running.
-- **discussion:** Intro timer OR discussion timer running. Groups displayed with questions.
+- **discussion:** Discussion timer running. Groups displayed with questions.
 - **ended:** All data cleared. Students kicked. No further actions.
 
 ### 4.3 Available Attributes (Staff-Toggled)
@@ -374,7 +356,7 @@ shared_attributes = ["currentGPA"]  # only GPA shared, goalGPA and availability 
 ┌─────────────────────────────────────────────────────────────────┐
 │ PHASE 3: GROUP FORMATION & DISCUSSION (Automated)               │
 ├─────────────────────────────────────────────────────────────────┤
-│ 1. Staff clicks "Start Round" (from lobby)                      │
+│ 1. Staff clicks "Form Groups" (from lobby)                      │
 │ 2. Server:                                                      │
 │    - Runs matching algorithm (see §7)                           │
 │    - Sets state to "groups"                                     │
@@ -382,12 +364,9 @@ shared_attributes = ["currentGPA"]  # only GPA shared, goalGPA and availability 
 │ 3. Staff clicks "Start Discussion"                              │
 │ 4. Server:                                                      │
 │    - Sets state to "discussion"                                 │
-│    - Starts auto intro timer (30s)                              │
-│    - Emits "discussion_started" with intro + discussion durations│
-│ 5. 30s elapsed (auto) → Server auto-switches to discussion timer│
-│ 6. Discussion timer elapses (auto) → Server sets state to "groups"│
-│ 7. Server re-emits "groups_formed" (new groups)                 │
-│ 8. Staff chooses: "next round" or "back to lobby"               │
+│    - Emits "discussion_started" discussion durations            │
+│ 6. Discussion timer elapses (auto)                              │
+│ 8. Staff chooses: "next groups" or "back to lobby"              │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐

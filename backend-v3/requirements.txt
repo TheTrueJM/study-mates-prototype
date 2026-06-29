@@ -1,6 +1,7 @@
 eventlet
 flask
 flask-bcrypt
+flask_cors
 flask-jwt-extended
 flask-login
 flask-socketio

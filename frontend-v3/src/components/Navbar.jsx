@@ -7,7 +7,7 @@ import { useTutorial } from "../contexts/TutorialContext";
 import Button from './Button';
 import Modal from './Modal';
 
-import QRCode from '../../public/static/Feedback-Form-QR.svg';
+import QRCode from '/static/Feedback-Form-QR.svg';
 
 
 function Navbar() {
