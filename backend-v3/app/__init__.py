@@ -29,7 +29,7 @@ else:
     FRONTEND_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 
-socketio = SocketIO(logger=LOGGER, cors_allowed_origins=FRONTEND_ORIGINS, async_mode="eventlet")
+socketio = SocketIO(logger=LOGGER, cors_allowed_origins=FRONTEND_ORIGINS, async_mode="gevent")
 
 
 def create_app():
@@ -40,7 +40,7 @@ def create_app():
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=JWT_EXPIRY)
     
     db.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*", async_mode="threading", ping_timeout=60, ping_interval=25)
+    socketio.init_app(app, cors_allowed_origins="*", async_mode="gevent", ping_timeout=60, ping_interval=25)
 
     CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True)
     JWTManager(app)

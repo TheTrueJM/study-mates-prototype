@@ -93,7 +93,7 @@ def register_student_events(socketio):
     @with_tutorial_auth
     def update_details(user_id, code, data):
         if not isinstance(data, dict):
-            socketio.emit("error", {"message": "Invalid Data Format"}, to=request.sid)
+            emit("error", {"message": "Invalid Data Format"}, to=request.sid, namespace="/")
             return
 
         current_gpa = data.get(AttributeType.CURRENT_GPA)
@@ -112,17 +112,17 @@ def register_student_events(socketio):
 
         student_attributes.setdefault(AttributeType.CURRENT_GPA)
         if AttributeType.CURRENT_GPA in available_attributes and current_gpa:
-            if current_gpa not in VALID_GRADES:
-                socketio.emit("error", {"message": "Invalid Current GPA"}, to=request.sid)
-            else:
-                student_attributes[AttributeType.CURRENT_GPA] = current_gpa
+             if current_gpa not in VALID_GRADES:
+                 emit("error", {"message": "Invalid Current GPA"}, to=request.sid, namespace="/")
+             else:
+                 student_attributes[AttributeType.CURRENT_GPA] = current_gpa
 
         student_attributes.setdefault(AttributeType.GOAL_GRADE)
         if AttributeType.GOAL_GRADE in available_attributes and goal_grade:
-            if goal_grade not in VALID_GRADES:
-                socketio.emit("error", {"message": "Invalid Goal Grade"}, to=request.sid)
-            else:
-                student_attributes[AttributeType.GOAL_GRADE] = goal_grade
+             if goal_grade not in VALID_GRADES:
+                 emit("error", {"message": "Invalid Goal Grade"}, to=request.sid, namespace="/")
+             else:
+                 student_attributes[AttributeType.GOAL_GRADE] = goal_grade
 
         student_attributes.setdefault(AttributeType.AVAILABILITY, [])
         if AttributeType.AVAILABILITY in available_attributes and availability:
@@ -136,24 +136,24 @@ def register_student_events(socketio):
 
         student_attributes.setdefault(AttributeType.MEETING_MODE)
         if AttributeType.MEETING_MODE in available_attributes and meeting_mode:
-            if meeting_mode not in VALID_MEETING_MODE:
-                socketio.emit("error", {"message": "Invalid Meeting Mode"}, to=request.sid)
-            else:
-                student_attributes[AttributeType.MEETING_MODE] = meeting_mode
+             if meeting_mode not in VALID_MEETING_MODE:
+                 emit("error", {"message": "Invalid Meeting Mode"}, to=request.sid, namespace="/")
+             else:
+                 student_attributes[AttributeType.MEETING_MODE] = meeting_mode
         
         student_attributes.setdefault(AttributeType.YEAR, [])
         if AttributeType.YEAR in available_attributes and year:
-            if not isinstance(year, int) and year < 1 or year > 10:
-                socketio.emit("error", {"message": "Invalid Study Year"}, to=request.sid)
-            else:
-                student_attributes[AttributeType.YEAR] = year
+             if not isinstance(year, int) and year < 1 or year > 10:
+                 emit("error", {"message": "Invalid Study Year"}, to=request.sid, namespace="/")
+             else:
+                 student_attributes[AttributeType.YEAR] = year
 
         student_attributes.setdefault(AttributeType.SEMESTER, [])
         if AttributeType.SEMESTER in available_attributes and semester:
-            if not isinstance(semester, int) and semester < 1 or semester > 2:
-                socketio.emit("error", {"message": "Invalid Study Semester"}, to=request.sid)
-            else:
-                student_attributes[AttributeType.SEMESTER] = semester
+             if not isinstance(semester, int) and semester < 1 or semester > 2:
+                 emit("error", {"message": "Invalid Study Semester"}, to=request.sid, namespace="/")
+             else:
+                 student_attributes[AttributeType.SEMESTER] = semester
 
         tutorials[code]["students"][user_id]["attributes"] = student_attributes
 

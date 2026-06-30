@@ -39,9 +39,6 @@ def register_staff_events(socketio):
     @socketio.on("connect", namespace="/staff")
     def connect(auth: dict = None):
         # TODO Validate JWT (for all requests as wrapper or maybe just this?)
-
-        print('test')
-
         user_id = auth.get("uuid") if isinstance(auth, dict) else None
 
         if user_id not in users:
@@ -78,8 +75,6 @@ def register_staff_events(socketio):
 
     @socketio.on("create_tutorial", namespace="/staff")
     def create_tutorial(data):
-        print("Create Tutorial Print Test")
-
         user_id = sessions.get(request.sid)
         user = users.get(user_id, {})
 
