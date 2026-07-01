@@ -1,46 +1,45 @@
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getSocket, disconnectSocket } from "../socket";
-
+import { getStaffSocket, getStudentSocket, disconnectSocket } from "../socket";
 
 const TutorialContext = createContext(null);
 
 export function TutorialProvider({ children }) {
   const navigate = useNavigate();
 
-  const [UUID, setUUID] = useState(null);
-  const [tutorialCode, setTutorialCode] = useState(null);
-  const [tutorialName, setTutorialName] = useState(null);
-  const [state, setState] = useState(null);
+  const [UUID, setUUID] = useState("");
+  const [tutorialCode, setTutorialCode] = useState("");
+  const [tutorialName, setTutorialName] = useState("");
+  const [state, setState] = useState("");
   const [availableAttributes, setAvailableAttributes] = useState([]);
   const [questions, setQuestions] = useState([]);
-  const [timeDuration, setTimeDuration] = useState(null);
-  const [timeRemaining, setTimeRemaining] = useState(null);
-  const [timeRunning, setTimeRunning] = useState(null);
+  const [timeDuration, setTimeDuration] = useState("");
+  const [timeRemaining, setTimeRemaining] = useState("");
+  const [timeRunning, setTimeRunning] = useState(false);
 
-  const [studentName, setStudentName] = useState(null);
+  const [studentName, setStudentName] = useState("");
   const [attributes, setAttributes] = useState({});
   const [sharedAttributes, setSharedAttributes] = useState([]);
-  const [attributesComplete, setAttributesComplete] = useState(null);
-  const [groupNumber, setGroupNumber] = useState(null);
+  const [attributesComplete, setAttributesComplete] = useState(false);
+  const [groupNumber, setGroupNumber] = useState("");
   const [groupMembers, setGroupMembers] = useState({});
 
   const [students, setStudents] = useState({});
   const [groups, setGroups] = useState({});
-  const [groupSize, setGroupSize] = useState(null);
-  const [maxGroups, setMaxGroups] = useState(null);
+  const [groupSize, setGroupSize] = useState("");
+  const [maxGroups, setMaxGroups] = useState("");
 
-  const socketRef = useRef(null);
+  const [currentNamespace, setCurrentNamespace] = useState("/");
 
 
-  useEffect(() => {
-    socketRef.current = getSocket("/");
+  // Helper function to attach all event listeners to a socket instance
+  const attachListeners = (nsSocket) => {
+    nsSocket.on("session", (data) => {
+      console.log("Session Socket: ", nsSocket);
 
-    socketRef.current.on("session", (data) => {
-      console.log('session');
       if (data) {
-        const uuid = data.user_id;
+        const uuid = data.uuid;
         const tutorialCode = data.code;
 
         if (uuid) {
@@ -54,179 +53,195 @@ export function TutorialProvider({ children }) {
       }
     });
 
-    socketRef.current.on("tutorial_ended", () => {
-      setTutorialCode(null);
-      setTutorialName(null);
-      setState(null);
+    nsSocket.on("tutorial_ended", () => {
+      setTutorialCode("");
+      setTutorialName("");
+      setState("");
       setQuestions([]);
-      setTimeDuration(null);
-      setTimeRemaining(null);
-      setTimeRunning(null);
+      setTimeDuration("");
+      setTimeRemaining("");
+      setTimeRunning(false);
 
-      setStudentName(null);
+      setStudentName("");
       setAttributes({});
       setSharedAttributes([]);
-      setAttributesComplete(null);
-      setGroupNumber(null);
+      setAttributesComplete(false);
+      setGroupNumber("");
       setGroupMembers({});
 
       setStudents({});
       setAvailableAttributes([]);
       setGroups({});
-      setGroupSize(null);
-      setMaxGroups(null);
+      setGroupSize("");
+      setMaxGroups("");
+
+      disconnectSocket(currentNamespace);
 
       // TODO: Redirect to home page or create tutorial page (depending on auth)
-      // navigate("/");
+      navigate(currentNamespace == "/staff" ? "/staff/login" : "/");
     });
 
-    socketRef.current.on("error", (error) => {
+    nsSocket.on("error", (error) => {
       // TODO: Check if Alert causes Issues
       // alert(error.message);
-      console.log(error.message);
+      console.log("Socket Error: ", error.message);
     });
 
     // Student Events
-    socketRef.current.on("tutorial_joined", (data) => {
-      navigate("/tutorial/" + data.get("tutorial_code", tutorialCode))
+    nsSocket.on("tutorial_joined", (data) => {
+      const tutorialCode = data.tutorial_code;
+      localStorage.setItem("tutorialCode", tutorialCode);
+      setTutorialCode(tutorialCode);
+      navigate(`/tutorial/${tutorialCode}`);
     });
 
-    socketRef.current.on("details_updated", (data) => {
-      setAttributes(data.attributes);
-      setSharedAttributes(data.sharedAttributes);
+    nsSocket.on("details_updated", (data) => {
+      setAttributes(data.attributes || {});
+      setSharedAttributes(data.sharedAttributes || []);
+      setAttributesComplete(data.attributes_complete);
     });
 
-    socketRef.current.on("details_confirmed", (data) => {
-      setAttributes(data.attributes);
-      setSharedAttributes(data.sharedAttributes);
+    nsSocket.on("details_confirmed", (data) => {
+      setAttributes(data.attributes || {});
+      setSharedAttributes(data.sharedAttributes || []);
+      setAttributesComplete(data.attributes_complete);
     });
 
-    socketRef.current.on("student_update", (data) => {
-      setStudentName(data.get("username"));
-      setAttributes(data.get("attributes"));
-      setSharedAttributes(data.get("shared_attributes"));
-      setAttributesComplete(data.get("attributes_complete"));
+    nsSocket.on("student_update", (data) => {
+      setStudentName(data.username);
+      setAttributes(data.attributes || {});
+      setSharedAttributes(data.shared_attributes || []);
+      setAttributesComplete(data.attributes_complete);
 
-      setTutorialCode(data.get("tutorial_code"));
-      setTutorialName(data.get("tutorial_name"));
-      setState(data.get("state"));
-      setGroupNumber(data.get("group_number"));
-      setGroupMembers(data.get("group_members"));
-      setQuestions(data.get("questions"));
+      setTutorialCode(data.tutorial_code);
+      setTutorialName(data.tutorial_name);
+      setState(data.state);
+      setGroupNumber(data.group_number);
+      setGroupMembers(data.group_members || []);
+      setQuestions(data.questions || []);
 
-      const timer = data.get("timer", {})
-      setTimeDuration(timer.get("duration"));
-      setTimeRemaining(timer.get("remaining"));
-      setTimeRunning(timer.get("running"));
+      const timer = data.timer || {};
+      setTimeDuration(timer.duration);
+      setTimeRemaining(timer.remaining);
+      setTimeRunning(timer.running);
     });
 
     // Staff Events
-    socketRef.current.on("tutorial_created", (data) => {
-      const tutorial_code = data.get("tutorial_code")
-      setTutorialCode(tutorial_code);
-      navigate(`/staff/tutorial/${tutorial_code}`);
+    nsSocket.on("tutorial_created", (data) => {
+      const tutorialCode = data.tutorial_code;
+      localStorage.setItem("tutorialCode", tutorialCode);
+      setTutorialCode(tutorialCode);
+      navigate(`/staff/tutorial/${tutorialCode}`);
     });
 
-    socketRef.current.on("tutorial_update", (data) => {
-      setTutorialCode(data.get("tutorial_code"));
-      setTutorialName(data.get("tutorial_name"));
-      setState(data.get("state"));
-      setGroupSize(data.get("group_size"));
-      setMaxGroups(data.get("max_groups"));
-      setAvailableAttributes(data.get("available_attributes", []));
+    nsSocket.on("tutorial_update", (data) => {
+      setTutorialCode(data.tutorial_code);
+      setTutorialName(data.tutorial_name);
+      setState(data.state);
+      setGroupSize(data.group_size);
+      setMaxGroups(data.max_groups);
+      setAvailableAttributes(data.available_attributes || []);
 
-      setStudents(data.get("students", {}));
-      setGroups(data.get("groups", {}));
-      setQuestions(data.get("questions", []));
+      setStudents(data.students || {});
+      setGroups(data.groups || {});
+      setQuestions(data.questions || []);
 
-      const timer = data.get("timer", {})
-      setTimeDuration(timer.get("duration"));
-      setTimeRemaining(timer.get("remaining"));
-      setTimeRunning(timer.get("running"));
+      const timer = data.timer || {};
+      setTimeDuration(timer.duration);
+      setTimeRemaining(timer.remaining);
+      setTimeRunning(timer.running);
     });
 
     // Timer Events
-    socketRef.current.on("timer_notification", (data) => {
-      // TODO: Improve Integration
+    nsSocket.on("timer_notification", (data) => {
       alert(data.message);
-      // console.log(error.message);
     });
+  };
 
-    return () => {
-      socketRef.current.off();
-    };
+  // Initialize student socket on mount
+  useEffect(() => {
+    const studentSocket = getStudentSocket();
+    attachListeners(studentSocket);
+    setCurrentNamespace("/");
   }, []);
 
-
   const switchToStaff = () => {
-    disconnectSocket();
-    socketRef.current = getSocket("/staff");
+    disconnectSocket("/");
+    const staffSocket = getStaffSocket();
+    attachListeners(staffSocket);
+    setCurrentNamespace("/staff");
   };
 
   const switchToStudent = () => {
-    disconnectSocket();
-    socketRef.current = getSocket("/");
+    disconnectSocket("/staff");
+    const studentSocket = getStudentSocket();
+    attachListeners(studentSocket);
+    setCurrentNamespace("/");
   };
 
+  const getActiveSocket = () => {
+    if (currentNamespace === "/staff") {
+      return getStaffSocket();
+    }
+    return getStudentSocket();
+  };
 
   // Student Actions
   const enterTutorial = (code) => {
-    socketRef.current.emit("enter_tutorial", { code });
+    getStudentSocket().emit("enter_tutorial", { code });
   };
 
   const updateDetails = (details) => {
-    socketRef.current.emit("update_details", details);
+    getStudentSocket().emit("update_details", details);
   };
 
   const confirmDetails = () => {
-    socketRef.current.emit("confirm_details");
+    getStudentSocket().emit("confirm_details");
   };
 
   const leaveTutorial = () => {
-    socketRef.current.emit("leave_tutorial");
+    getStudentSocket().emit("leave_tutorial");
     localStorage.removeItem("tutorialCode");
   };
 
   // Staff Actions
   const createTutorial = (settings) => {
-     console.log("Tutorial: ", socketRef.current);
-
-    socketRef.current.emit("create_tutorial", settings);
+    console.log("Create Tutorial Socket: ", getStaffSocket());
+    getStaffSocket().emit("create_tutorial", settings);
   };
 
   const updateTutorial = (settings) => {
-    socketRef.current.emit("update_settings", settings);
+    getStaffSocket().emit("update_settings", settings);
   };
 
   const backToLobby = () => {
-    socketRef.current.emit("return_lobby");
+    getStaffSocket().emit("return_lobby");
   };
 
   const startGrouping = () => {
-    socketRef.current.emit("start_grouping");
+    getStaffSocket().emit("start_grouping");
   };
 
   const startDiscussion = () => {
-    socketRef.current.emit("start_discussion");
+    getStaffSocket().emit("start_discussion");
   };
 
   const startTimer = () => {
-    socketRef.current.emit("start_timer");
+    getStaffSocket().emit("start_timer");
   };
 
   const stopTimer = () => {
-    socketRef.current.emit("stop_timer");
+    getStaffSocket().emit("stop_timer");
   };
 
   const resetTimer = (time) => {
-    socketRef.current.emit("reset_timer", { time });
+    getStaffSocket().emit("reset_timer", { time });
   };
 
   const endTutorial = () => {
-    socketRef.current.emit("end_tutorial");
+    getStaffSocket().emit("end_tutorial");
     localStorage.removeItem("tutorialCode");
   };
-
 
   return (
     <TutorialContext.Provider value={{

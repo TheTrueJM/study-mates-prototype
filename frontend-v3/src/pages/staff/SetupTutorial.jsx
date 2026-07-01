@@ -35,7 +35,11 @@ function TutorialSetup() {
   ];
 
 
+  const { switchToStaff } = useTutorial();
+
   useEffect(() => {
+    // Ensure socket is on /staff namespace when on staff pages
+    switchToStaff();
     setAvailableAttributes(["current_gpa", "goal_grade", "availability", "communication"]);
   }, [])
 
@@ -43,9 +47,9 @@ function TutorialSetup() {
   const handleBegin = (event) => {
     event.preventDefault();
 
-    const iGroupSize = parseFloat(groupSize);
-    const iMaxGroups = parseFloat(maxGroups);
-    const fDiscussionTime = parseFloat(groupSize);
+     const iGroupSize = parseFloat(groupSize);
+     const iMaxGroups = parseFloat(maxGroups);
+     const fDiscussionTime = parseFloat(discussionTime);
 
     // TODO: Improve Feedback Approach
     if (!Number.isInteger(iGroupSize) || iGroupSize < 2 || iGroupSize > 10) {
@@ -68,6 +72,7 @@ function TutorialSetup() {
       group_size: iGroupSize,
       max_groups: enableMaxGroups ? iMaxGroups : null,
       discussion_time: fDiscussionTime,
+      available_attributes: availableAttributes
     });
   };
 

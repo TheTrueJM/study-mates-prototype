@@ -39,6 +39,8 @@ def register_staff_events(socketio):
     @socketio.on("connect", namespace="/staff")
     def connect(auth: dict = None):
         # TODO Validate JWT (for all requests as wrapper or maybe just this?)
+        print(f"DEBUG: Staff socket connected with auth: {auth}")
+
         user_id = auth.get("uuid") if isinstance(auth, dict) else None
 
         if user_id not in users:
@@ -71,10 +73,14 @@ def register_staff_events(socketio):
                 "code": users[user_id]["tutorial"]
             }
         )
+        print(f"DEBUG: Session emitted for user {user_id}")
+
 
 
     @socketio.on("create_tutorial", namespace="/staff")
     def create_tutorial(data):
+        print(f"DEBUG: Create tutorial called with data: {data}")
+
         user_id = sessions.get(request.sid)
         user = users.get(user_id, {})
 
@@ -93,13 +99,13 @@ def register_staff_events(socketio):
             socketio.emit("error", {"message": "Invalid Data Format"}, to=request.sid, namespace="/staff")
             return
 
-        tutorial_name = data.get("name")
+        tutorial_name = data.get("tutorial_name")
         group_size = data.get("group_size")
         max_groups = data.get("max_groups")
         available_attributes = data.get("available_attributes")
 
         try:
-            discussion_time = math.ceil(float(data.get("time")) * 60)
+            discussion_time = math.ceil(float(data.get("discussion_time") or data.get("time")) * 60)
         except Exception:
             discussion_time = 5 * 60
 

@@ -49,7 +49,7 @@ TIMES = {
     "E": "Evening"
 }
 
-DESCRIPTORS = {
+DESCRIPTORS = (
     'agile', 'anonymous', 'blazing', 'blissful', 'bold', 'brave', 'bright', 'calm', 'cheerful',
     'clever', 'colorful', 'cosmic',  'curious', 'daring', 'dazzling', 'energetic', 'epic',
     'friendly', 'frosty', 'gentle', 'glowing', 'golden', 'graceful', 'happy', 'hasty', 'heroic',
@@ -57,15 +57,15 @@ DESCRIPTORS = {
     'mysterious', 'mythic', 'nimble', 'noble', 'peaceful', 'playful', 'powerful', 'quick',
     'radiant', 'rapid', 'resilient', 'royal', 'shiny', 'silent', 'silver', 'smart', 'sneaky',
     'stealthy', 'stellar', 'strong', 'swift', 'valiant', 'vibrant', 'wild', 'wise', 'witty'
-}
-ANIMALS = {
+)
+ANIMALS = (
     'armadillo', 'badger', 'bear', 'beaver', 'cat', 'chameleon', 'cheetah', 'chicken', 'cockatoo',
     'coyote', 'jackal', 'crow', 'dog', 'dolphin', 'duck', 'eagle', 'falcon', 'fish', 'flamingo',
     'fox', 'hawk', 'hedgehog', 'horse', 'jaguar', 'jellyfish', 'kangaroo', 'koala', 'leopard',
     'lion', 'lizard', 'meerkat', 'otter', 'owl', 'panda', 'panther', 'parrot', 'penguin', 'rabbit',
     'raccoon', 'raven', 'salamander', 'seal', 'serpent', 'shark', 'sheep', 'sloth', 'snake',
     'squirrel', 'swan', 'tiger', 'tortoise', 'turtle', 'wallaby', 'walrus', 'wolf', 'wombat', 'zebra'
-}
+)
 
 
 day_index = {k: i for i, k in enumerate(DAYS.keys())}
@@ -89,18 +89,24 @@ def emit_tutorial_update(code):
                     
     students = tutorial.get("students", {})
     groups = tutorial.get("groups", {})
+    
+    tutorial_name = tutorial.get("name")
+    state = str(tutorial.get("state"))
+    available_attributes = tutorial.get("available_attributes", [])
+    questions = tutorial.get("questions", [])
+    timer = tutorial.get("timer", {})
 
     staff_payload = {
         "tutorial_code": code,
-        "tutorial_name": tutorial.get("name"),
-        "state": tutorial.get("state"),
+        "tutorial_name": tutorial_name,
+        "state": state,
         "group_size": tutorial.get("group_size"),
         "max_groups": tutorial.get("max_groups"),
-        "available_attributes": tutorial.get("available_attributes", []),
+        "available_attributes": available_attributes,
         "students": students,
         "groups": groups,
-        "questions": tutorial.get("questions", []),
-        "timer": tutorial.get("timer", {}),
+        "questions": questions,
+        "timer": timer,
     }
     emit("tutorial_update", staff_payload, room=code, namespace="/staff")
 
@@ -133,13 +139,13 @@ def emit_tutorial_update(code):
             "shared_attributes": student_data.get("shared_attributes", []),
             "attributes_complete": student_data.get("attributes_complete"),
             "tutorial_code": code,
-            "tutorial_name": tutorial.get("name"),
-            "state": tutorial.get("state"),
-            "available_attributes": tutorial.get("available_attributes", []),
+            "tutorial_name": tutorial_name,
+            "state": state,
+            "available_attributes": available_attributes,
             "group_number": group_number,
             "group_members": members,
-            "questions": tutorial.get("questions", []),
-            "timer": tutorial.get("timer", {})
+            "questions": questions,
+            "timer": timer,
         }
         emit("student_update", payload, room=student_id, namespace="/")
 
@@ -147,6 +153,7 @@ def emit_tutorial_update(code):
 def cleanup_expired_tutorials(): # TODO Run this Periodically in Application
     current_time = time.time()
     
+    # TODO Emit Closure to Users
     for code, tutorial in tutorials.items():
         if tutorial["state"] == TutorialState.ENDED:
             del tutorials[code]

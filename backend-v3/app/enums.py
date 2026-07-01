@@ -8,6 +8,9 @@ class TutorialState(Enum):
     DISCUSSION = "discussion"
     ENDED = "ended"
 
+    def __str__(self):
+        return self.value
+
 
 class GradeType(Enum):
     P = 4

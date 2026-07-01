@@ -32,6 +32,8 @@ def with_tutorial_auth(f):
 def register_student_events(socketio):
     @socketio.on("connect", namespace="/")
     def connect(auth: dict = None):
+        print(f"DEBUG: Student socket connected with auth: {auth}")
+
         user_id = auth.get("uuid") if isinstance(auth, dict) else None
 
         if user_id not in users:
@@ -227,6 +229,9 @@ def register_student_events(socketio):
 
 
 def join_tutorial(user_id, code):
+    print(f"DEBUG: Joining tutorial with code: {code}")
+    print(f"    ... with all tutorials: {tutorials}")
+
     if not (tutorial := tutorials.get(code)):
         emit("error", {"message": "Tutorial Not Found"}, to=request.sid, namespace="/")
         return
