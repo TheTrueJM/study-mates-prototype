@@ -24,12 +24,12 @@ JWT_EXPIRY = int(os.getenv("JWT_EXPIRATION_HOURS")) if os.getenv("JWT_EXPIRATION
 
 ALL_ORIGINS = os.getenv("FRONTEND_ORIGINS")
 if ALL_ORIGINS:
-    FRONTEND_ORIGINS = [origin.strip() for origin in ALL_ORIGINS.split(',') if origin.strip()]
+    FRONTEND_ORIGINS = [origin.strip() for origin in ALL_ORIGINS.split(",") if origin.strip()]
 else:
     FRONTEND_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
 
-socketio = SocketIO(logger=LOGGER, cors_allowed_origins=FRONTEND_ORIGINS, async_mode=None)
+socketio = SocketIO(logger=LOGGER, cors_allowed_origins=FRONTEND_ORIGINS, async_mode="gevent")
 
 
 def create_app():
@@ -40,15 +40,15 @@ def create_app():
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=JWT_EXPIRY)
     
     db.init_app(app)
-    socketio.init_app(app, cors_allowed_origins="*", ping_timeout=60, ping_interval=25)
+    socketio.init_app(app, async_mode="gevent", cors_allowed_origins="*", ping_timeout=60, ping_interval=25)
 
     CORS(app, origins=FRONTEND_ORIGINS, supports_credentials=True)
     JWTManager(app)
     
     # Register blueprints
-    api_bp = Blueprint('api', __name__)
+    api_bp = Blueprint("api", __name__)
     api_bp.register_blueprint(staff_bp)
-    app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(api_bp, url_prefix="/api")
     
     register_student_events(socketio)
     register_staff_events(socketio)

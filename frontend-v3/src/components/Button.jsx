@@ -1,12 +1,12 @@
-// Variants: 'primary' (blue), 'secondary' (orange), 'outline' (border only)
-function Button({ children, onClick, variant = 'primary', fullWidth = false, disabled = false }) {
+// Variants: "primary" (blue), "secondary" (orange), "outline" (border only)
+function Button({ children, onClick, variant = "primary", fullWidth = false, disabled = false }) {
   const className = [
-    'btn',
+    "btn",
     `btn-${variant}`,
-    fullWidth && 'btn-full'
+    fullWidth && "btn-full"
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   return (
     <button className={className} onClick={onClick} disabled={disabled}>

@@ -96,7 +96,7 @@ def register_staff_events(socketio):
             return
         
         if not isinstance(data, dict):
-            socketio.emit("error", {"message": "Invalid Data Format"}, to=request.sid, namespace="/staff")
+            emit("error", {"message": "Invalid Data Format"}, to=request.sid, namespace="/staff")
             return
 
         tutorial_name = data.get("tutorial_name")
@@ -110,15 +110,15 @@ def register_staff_events(socketio):
             discussion_time = 5 * 60
 
         if not isinstance(group_size, int) or group_size < 2:
-            socketio.emit("error", {"message": "Invalid Group Size"}, to=request.sid, namespace="/staff")
+            emit("error", {"message": "Invalid Group Size"}, to=request.sid, namespace="/staff")
             return
         
         if max_groups and (not isinstance(max_groups, int) or max_groups < 2):
-            socketio.emit("error", {"message": "Invalid Maximum Groups"}, to=request.sid, namespace="/staff")
+            emit("error", {"message": "Invalid Maximum Groups"}, to=request.sid, namespace="/staff")
             return
         
         if not isinstance(available_attributes, list):
-            socketio.emit("error", {"message": "Invalid Attributes Available"}, to=request.sid, namespace="/staff")
+            emit("error", {"message": "Invalid Attributes Available"}, to=request.sid, namespace="/staff")
             return
 
         code = generate_unique_tutorial_code()
@@ -158,20 +158,20 @@ def register_staff_events(socketio):
         new_available_attributes = data.get("available_attributes")
 
         try:
-            new_discussion_time = math.ceil(float(data.get("time")) * 60)
+            new_discussion_time = math.ceil(float(data.get("discussion_time")) * 60)
         except Exception:
             new_discussion_time = 5 * 60
 
         if not isinstance(new_group_size, int) or new_group_size < 2:
-            socketio.emit("error", {"message": "Invalid Group Size"}, to=request.sid, namespace="/staff")
+            emit("error", {"message": "Invalid Group Size"}, to=request.sid, namespace="/staff")
             return
         
         if new_max_groups and (not isinstance(new_max_groups, int) or new_max_groups < 2):
-            socketio.emit("error", {"message": "Invalid Maximum Groups"}, to=request.sid, namespace="/staff")
+            emit("error", {"message": "Invalid Maximum Groups"}, to=request.sid, namespace="/staff")
             return
         
         if not isinstance(new_available_attributes, list):
-            socketio.emit("error", {"message": "Invalid Attributes Available"}, to=request.sid, namespace="/staff")
+            emit("error", {"message": "Invalid Attributes Available"}, to=request.sid, namespace="/staff")
             return
 
         tutorial = tutorials[code]
@@ -207,7 +207,7 @@ def register_staff_events(socketio):
 
         emit_tutorial_update(code)
 
-    @socketio.on("start_grouping")
+    @socketio.on("start_grouping", namespace="/staff")
     @with_tutorial_auth
     def start_grouping(user_id, code):
         tutorials[code]["last_activity"] = int(time.time())
@@ -233,7 +233,7 @@ def register_staff_events(socketio):
                             tutorials[code]["previous_matches"][member_id].add(other_member_id)
         
         except Exception as e:
-            socketio.emit("error", {"message": e.message}, to=request.sid, namespace="/staff")
+            emit("error", {"message": e}, to=request.sid, namespace="/staff")
             return
 
         emit_tutorial_update(code)

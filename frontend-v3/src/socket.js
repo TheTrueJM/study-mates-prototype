@@ -26,7 +26,7 @@ export function getStaffSocket() {
   if (!staffSocket) {
     staffSocket = io("/staff", {
       path: "/socket.io",
-      auth: { user_id: null, code: null },
+      auth: { user_id: null, code: null, token: null },
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionDelay: 1000,

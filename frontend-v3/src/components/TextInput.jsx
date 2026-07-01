@@ -7,7 +7,7 @@ function TextInput({ name, label, hint, value, placeholder, onChange, disabled=f
         type={!password ? "text" : "password"}
         id={name}
         name={name}
-        className={`input ${disabled ? 'input-disabled' : ''}`}
+        className={`input ${disabled ? "input-disabled" : ""}`}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}

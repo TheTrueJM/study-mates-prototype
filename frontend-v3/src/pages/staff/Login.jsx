@@ -39,11 +39,12 @@ export default function Login() {
         }
         return data;
       })
+      // TODO: Implement Proper Feedback Handling
       .then(data => {
         login(data.token);
         setFeedback("Account login successful. Redirecting...");
         setFeedbackType("success");
-        setTimeout(() => navigate("/staff/"), 2500);
+        setTimeout(() => navigate("/staff/"));//, 2500);
       })
       .catch(error => {
         setFeedback(error.message);

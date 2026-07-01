@@ -6,15 +6,15 @@ import Navbar from "./components/Navbar";
 
 // Student Pages
 import JoinTutorial from "./pages/student/JoinTutorial";
-import StudentTutorial from './pages/student/Tutorial';
+import StudentTutorial from "./pages/student/Tutorial";
 
 // Staff Pages
-import Login from './pages/staff/Login';
-import SetupTutorial from './pages/staff/SetupTutorial';
-import StaffTutorial from './pages/staff/Tutorial';
+import Login from "./pages/staff/Login";
+import SetupTutorial from "./pages/staff/SetupTutorial";
+import StaffTutorial from "./pages/staff/Tutorial";
 
 // Error Pages
-import NotFound from './pages/NotFound';
+import NotFound from "./pages/NotFound";
 
 
 // ProtectedStudentRoute - Requires Student ...

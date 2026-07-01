@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { useTutorial } from '../../contexts/TutorialContext';
+import { useTutorial } from "../../contexts/TutorialContext";
 
-import Card from '../../components/Card';
-import Button from '../../components/Button';
-import Modal from '../../components/Modal';
+import Card from "../../components/Card";
+import Button from "../../components/Button";
+import Modal from "../../components/Modal";
 
-import LobbyLayout from './LobbyLayout';
-import GroupLayout from './GroupLayout';
+import LobbyLayout from "./LobbyLayout";
+import GroupLayout from "./GroupLayout";
 
 
 function Tutorial() {
   const navigate = useNavigate();
-  const code = useParams();
+  const { code } = useParams();
 
   const {
     username, attributes, sharedAttributes, attributesComplete,
@@ -33,23 +33,24 @@ function Tutorial() {
   }, [code, navigate]);
 
   return (
-    <div className="container container-sm mt-lg">
+    <div className="container container-md mt-lg">
       <Card
-        title={tutorialName}
+        title={`${tutorialName} (${tutorialState})`}
         actions={
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            {(tutorialState === "groups" || tutorialState === "discussion") && (
+            {/* {(tutorialState === "groups" || tutorialState === "discussion") && (
               <Button variant="outline" onClick={() => setShowDetailsModal(true)}>
                 Edit Details
               </Button>
-            )}
+            )} */}
             <Button variant="outline" onClick={leaveTutorial}>Leave Tutorial</Button>
           </div>
         }
       >
         {/* tutorial components split across separate files */}
-        {tutorialState === 'lobby' && (
+        {tutorialState === "lobby" && (
           <LobbyLayout
+            code={code}
             username={username}
             attributes={attributes}
             sharedAttributes={sharedAttributes}
@@ -59,8 +60,9 @@ function Tutorial() {
             confirmDetails={confirmDetails}
           />
         )}
-        {(tutorialState === 'groups' || tutorialState === 'discussion') && (
+        {(tutorialState === "groups" || tutorialState === "discussion") && (
           <GroupLayout
+            code={code}
             state={tutorialState}
             username={username}
             groupNumber={groupNumber}

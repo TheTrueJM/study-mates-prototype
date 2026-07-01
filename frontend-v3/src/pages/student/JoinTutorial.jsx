@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { useTutorial } from '../../contexts/TutorialContext';
+import { useTutorial } from "../../contexts/TutorialContext";
 
-import Button from '../../components/Button';
+import Button from "../../components/Button";
 
 function JoinTutorial() {
   const navigate = useNavigate();
 
   const { enterTutorial } = useTutorial();
 
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState("");
 
 
   const handleJoin = (e) => {
@@ -26,7 +26,7 @@ function JoinTutorial() {
       <div className="card">
         <h1 className="card-header">Join Tutorial Session</h1>
 
-        <div className="flex-col gap-md" style={{ display: 'flex' }}>
+        <div className="flex-col gap-md" style={{ display: "flex" }}>
           {/* Tutorial Code Input */}
           <div className="form-group">
             <label className="input-label">Enter Tutorial Code</label>

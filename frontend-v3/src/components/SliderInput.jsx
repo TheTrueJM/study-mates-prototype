@@ -8,7 +8,7 @@ function SliderInput({ name, label, hint, value, min, max, step, onChange, disab
           type="range"
           id={name}
           name={name}
-          className={`input ${disabled ? 'input-disabled' : ''}`}
+          className={`input ${disabled ? "input-disabled" : ""}`}
           value={value}
           min={min}
           max={max}

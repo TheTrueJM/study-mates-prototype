@@ -1,15 +1,20 @@
 import numpy as np
-import random
+import random, math
 
-from app.enums import AttributeType, GradeType, MeetingMode, VALID_GRADES
+from ..enums import AttributeType, GradeType, MeetingMode, VALID_GRADES
 
 
 def form_groups(tutorial):
     group_size = tutorial["group_size"]
-    max_groups = tutorial["max_groups"] # TODO Add Max Groups Restriction
+    max_groups = tutorial["max_groups"]
     
     student_details = tutorial["students"]
     student_ids = list(student_details.keys())
+    total_students = len(student_ids)
+
+    # Restrict Maximum Total of Groups
+    if max_groups and max_groups < math.ceil(total_students / group_size):
+        group_size = math.ceil(total_students / max_groups)
 
     available_attributes = tutorial["available_attributes"]
 

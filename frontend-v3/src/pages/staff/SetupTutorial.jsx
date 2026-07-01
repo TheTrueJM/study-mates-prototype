@@ -1,20 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useTutorial } from '../../contexts/TutorialContext';
+import { useTutorial } from "../../contexts/TutorialContext";
 
-import Card from '../../components/Card';
-import Button from '../../components/Button';
-import TextInput from '../../components/TextInput';
-import NumberInput from '../../components/NumberInput';
-import SliderInput from '../../components/SliderInput';
-import DropdownInput from '../../components/DropdownInput';
-import CheckboxInput from '../../components/CheckboxInput';
+import Card from "../../components/Card";
+import Button from "../../components/Button";
+import TextInput from "../../components/TextInput";
+import NumberInput from "../../components/NumberInput";
+import SliderInput from "../../components/SliderInput";
+import DropdownInput from "../../components/DropdownInput";
+import CheckboxInput from "../../components/CheckboxInput";
 
 
 function TutorialSetup() {
-  const { createTutorial } = useTutorial();
-
   const [name, setName] = useState("");
   const [groupSize, setGroupSize] = useState(5);
   const [maxGroups, setMaxGroups] = useState("");
@@ -34,11 +32,12 @@ function TutorialSetup() {
     // {value: "accessibility", label: "Accessibility"}
   ];
 
+  const { createTutorial, switchToStaff } = useTutorial();
 
-  const { switchToStaff } = useTutorial();
 
   useEffect(() => {
     // Ensure socket is on /staff namespace when on staff pages
+    // TODO: Verify if Necessary
     switchToStaff();
     setAvailableAttributes(["current_gpa", "goal_grade", "availability", "communication"]);
   }, [])
@@ -47,9 +46,9 @@ function TutorialSetup() {
   const handleBegin = (event) => {
     event.preventDefault();
 
-     const iGroupSize = parseFloat(groupSize);
-     const iMaxGroups = parseFloat(maxGroups);
-     const fDiscussionTime = parseFloat(discussionTime);
+    const iGroupSize = parseFloat(groupSize);
+    const iMaxGroups = parseFloat(maxGroups);
+    const fDiscussionTime = parseFloat(discussionTime);
 
     // TODO: Improve Feedback Approach
     if (!Number.isInteger(iGroupSize) || iGroupSize < 2 || iGroupSize > 10) {
@@ -129,6 +128,7 @@ function TutorialSetup() {
         />
 
         {/* Student Attributes Selection */}
+        {/* TODO: Improve Selection Menu and Input Type */}
         <DropdownInput
           name="student-attributes"
           label="Available Student Attributes"

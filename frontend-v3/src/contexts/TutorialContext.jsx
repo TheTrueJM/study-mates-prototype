@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { getStaffSocket, getStudentSocket, disconnectSocket } from "../socket";
+import { getStaffSocket, getStudentSocket, setSocketAuth, disconnectSocket } from "../socket";
 
 const TutorialContext = createContext(null);
 
@@ -11,7 +11,7 @@ export function TutorialProvider({ children }) {
   const [UUID, setUUID] = useState("");
   const [tutorialCode, setTutorialCode] = useState("");
   const [tutorialName, setTutorialName] = useState("");
-  const [state, setState] = useState("");
+  const [tutorialState, setTutorialState] = useState("");
   const [availableAttributes, setAvailableAttributes] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [timeDuration, setTimeDuration] = useState("");
@@ -36,7 +36,7 @@ export function TutorialProvider({ children }) {
   // Helper function to attach all event listeners to a socket instance
   const attachListeners = (nsSocket) => {
     nsSocket.on("session", (data) => {
-      console.log("Session Socket: ", nsSocket);
+      console.log("DEBUG Session Socket: ", nsSocket);
 
       if (data) {
         const uuid = data.uuid;
@@ -56,7 +56,7 @@ export function TutorialProvider({ children }) {
     nsSocket.on("tutorial_ended", () => {
       setTutorialCode("");
       setTutorialName("");
-      setState("");
+      setTutorialState("");
       setQuestions([]);
       setTimeDuration("");
       setTimeRemaining("");
@@ -78,13 +78,13 @@ export function TutorialProvider({ children }) {
       disconnectSocket(currentNamespace);
 
       // TODO: Redirect to home page or create tutorial page (depending on auth)
-      navigate(currentNamespace == "/staff" ? "/staff/login" : "/");
+      navigate(currentNamespace == "/staff" ? "/staff/" : "/");
     });
 
     nsSocket.on("error", (error) => {
       // TODO: Check if Alert causes Issues
       // alert(error.message);
-      console.log("Socket Error: ", error.message);
+      console.log("DEBUG Socket Error: ", error.message);
     });
 
     // Student Events
@@ -108,6 +108,8 @@ export function TutorialProvider({ children }) {
     });
 
     nsSocket.on("student_update", (data) => {
+      console.log("DEBUG Student Tutorial Update: ", data);
+
       setStudentName(data.username);
       setAttributes(data.attributes || {});
       setSharedAttributes(data.shared_attributes || []);
@@ -115,7 +117,7 @@ export function TutorialProvider({ children }) {
 
       setTutorialCode(data.tutorial_code);
       setTutorialName(data.tutorial_name);
-      setState(data.state);
+      setTutorialState(data.state);
       setGroupNumber(data.group_number);
       setGroupMembers(data.group_members || []);
       setQuestions(data.questions || []);
@@ -135,9 +137,11 @@ export function TutorialProvider({ children }) {
     });
 
     nsSocket.on("tutorial_update", (data) => {
+      console.log("DEBUG Staff Tutorial Update: ", data);
+
       setTutorialCode(data.tutorial_code);
       setTutorialName(data.tutorial_name);
-      setState(data.state);
+      setTutorialState(data.state);
       setGroupSize(data.group_size);
       setMaxGroups(data.max_groups);
       setAvailableAttributes(data.available_attributes || []);
@@ -206,7 +210,6 @@ export function TutorialProvider({ children }) {
 
   // Staff Actions
   const createTutorial = (settings) => {
-    console.log("Create Tutorial Socket: ", getStaffSocket());
     getStaffSocket().emit("create_tutorial", settings);
   };
 
@@ -245,7 +248,7 @@ export function TutorialProvider({ children }) {
 
   return (
     <TutorialContext.Provider value={{
-      tutorialCode, tutorialName, state, questions, timeDuration, timeRemaining, timeRunning,
+      tutorialCode, tutorialName, tutorialState, questions, timeDuration, timeRemaining, timeRunning,
       studentName, attributes, sharedAttributes, attributesComplete, groupNumber, groupMembers,
       students, availableAttributes, groups, groupSize, maxGroups,
       switchToStaff, switchToStudent, enterTutorial, updateDetails, confirmDetails, leaveTutorial,

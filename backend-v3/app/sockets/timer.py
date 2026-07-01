@@ -1,33 +1,19 @@
-# TODO REVIEW THIS STILL
-
-from threading import Thread, Lock
-from time import monotonic, sleep
+from time import monotonic
 from collections import deque
+import gevent, gevent.lock
 
 
 class AsyncTimer:
-    __slots__ = (
-        "codes",
-        "lock",
-        "tutorials",
-        "running",
-        "next_tick",
-        "socketio",
-        "app_ctx",
-        "deque",
-        "_timer_thread",
-    )
-
     def __init__(self):
         self.codes = set()
-        self.lock = Lock()
+        self.lock = gevent.lock.Semaphore()
         self.tutorials = None
         self.running = False
         self.next_tick = None
         self.socketio = None
         self.app_ctx = None
+        self.timer_greenlet = None
         self.deque = deque()
-        self._timer_thread = None
 
     def start(self, code):
         from . import utils
@@ -44,61 +30,58 @@ class AsyncTimer:
         if not self.running:
             self.running = True
             self.next_tick = monotonic() + 1
-            self.deque.clear()
-            self._timer_thread = Thread(target=self._timer_loop, daemon=True)
-            self._timer_thread.start()
+            gevent.spawn(self._timer_loop)
             self.socketio.start_background_task(self._emit_loop)
 
     def _emit_loop(self):
-        import eventlet
         from . import utils
 
         socketio = self.socketio
         tutorials = self.tutorials
-        dq = self.deque
         app_ctx = self.app_ctx
 
         while self.running:
-            while dq:
-                try:
-                    item = dq.popleft()
-                except IndexError:
-                    break
-
-                if item is None:
-                    return
-
-                code, remaining, is_done = item
+            for code, remaining, is_done in self._drain_deque():
                 tutorial = tutorials.get(code)
                 if not tutorial:
                     continue
 
-                with app_ctx.app_context():
+                if app_ctx is not None:
+                    with app_ctx.app_context():
+                        if is_done:
+                            message = {"message": "Time's up!"}
+                            for namespace in ["/", "/staff"]:
+                                socketio.emit("timer_notification", message, room=code, namespace=namespace)
+                        else:
+                            utils.emit_tutorial_update(code)
+                else:
                     if is_done:
-                        message = {"message": "Time's up!"}
-                        socketio.emit(
-                            "timer_notification", message, room=code, namespace="/"
-                        )
-                        socketio.emit(
-                            "timer_notification", message, room=code, namespace="/staff"
-                        )
+                        for namespace in ["/", "/staff"]:
+                            socketio.emit("timer_notification", message, room=code, namespace=namespace)
                     else:
                         utils.emit_tutorial_update(code)
 
-            eventlet.sleep(0.001)
+            gevent.sleep(0.01)
+
+    def _drain_deque(self):
+        items = []
+        with self.lock:
+            while self.deque:
+                try:
+                    items.append(self.deque.popleft())
+                except IndexError:
+                    break
+        return items
 
     def _timer_loop(self):
-        tutorials = self.tutorials
-        dq = self.deque
         next_tick = self.next_tick or 0.0
 
         while self.running:
-            sleep(max(0, next_tick - monotonic()))
+            gevent.sleep(max(0, next_tick - monotonic()))
 
             with self.lock:
                 if not (codes := list(self.codes)):
                     self.running = False
-                    dq.append(None)
                     return
 
                 next_tick += 1
@@ -107,7 +90,7 @@ class AsyncTimer:
                 finished = []
 
                 for c in codes:
-                    tutorial = tutorials.get(c) if tutorials else None
+                    tutorial = self.tutorials.get(c) if self.tutorials else None
                     if not tutorial:
                         finished.append(c)
                         continue
@@ -122,10 +105,10 @@ class AsyncTimer:
 
                     if remaining <= 0:
                         timer["running"] = False
-                        dq.append((c, remaining, True))
+                        self.deque.append((c, remaining, True))
                         finished.append(c)
                     else:
-                        dq.append((c, remaining, False))
+                        self.deque.append((c, remaining, False))
 
                 if finished:
                     for c in finished:
@@ -141,7 +124,6 @@ class AsyncTimer:
         self.next_tick = None
         self.tutorials = None
         self.deque.clear()
-        self._timer_thread = None
 
 
 timer = AsyncTimer()

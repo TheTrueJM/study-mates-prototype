@@ -7,7 +7,7 @@ function NumberInput({ name, label, hint, value, min, max, step, placeholder, on
         type="number"
         id={name}
         name={name}
-        className={`input ${disabled ? 'input-disabled' : ''}`}
+        className={`input ${disabled ? "input-disabled" : ""}`}
         value={value}
         min={min}
         max={max}
