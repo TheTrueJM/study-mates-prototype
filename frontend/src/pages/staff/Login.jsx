@@ -1,77 +1,93 @@
-// Login - Staff enters their username and password to authetnicate
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import { useState } from 'react';
-import { useNavigate } from "react-router-dom";
-import { useAuth } from '../../hooks/useAuth';
-import Input from '../../components/Input';
+import Card from "../../components/Card";
 import Button from '../../components/Button';
+import TextInput from "../../components/TextInput";
 
-function Login() {
+import { useAuth } from "../../contexts/AuthContext";
+
+
+export default function Login() {
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
-  const { setStaff } = useAuth();  
 
-  const handleLogin= async () => {
-    if (!username || !password) {
-      alert("Please enter both a username and password.");
-      return;
-    }
+  const [feedback, setFeedback] = useState("");
+  const [feedbackType, setFeedbackType] = useState("");
 
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+  const { login } = useAuth();
 
-    const apiPost = (endpoint, payload) =>
-      fetch(`${BACKEND_URL}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      }).then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || res.statusText);
+  const LOGIN_URL = "/staff/login";
+
+
+  const loginUser = (event) => {
+    event.preventDefault();
+
+    fetch(LOGIN_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    })
+      .then(async response => {
+        const data = await response.json();
+        if (!response.ok || data.error) {
+          throw new Error(`Error: ${data.message || "HTTP " + response.status}`);
+        }
         return data;
+      })
+      // TODO: Implement Proper Feedback Handling
+      .then(data => {
+        login(data.token);
+        setFeedback("Account login successful. Redirecting...");
+        setFeedbackType("success");
+        setTimeout(() => navigate("/staff/"));//, 2500);
+      })
+      .catch(error => {
+        setFeedback(error.message);
+        setFeedbackType("error");
       });
-
-    try {
-      await apiPost("/staff/login", { username, password });
-      
-      // Update frontend state
-      setStaff();
-      
-      navigate("/staff/");
-    } catch (err) {
-      alert(err.message);
-    }
   };
 
+  
   return (
     <div className="container container-sm mt-lg">
-      <div className="card">
-        <h1 className="card-header">Staff Login</h1>
-
+      <Card title="Staff Login">
         <div className="flex-col gap-md" style={{ display: 'flex' }}>
-          {/* Staff username input */}
-          <Input
+          {/* Staff Username Input */}
+          <TextInput
+            name="username"
             label="Enter Username"
             onChange={setUsername}
             placeholder="Username..."
           />
 
-          {/* Password username input */}
-          <Input
+          {/* Staff Password Input */}
+          <TextInput
+            name="password"
             label="Enter Password"
             type="password"
             onChange={setPassword}
             placeholder="Password..."
+            password={true}
           />
 
-          <Button variant="primary" fullWidth onClick={handleLogin}>
+          <Button variant="primary" fullWidth onClick={loginUser}>
             Login
           </Button>
         </div>
-      </div>
+      </Card>
     </div>
+
+    // <div className="text-center">
+    //   <div className={`feedback ${feedbackType}`}>{feedback}</div>
+    //   <div className="formButtons grid-cols-2">
+    //     <Link className="formButton buttonOutline col-span-2 sm:col-span-1" to="/register">Go to Register</Link>
+    //     <button type="submit" className="formButton buttonAction col-span-2 sm:col-span-1">Login</button>
+    //   </div>
+    // </div>
   );
 }
-
-export default Login;

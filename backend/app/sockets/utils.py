@@ -1,27 +1,40 @@
-import random
-import string
-import logging
-import time
+from flask_socketio import emit
+import random, string, uuid, time
 
-from flask import request
-from flask_socketio import emit, join_room
-from .. import socketio
-from ..enums import parse_availability
-from .errors import ERR_TUTORIAL_NOT_FOUND, ERR_SESSION_NOT_FOUND, ERR_UNAUTHORISED
+from ..enums import TutorialState, AttributeType, VALID_ATTRIBUTES
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
-users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff, tutorial: code, disconnected_at: float|None}, ... }
+users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff|None, tutorial: code|None}, ... }
 sessions = dict() # { sID: UUID }
 tutorials = dict()
-disconnected_students = dict()  # { code: { user_id: disconnected_at, ... } }
-disconnected_staff = dict()  # { code: disconnected_at, ... }
+# {
+#   code: {
+#       staff: UUID,
+#       name: str,
+#       state: TutorialState,
+#       group_size: int,
+#       max_groups: int,
+#       available_attributes: [ ... ],
+#       students: {
+#           UUID: {
+#               name: str,
+#               attributes: { ... },
+#               shared_attributes: [ ... ],
+#               attributes_complete: bool,
+#               group: int
+#           },
+#           ...
+#       },
+#       groups: { number: [ UUID, ... ], ... },
+#       previous_matches: { UUID: ? },
+#       questions: [question, ...],
+#       timer: { duration: int, remaining: int, running: bool }
+#   },
+#   ...
+# }
 
-RECONNECT_GRACE_PERIOD = 5.0  # seconds
-STAFF_RECONNECT_GRACE_PERIOD = 30.0  # seconds
 
-_DAY = {
+DAYS = {
     "MON": "Monday",
     "TUE": "Tuesday",
     "WED": "Wednesday",
@@ -30,299 +43,173 @@ _DAY = {
     "SAT": "Saturday",
     "SUN": "Sunday",
 }
-_TIME = {"M": "Morning", "A": "Afternoon", "E": "Evening"}
-_day_idx = {k: i for i, k in enumerate(_DAY.keys())}
-_time_idx = {k: i for i, k in enumerate(_TIME.keys())}
-_fmt_avail = lambda c: (
-    f"{_DAY.get(c[:3], c[:3])}-{_TIME.get(c[3:], c[3:])}" if len(c) == 4 else c
+TIMES = {
+    "M": "Morning",
+    "A": "Afternoon",
+    "E": "Evening"
+}
+
+DESCRIPTORS = (
+    'agile', 'anonymous', 'blazing', 'blissful', 'bold', 'brave', 'bright', 'calm', 'cheerful',
+    'clever', 'colorful', 'cosmic',  'curious', 'daring', 'dazzling', 'energetic', 'epic',
+    'friendly', 'frosty', 'gentle', 'glowing', 'golden', 'graceful', 'happy', 'hasty', 'heroic',
+    'hidden', 'jolly', 'joyful', 'kind', 'legendary', 'lively', 'lunar', 'midnight', 'mighty',
+    'mysterious', 'mythic', 'nimble', 'noble', 'peaceful', 'playful', 'powerful', 'quick',
+    'radiant', 'rapid', 'resilient', 'royal', 'shiny', 'silent', 'silver', 'smart', 'sneaky',
+    'stealthy', 'stellar', 'strong', 'swift', 'valiant', 'vibrant', 'wild', 'wise', 'witty'
 )
-_fmt_to_code = {v: k for k, v in _DAY.items()}
-_time_to_code = {v: k for k, v in _TIME.items()}
+ANIMALS = (
+    'armadillo', 'badger', 'bear', 'beaver', 'cat', 'chameleon', 'cheetah', 'chicken', 'cockatoo',
+    'coyote', 'jackal', 'crow', 'dog', 'dolphin', 'duck', 'eagle', 'falcon', 'fish', 'flamingo',
+    'fox', 'hawk', 'hedgehog', 'horse', 'jaguar', 'jellyfish', 'kangaroo', 'koala', 'leopard',
+    'lion', 'lizard', 'meerkat', 'otter', 'owl', 'panda', 'panther', 'parrot', 'penguin', 'rabbit',
+    'raccoon', 'raven', 'salamander', 'seal', 'serpent', 'shark', 'sheep', 'sloth', 'snake',
+    'squirrel', 'swan', 'tiger', 'tortoise', 'turtle', 'wallaby', 'walrus', 'wolf', 'wombat', 'zebra'
+)
 
 
-def _sort_avail(codes):
-    return sorted(
-        codes, key=lambda c: (_day_idx.get(c[:3], 9), _time_idx.get(c[3:], 9))
-    )
+day_index = {k: i for i, k in enumerate(DAYS.keys())}
+time_index = {k: i for i, k in enumerate(TIMES.keys())}
+
+format_availability = lambda code: (
+    f"{DAYS.get(code[:3], code[:3])}-{TIMES.get(code[3:], code[3:])}" if len(code) == 4 else code
+)
+sort_availability = lambda codes: sorted(
+    codes, key=lambda code: (day_index.get(code[:3], 99), time_index.get(code[3:], 99))
+)
 
 
-# {
-#   code: {
-#       staff: UUID,
-#       name: name,
-#       state: lobby|groups|discussion,
-#       group_size: size,
-#       students: { UUID, ... },
-#       groups: { id: [ UUID, ... ], ... },
-#       questions: [question, ...],
-#       timer: { duration: int, remaining: int, running: bool }
-#   },
-#   ...
-# }
-
-
-# -----------------------------
-# Helpers
-# -----------------------------
-
-
-def _generate_code(length=6):
-    while True:
-        code  = ''.join(random.choices(string.ascii_uppercase, k=length))
-        if code not in tutorials:
-            return code
-
-
-def _cleanup_stale_users(code):
-    if not (tutorial := tutorials.get(code)):
-        disconnected_students.pop(code, None)
-        disconnected_staff.pop(code, None)
-        return
-
-    now = time.time()
-    student_threshold = now - RECONNECT_GRACE_PERIOD
-    staff_threshold = now - STAFF_RECONNECT_GRACE_PERIOD
-
-    if disconnected := disconnected_students.get(code):
-        stale_ids = [sid for sid, ts in disconnected.items() if ts <= student_threshold]
-        disconnected_students[code] = {
-            sid: ts for sid, ts in disconnected.items() if ts > student_threshold
-        }
-
-        students = tutorial.get("students", {})
-        for student_id in stale_ids:
-            if users.get(student_id) and users[student_id].get("sessions"):
-                continue
-            students.pop(student_id, None)
-            users.pop(student_id, None)
-
-    staff_disconnect_time = disconnected_staff.get(code)
-    if staff_disconnect_time and staff_disconnect_time <= staff_threshold:
-        staff_id = tutorial.get("staff")
-        emit("tutorial_ended", room=code, namespace="/")
-        for student_id in list(tutorial.get("students", {}).keys()):
-            if student_id in users:
-                users[student_id]["tutorial"] = None
-        tutorials.pop(code, None)
-        disconnected_students.pop(code, None)
-        disconnected_staff.pop(code, None)
-        if staff_id and staff_id in users:
-            users[staff_id]["tutorial"] = None
-
-
-def _generate_name(tutorial):
-    DESCRIPTORS = (
-        'agile', 'anonymous', 'blazing', 'blissful', 'bold', 'brave', 'bright', 'calm', 'cheerful',
-        'clever', 'colorful', 'cosmic',  'curious', 'daring', 'dazzling', 'energetic', 'epic',
-        'friendly', 'frosty', 'gentle', 'glowing', 'golden', 'graceful', 'happy', 'hasty', 'heroic',
-        'hidden', 'jolly', 'joyful', 'kind', 'legendary', 'lively', 'lunar', 'midnight', 'mighty',
-        'mysterious', 'mythic', 'nimble', 'noble', 'peaceful', 'playful', 'powerful', 'quick',
-        'radiant', 'rapid', 'resilient', 'royal', 'shiny', 'silent', 'silver', 'smart', 'sneaky',
-        'stealthy', 'stellar', 'strong', 'swift', 'valiant', 'vibrant', 'wild', 'wise', 'witty'
-    )
-    ANIMALS = (
-        'armadillo', 'badger', 'bear', 'beaver', 'cat', 'chameleon', 'cheetah', 'chicken', 'cockatoo',
-        'coyote', 'jackal', 'crow', 'dog', 'dolphin', 'duck', 'eagle', 'falcon', 'fish', 'flamingo',
-        'fox', 'hawk', 'hedgehog', 'horse', 'jaguar', 'jellyfish', 'kangaroo', 'koala', 'leopard',
-        'lion', 'lizard', 'meerkat', 'otter', 'owl', 'panda', 'panther', 'parrot', 'penguin', 'rabbit',
-        'raccoon', 'raven', 'salamander', 'seal', 'serpent', 'shark', 'sheep', 'sloth', 'snake',
-        'squirrel', 'swan', 'tiger', 'tortoise', 'turtle', 'wallaby', 'walrus', 'wolf', 'wombat', 'zebra'
-    )
-    names = {student["name"] for student in tutorial.get("students", {}).values()}
-    while True:
-        name = f"{random.choice(DESCRIPTORS).title()}-{random.choice(ANIMALS).title()}"
-        if name not in names:
-            return name
-
-def _is_student_disconnected(student_id, code):
-    return bool(
-        code
-        and student_id is not None
-        and (disconnected := disconnected_students.get(code))
-        and (disconnect_time := disconnected.get(student_id)) is not None
-        and time.time() < disconnect_time + RECONNECT_GRACE_PERIOD
-    )
-
-
-def _assign_late_joiner_to_group(tutorial, user_id):
-    students = tutorial.get("students", {})
-    groups = tutorial.get("groups", {})
-    if not groups or not students.get(user_id):
-        return False
-    group_ids = list(groups.keys())
-    best_group = group_ids[-1]
-    groups[best_group].append(user_id)
-    students[user_id]["group"] = best_group
-    return True
-
-
-def _emit_tutorial_update(code):
+def emit_tutorial_update(code):
     tutorial = tutorials.get(code)
     if not tutorial:
-        emit("error", ERR_TUTORIAL_NOT_FOUND, room=code, namespace="/")
+        # TODO Update Error Messages
+        for ns in ["/", "/staff"]:
+            emit("error", {"message": "Tutorial Not Found"}, room=code, namespace=ns)
         return
-
-    _cleanup_stale_users(code)
-
-    students = {
-        sid: data
-        for sid, data in tutorial.get("students", {}).items()
-        if not _is_student_disconnected(sid, code)
-    }
-
-    groups = {}
-    for group_id, member_ids in tutorial.get("groups", {}).items():
-        active_member_ids = [
-            sid
-            for sid in member_ids
-            if sid in students and not _is_student_disconnected(sid, code)
-        ]
-        if active_member_ids:
-            groups[group_id] = active_member_ids
+    
+    students = tutorial.get("students", {})
+    groups = tutorial.get("groups", {})
+    
+    tutorial_name = tutorial.get("name")
+    state = str(tutorial.get("state"))
+    available_attributes = tutorial.get("available_attributes", [])
+    questions = tutorial.get("questions", [])
+    timer = tutorial.get("timer", {})
 
     staff_payload = {
         "tutorial_code": code,
-        "name": tutorial.get("name"),
-        "state": tutorial.get("state"),
+        "tutorial_name": tutorial_name,
+        "state": state,
         "group_size": tutorial.get("group_size"),
+        "max_groups": tutorial.get("max_groups"),
+        "available_attributes": available_attributes,
         "students": students,
         "groups": groups,
-        "questions": tutorial.get("questions", []),
-        "timer": tutorial.get("timer"),
+        "questions": questions,
+        "timer": timer,
     }
     emit("tutorial_update", staff_payload, room=code, namespace="/staff")
 
-    for student_id, data in tutorial.get("students", {}).items():
-        if _is_student_disconnected(student_id, code):
-            continue
-
-        group_number = data.get("group")
+    formatted_students = dict()
+    formatted_groups = dict()
+    for student_id, student_data in tutorial.get("students", {}).items():
+        group_number = student_data.get("group")
         group = tutorial.get("groups", {}).get(group_number)
         students = tutorial.get("students", {})
 
-        seen = set()
-        members = []
+        members = None
         if group:
-            for sid in group:
-                if sid not in students or _is_student_disconnected(sid, code):
-                    continue
-                student = students.get(sid, {})
-                name = student.get("name")
-                if name and name not in seen:
-                    seen.add(name)
-                    members.append(
-                        {
-                            "name": name,
-                            "availability": [
-                                _fmt_avail(a)
-                                for a in _sort_avail(student.get("availability", []))
-                            ],
-                        }
-                    )
-        else:
-            members = None
+            if group_number in formatted_groups:
+                members = formatted_groups[group_number]
+            else:
+                members = []
+                for sid in group:
+                    if sid and sid not in formatted_students:
+                        student = students.get(sid, {})
+                        student_details = dict()
+                        student_details["name"] = student.get("name")
+                        student_details["attributes"] = get_public_attributes(student)
+                        formatted_students[sid] = student_details
+                    members.append(formatted_students[sid])
+                formatted_groups[group_number] = members
 
         payload = {
-            "username": data.get("name"),
-            "name": tutorial.get("name"),
-            "state": tutorial.get("state"),
+            "username": student_data.get("name"),
+            "attributes": student_data.get("attributes", {}),
+            "shared_attributes": student_data.get("shared_attributes", []),
+            "attributes_complete": student_data.get("attributes_complete"),
+            "tutorial_code": code,
+            "tutorial_name": tutorial_name,
+            "state": state,
+            "available_attributes": available_attributes,
             "group_number": group_number,
             "group_members": members,
-            "questions": tutorial.get("questions", []),
-            "timer": tutorial.get("timer"),
-            "tutorial_code": code
+            "questions": questions,
+            "timer": timer,
         }
         emit("student_update", payload, room=student_id, namespace="/")
 
 
-def _join_tutorial(user_id, code, details, namespace):
-    join_room(user_id, namespace=namespace)
-
-    if not (tutorial := tutorials.get(code)) and namespace!="/staff":
-        emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid, namespace=namespace)
-        return
-
-    if user := users.get(user_id):
-        user["disconnected_at"] = None
-        if code and user.get("role") == "student" and tutorial:
-            disconnected_students.get(code, {}).pop(user_id, None)
-
-        elif code and user.get("role") == "staff":
-            disconnected_staff.pop(code, None)
-    else:
-        emit("error", ERR_SESSION_NOT_FOUND, to=request.sid, namespace=namespace)
-        return
-
-    if code and user:
-        user["tutorial"] = code
-
-    if user and user.get("role") == "student" and tutorial:
-        tutorial.setdefault("students", {})
-
-        is_new_student = user_id not in tutorial.get("students", {})
-
-        if is_new_student:
-            tutorial["students"][user_id] = {
-                "name": _generate_name(tutorial),
-                "currentGPA": details.get("currentGPA", 4.5) or 4.5,
-                "goalGPA": details.get("goalGPA", 4.0) or 4.0,
-                "availability": parse_availability(details.get("availability") or []),
-                "group": None
-            }
-
-        state = tutorial.get("state")
-        if user_id in tutorial.get("students", {}):
-            student_data = tutorial["students"].get(user_id, {})
-
-            if state in ("groups", "discussion"):
-                prev_group = user.get("last_group")
-
-                if prev_group and prev_group in tutorial.get("groups", {}):
-                    tutorial["students"][user_id]["group"] = prev_group
-                    if user_id not in tutorial["groups"][prev_group]:
-                        tutorial["groups"][prev_group].append(user_id)
-                elif (
-                    is_new_student
-                    or student_data.get("group") is None
-                    or student_data.get("group") not in tutorial.get("groups", {})
-                ):
-                    _assign_late_joiner_to_group(tutorial, user_id)
-
-        join_room(code, namespace=namespace)
-    elif user and user.get("role") == "staff":
-        join_room(code, namespace=namespace)
-    else: # no tutorial
-        emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid, namespace=namespace)
-        user["tutorial"] = None
-        return
-
-    _emit_tutorial_update(code)
+def cleanup_expired_tutorials(): # TODO Run this Periodically in Application
+    current_time = time.time()
+    
+    # TODO Emit Closure to Users
+    for code, tutorial in tutorials.items():
+        if tutorial["state"] == TutorialState.ENDED:
+            del tutorials[code]
+            continue
+        
+        # Auto-expire if idle for 60 minutes
+        if current_time - tutorial.get("last_activity", 0) > 3600:
+            tutorial["state"] = TutorialState.ENDED
+            del tutorials[code]
 
 
-def multi_namespace_event(event, namespaces):
-    def decorator(f):
-        for ns in namespaces:
-            socketio.on(event, namespace=ns)(f)
-        return f
-    return decorator
+def get_public_attributes(student):
+    public_attributes = {}
+    if all_attributes := student.get("attributes"):
+        if str(AttributeType.YEAR) in all_attributes and (year := all_attributes.get(str(AttributeType.YEAR))):
+            public_attributes[str(AttributeType.YEAR)] = year
+        if str(AttributeType.SEMESTER) in all_attributes and (semester := all_attributes.get(str(AttributeType.SEMESTER))):
+            public_attributes[str(AttributeType.SEMESTER)] = semester
+
+        for attribute in student.get("shared_attributes", []):
+            match attribute:
+                case str(AttributeType.AVAILABILITY):
+                    public_attributes[attribute] = [
+                        format_availability(code)
+                        for code in sort_availability(all_attributes.get(attribute, []))
+                    ]
+                case _:
+                    if attribute in VALID_ATTRIBUTES:
+                        public_attributes[attribute] = all_attributes.get(attribute)
+    return public_attributes
 
 
-# -----------------------------
-# Socket lifecycle
-# -----------------------------
+def _generate_tutorial_code(length = 6):
+    return ''.join(random.choices(string.ascii_uppercase, k=length))
 
+def generate_unique_tutorial_code(length = 6):
+    tutorial_code = _generate_tutorial_code(length)
+    while tutorial_code in tutorials:
+        tutorial_code = _generate_tutorial_code(length)
+    return tutorial_code
 
-@multi_namespace_event("disconnect", ["/", "/staff"])
-def disconnect():
-    if user_id := sessions.pop(request.sid, None):
-        if user := users.get(user_id):
-            user["sessions"].discard(request.sid)
+def _generate_user_uuid():
+    return str(uuid.uuid4())
 
-            if not user["sessions"]:
-                user["disconnected_at"] = time.time()
-                if (code := user.get("tutorial")) and user.get("role") == "student":
-                    if code not in disconnected_students:
-                        disconnected_students[code] = {}
-                    disconnected_students[code][user_id] = user["disconnected_at"]
-                elif (code := user.get("tutorial")) and user.get("role") == "staff":
-                    disconnected_staff[code] = user["disconnected_at"]
+def generate_unique_user_uuid():
+    user_uuid = _generate_user_uuid()
+    while user_uuid in users:
+        user_uuid = _generate_user_uuid()
+    return user_uuid
+
+def _generate_student_name():
+    return f"{random.choice(DESCRIPTORS)}-{random.choice(ANIMALS)}"
+
+def generate_unique_student_name(tutorial_code):
+    student_names = {student.get("name") for student in tutorials[tutorial_code].get("students", {}).values()}
+    student_name = _generate_student_name()
+    while student_name in student_names:
+        student_name = _generate_student_name()
+    return student_name

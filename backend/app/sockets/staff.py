@@ -1,388 +1,332 @@
-import logging
-import uuid
-import random
-import math
-import numpy as np
-from functools import wraps
-
-from sqlalchemy.sql.expression import func
-from ..database import DiscussionQuestion
-
 from flask import request
 from flask_socketio import emit, join_room, leave_room
-from .. import socketio
-from . import utils
+# from flask_jwt_extended import jwt_required
+from sqlalchemy import func
+from functools import wraps
+import time, math
+
+from .utils import tutorials, users, sessions, generate_unique_user_uuid, generate_unique_tutorial_code, emit_tutorial_update
 from .timer import timer
-from .errors import (
-    ERR_SESSION_NOT_FOUND,
-    ERR_NO_ACTIVE_TUTORIAL,
-    ERR_TUTORIAL_NOT_FOUND,
-    ERR_UNAUTHORISED,
-    ERR_ALREADY_IN_TUTORIAL,
-    ERR_INVALID_GROUP_SIZE,
-)
-
-logger = logging.getLogger(__name__)
+from .matching import form_groups
+from ..enums import TutorialState
+from ..database import DiscussionQuestion
 
 
-def _with_tutorial_auth(f):
+def with_tutorial_auth(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
-        if not (user_id := utils.sessions.get(request.sid)):
-            emit("error", ERR_SESSION_NOT_FOUND, to=request.sid, namespace="/staff")
+        if not (user_id := sessions.get(request.sid)):
+            emit("error", {"message": "User Session Not Found"}, to=request.sid, namespace="/staff")
             return
 
-        if not (code := utils.users.get(user_id, {}).get("tutorial")):
-            emit("error", ERR_NO_ACTIVE_TUTORIAL, to=request.sid, namespace="/staff")
+        if not (code := users.get(user_id, {}).get("tutorial")):
+            emit("error", {"message": "Not in a Tutorial"}, to=request.sid, namespace="/staff")
             return
 
-        if not (tutorial := utils.tutorials.get(code)):
-            emit("error", ERR_TUTORIAL_NOT_FOUND, to=request.sid, namespace="/staff")
+        if not (tutorial := tutorials.get(code)):
+            emit("error", {"message": "Tutorial Not Found"}, to=request.sid, namespace="/staff")
             return
 
-        if tutorial["staff"] != user_id:
-            emit("error", ERR_UNAUTHORISED, to=request.sid, namespace="/staff")
+        if tutorial.get("staff") != user_id:
+            emit("error", {"message": "Not Authorised"}, to=request.sid, namespace="/staff")
             return
 
-        return f(user_id, code, tutorial, *args, **kwargs)
+        return f(user_id, code, *args, **kwargs)
     return wrapper
 
 
-@socketio.on("connect", namespace="/staff")
-def connect(auth: dict = None):
-    user_id = (auth or {}).get("uuid") or str(uuid.uuid4())
+def register_staff_events(socketio):
+    @socketio.on("connect", namespace="/staff")
+    def connect(auth: dict = None):
+        # TODO Validate JWT (for all requests as wrapper or maybe just this?)
+        user_id = auth.get("uuid") if isinstance(auth, dict) else None
 
-    existing_tutorial = None
-    if user_id in utils.users:
-        existing_tutorial = utils.users[user_id].get("tutorial")
-    else:
-        utils.users[user_id] = {
-            "sessions": set(),
-            "role": "staff",
-            "tutorial": None
-        }
+        if user_id not in users:
+            user_id = generate_unique_user_uuid()
+            users[user_id] = {
+                "sessions": set(),
+                "tutorial": None
+            }
 
-    code = (auth or {}).get("code") or existing_tutorial
+        join_room(user_id, namespace="/staff")
 
-    utils.users[user_id]["sessions"].add(request.sid)
-    utils.sessions[request.sid] = user_id
+        tutorial_code = auth.get("code") if isinstance(auth, dict) else None
+        if tutorial_code:
+            previous_tutorial = users[user_id]["tutorial"]
+            if previous_tutorial and previous_tutorial != tutorial_code and previous_tutorial in tutorials:
+                end_tutorial(user_id, previous_tutorial)
+            
+            users[user_id]["tutorial"] = None
+            if tutorial_code in tutorials:
+                join_tutorial(user_id, tutorial_code)
 
-    emit("session",
-        {
-            "uuid": user_id,
-            "role": "staff",
-            "code": utils.users[user_id]["tutorial"]
-        },
-        namespace="/staff"
-    )
+        users[user_id]["role"] = "staff"
+        users[user_id]["sessions"].add(request.sid)
+        sessions[request.sid] = user_id
 
-    if code:
-        tutorial = utils.tutorials.get(code)
-        if tutorial and tutorial.get("staff") == user_id:
-            utils._join_tutorial(user_id, code, None, namespace="/staff")
-        else:
-            utils.users[user_id]["tutorial"] = None
-
-
-# -----------------------------
-# Tutorial management
-# -----------------------------
-
-
-@socketio.on("create_tutorial", namespace="/staff")
-def create_tutorial(data):
-    user_id = utils.sessions.get(request.sid)
-
-    if utils.users.get(user_id, {}).get("role") != "staff":
-        emit("error", ERR_UNAUTHORISED, to=request.sid, namespace="/staff")
-        return
-    elif utils.users.get(user_id, {}).get("tutorial") is not None:
-        emit(
-            "error",
+        emit("session",
             {
-                **ERR_ALREADY_IN_TUTORIAL,
-                "tutorial_code": utils.users[user_id].get("tutorial"),
-            },
-            to=request.sid,
-            namespace="/staff",
+                "uuid": user_id,
+                "role": users[user_id]["role"],
+                "code": users[user_id]["tutorial"]
+            }
         )
-        return
 
-    name = data.get("name")
-    group_size = int(data.get("group_size")) or None
-    discussion_time = math.ceil(float(data.get("time", 5)) * 60) or 300
 
-    if not group_size or group_size < 2:
-        emit("error", ERR_INVALID_GROUP_SIZE, to=request.sid, namespace="/staff")
-        return
+    @socketio.on("create_tutorial", namespace="/staff")
+    def create_tutorial(data):
+        user_id = sessions.get(request.sid)
+        user = users.get(user_id, {})
 
-    code = utils._generate_code()
+        if user.get("role") != "staff":
+            emit("error", {"message": "Not Authorised"}, to=request.sid, namespace="/staff")
+            return
+        elif (tutorial := user.get("tutorial")) is not None:
+            emit(
+                "error",
+                {"message": "Already in Tutorial", "tutorial_code": tutorial},
+                to=request.sid, namespace="/staff",
+            )
+            return
+        
+        if not isinstance(data, dict):
+            emit("error", {"message": "Invalid Data Format"}, to=request.sid, namespace="/staff")
+            return
 
-    utils.tutorials[code] = {
-        "staff": user_id,
-        "name": name,
-        "state": "lobby",
-        "group_size": group_size,
-        "students": dict(),
-        "groups": dict(),
-        "previous_matches": dict(),
-        "questions": list(),
-        "timer": {
-            "duration": discussion_time,
-            "remaining": discussion_time,
-            "running": False
+        tutorial_name = data.get("tutorial_name")
+        group_size = data.get("group_size")
+        max_groups = data.get("max_groups")
+        available_attributes = data.get("available_attributes")
+
+        try:
+            discussion_time = math.ceil(float(data.get("discussion_time") or data.get("time")) * 60)
+        except Exception:
+            discussion_time = 5 * 60
+
+        if not isinstance(group_size, int) or group_size < 2:
+            emit("error", {"message": "Invalid Group Size"}, to=request.sid, namespace="/staff")
+            return
+        
+        if max_groups and (not isinstance(max_groups, int) or max_groups < 2):
+            emit("error", {"message": "Invalid Maximum Groups"}, to=request.sid, namespace="/staff")
+            return
+        
+        if not isinstance(available_attributes, list):
+            emit("error", {"message": "Invalid Attributes Available"}, to=request.sid, namespace="/staff")
+            return
+
+        code = generate_unique_tutorial_code()
+
+        tutorials[code] = {
+            "staff": user_id,
+            "name": tutorial_name,
+            "state": TutorialState.LOBBY,
+            "group_size": group_size,
+            "max_groups": max_groups,
+            "available_attributes": available_attributes,
+            "students": dict(),
+            "groups": dict(),
+            "previous_matches": dict(),
+            "questions": list(),
+            "timer": {
+                "duration": discussion_time,
+                "remaining": discussion_time,
+                "running": False
+            },
+            "last_activity": int(time.time())
         }
-    }
 
-    logger.info(f"Created tutorial {code} for {user_id}")
+        users[user_id]["tutorial"] = code
+        join_tutorial(user_id, code)
 
-    utils.users[user_id]["tutorial"] = code
+        emit("tutorial_created", {"tutorial_code": code}, to=request.sid, namespace="/staff")
+
+    @socketio.on("update_settings", namespace="/staff")
+    @with_tutorial_auth
+    def update_settings(user_id, code, data):
+        # TODO Improve Validation Modularity of with Tutorial Creation
+        tutorials[code]["last_activity"] = int(time.time())
+
+        new_group_size = data.get("group_size")
+        new_max_groups = data.get("max_groups")
+        new_available_attributes = data.get("available_attributes")
+
+        try:
+            new_discussion_time = math.ceil(float(data.get("discussion_time")) * 60)
+        except Exception:
+            new_discussion_time = 5 * 60
+
+        if not isinstance(new_group_size, int) or new_group_size < 2:
+            emit("error", {"message": "Invalid Group Size"}, to=request.sid, namespace="/staff")
+            return
+        
+        if new_max_groups and (not isinstance(new_max_groups, int) or new_max_groups < 2):
+            emit("error", {"message": "Invalid Maximum Groups"}, to=request.sid, namespace="/staff")
+            return
+        
+        if not isinstance(new_available_attributes, list):
+            emit("error", {"message": "Invalid Attributes Available"}, to=request.sid, namespace="/staff")
+            return
+
+        tutorial = tutorials[code]
+        tutorial["group_size"] = new_group_size
+        tutorial["max_groups"] = new_max_groups
+        tutorial["available_attributes"] = new_available_attributes
+        tutorial["timer"]["duration"] = new_discussion_time
+        tutorial["timer"]["remaining"] = new_discussion_time
+        tutorial["timer"]["running"] = False
+        timer.stop(code)
+        emit_tutorial_update(code)
+
+    # TODO Verify if Necessary
+    # @socketio.on("fetch_tutorial", namespace="/staff")
+    # @_with_tutorial_auth
+    # def fetch_tutorial(user_id, code, tutorial):
+    #     emit_tutorial_update(code)
+
+
+    @socketio.on("return_lobby", namespace="/staff")
+    @with_tutorial_auth
+    def return_lobby(user_id, code):
+        tutorials[code]["last_activity"] = int(time.time())
+
+        tutorials[code]["state"] = TutorialState.LOBBY
+        tutorials[code]["groups"].clear()
+        tutorials[code]["questions"].clear()
+        tutorials[code]["timer"]["running"] = False
+        timer.stop(code)
+
+        for student_id in tutorials[code]["students"]:
+            tutorials[code]["students"][student_id]["group"] = None
+
+        emit_tutorial_update(code)
+
+    @socketio.on("start_grouping", namespace="/staff")
+    @with_tutorial_auth
+    def start_grouping(user_id, code):
+        tutorials[code]["last_activity"] = int(time.time())
+
+        tutorials[code]["questions"].clear()
+        tutorials[code]["timer"]["running"] = False
+        timer.stop(code)
+        
+        tutorials[code]["groups"].clear()
+        tutorials[code]["state"] = TutorialState.GROUPING
+
+        try:
+            groups = form_groups(tutorials[code])
+
+            for group_id, members in groups.items():
+                for member_id in members:
+                    tutorials[code]["groups"].setdefault(group_id, list()).append(member_id)
+                    tutorials[code]["students"][member_id]["group"] = group_id
+
+                    tutorials[code]["previous_matches"].setdefault(member_id, set())
+                    for other_member_id in members:
+                        if other_member_id != member_id:
+                            tutorials[code]["previous_matches"][member_id].add(other_member_id)
+        
+        except Exception as e:
+            emit("error", {"message": e}, to=request.sid, namespace="/staff")
+            return
+
+        emit_tutorial_update(code)
+
+
+    @socketio.on("start_discussion", namespace="/staff")
+    @with_tutorial_auth
+    def start_discussion(user_id, code):
+        tutorials[code]["last_activity"] = int(time.time())
+
+        tutorials[code]["state"] = TutorialState.DISCUSSION
+        tutorials[code]["timer"]["remaining"] = tutorials[code]["timer"]["duration"]
+        tutorials[code]["timer"]["running"] = True
+        timer.start(code)
+
+        academic = DiscussionQuestion.query.filter_by(category_name="academic").order_by(func.random()).first()
+        casual = DiscussionQuestion.query.filter_by(category_name="casual").order_by(func.random()).first()
+        study = DiscussionQuestion.query.filter_by(category_name="study").order_by(func.random()).first()
+
+        questions = [academic.question, casual.question, study.question]
+        tutorials[code]["questions"] = questions
+
+        emit_tutorial_update(code)
+
+
+    @socketio.on("start_timer", namespace="/staff")
+    @with_tutorial_auth
+    def start_timer(user_id, code):
+        tutorials[code]["last_activity"] = int(time.time())
+
+        tutorials[code]["timer"]["running"] = True
+        timer.start(code)
+        emit_tutorial_update(code)
+
+    @socketio.on("stop_timer", namespace="/staff")
+    @with_tutorial_auth
+    def stop_timer(user_id, code):
+        tutorials[code]["last_activity"] = int(time.time())
+
+        tutorials[code]["timer"]["running"] = False
+        timer.stop(code)
+        emit_tutorial_update(code)
+
+    @socketio.on("reset_timer", namespace="/staff")
+    @with_tutorial_auth
+    def reset_timer(user_id, code, data):
+        tutorials[code]["last_activity"] = int(time.time())
+
+        # TODO Copy Validation Strategy from Creation/Update
+        try:
+            new_time = math.ceil(float(data.get("time")) * 60)
+        except Exception:
+            new_time = 5 * 60
+        
+        tutorials[code]["timer"]["duration"] = new_time
+        tutorials[code]["timer"]["remaining"] = new_time
+        tutorials[code]["timer"]["running"] = False
+        timer.stop(code)
+        emit_tutorial_update(code)
+
+
+    @socketio.on("end_tutorial", namespace="/staff")
+    @with_tutorial_auth
+    def end_tutorial(user_id, code):
+        tutorials[code]["timer"]["running"] = False
+        timer.stop(code)
+
+        tutorials[code]["state"] = TutorialState.ENDED
+        emit("tutorial_ended", room=code, namespace="/")
+        emit("tutorial_ended", room=code, namespace="/staff")
+
+        student_ids = list(tutorials[code].get("students", {}).keys())
+        for student_id in student_ids:
+            if student_id in users:
+                users[student_id]["tutorial"] = None
+                # TODO Leave Tutorial Rooms on Student End?
+                emit("left_tutorial", room=student_id, namespace="/")
+
+        users[user_id]["tutorial"] = None
+        del tutorials[code]
+
+        leave_room(code, namespace="/staff")
+        emit("left_tutorial", to=request.sid, namespace="/staff")
+
+
+def join_tutorial(user_id, code):
+    if not (user := users.get(user_id)) or not isinstance(user, dict):
+        emit("error", {"message": "User Session Not Found"}, to=request.sid, namespace="/staff")
+        return
+
+    if user.get("role") != "staff":
+        emit("error", {"message": "Invalid User Role"}, to=request.sid, namespace="/staff")
+        return
+    
+    if tutorials.get(code, {}).get("staff") != user_id:
+        emit("error", {"message": "Tutorial Managed by Another Staff User"}, to=request.sid, namespace="/staff")
+        return
+
+    user["tutorial"] = code
     join_room(code, namespace="/staff")
 
-    emit("tutorial_created", {"code": code}, namespace="/staff")
-
-
-@socketio.on("reset_lobby", namespace="/staff")
-@_with_tutorial_auth
-def reset_lobby(user_id, code, tutorial):
-    tutorial["state"] = "lobby"
-    tutorial["groups"].clear()
-    tutorial["questions"].clear()
-    tutorial["timer"]["running"] = False
-    timer.stop(code)
-
-    for student in tutorial["students"].values():
-        student["group"] = None
-
-    utils._emit_tutorial_update(code)
-
-
-@socketio.on("update_settings", namespace="/staff")
-@_with_tutorial_auth
-def update_settings(user_id, code, tutorial, data):
-    new_group_size = int(data.get("group_size")) or None
-    new_discussion_time = math.ceil(float(data.get("time", 5)) * 60) or 300
-
-    if not new_group_size or new_group_size < 2:
-        emit("error", ERR_INVALID_GROUP_SIZE, to=request.sid, namespace="/staff")
-        return
-
-    tutorial["group_size"] = new_group_size
-    tutorial["timer"]["duration"] = new_discussion_time
-    tutorial["timer"]["remaining"] = new_discussion_time
-    tutorial["timer"]["running"] = False
-    timer.stop(code)
-    utils._emit_tutorial_update(code)
-
-
-@socketio.on("fetch_tutorial", namespace="/staff")
-@_with_tutorial_auth
-def fetch_tutorial(user_id, code, tutorial):
-    utils._emit_tutorial_update(code)
-
-
-# -----------------------------
-# Grouping
-# -----------------------------
-
-
-@socketio.on("start_grouping", namespace="/staff")
-@_with_tutorial_auth
-def start_grouping(user_id, code, tutorial):
-    tutorial["questions"].clear()
-    tutorial["timer"]["running"] = False
-    timer.stop(code)
-    group_size = tutorial["group_size"]
-
-    students = list(tutorial["students"].keys())
-
-    connections: np.ndarray = _build_matrix(students, tutorial["students"])
-
-    tutorial["groups"].clear()
-    tutorial["state"] = "groups"
-
-    group_id = 1
-    unmatched = set(enumerate(students))
-    rematch_rate = (0.5 / (group_size ** 1.1)) # NOTE This is a Magic Number
-    while unmatched:
-        # Pick a starting student
-        group = [unmatched.pop()]
-
-        # Fill group with most compatible students
-        while len(group) < group_size and unmatched:
-            best_student, best_score = None, -1
-
-            for (candidate, c_id) in unmatched:
-                # Compatibility with entire group
-                score = rematches = 0
-                for (member, m_id) in group:
-                    # Track rematches between students in the group, with a slight chance to allow rematches through uncounted
-                    if c_id in tutorial["previous_matches"].get(m_id, ()) and random.random() > rematch_rate:
-                        rematches += 1
-                    score += connections[candidate][member]
-
-                # Penalise score from student rematches
-                if rematches: score *=  0.4 - (0.4 * (rematches / group_size)) # NOTE This is a Magic Number
-
-                if score > best_score:
-                    best_score = score
-                    best_student = (candidate, c_id)
-
-            group.append(best_student)
-            unmatched.remove(best_student)
-
-        # Save group
-        tutorial["groups"][group_id] = []
-        member_ids = set({id for (_, id) in group})
-        for id in member_ids:
-            tutorial["groups"][group_id].append(id)
-            tutorial["students"][id]["group"] = group_id
-            tutorial["previous_matches"].setdefault(id, set()).update(member_ids)
-
-        group_id += 1
-
-    utils._emit_tutorial_update(code)
-
-
-def _build_matrix(ids, students):
-    student_count = len(ids)
-    matrix = np.zeros((student_count, student_count))
-    max_weight = 0
-
-    for i in range(student_count):
-        s1 = students.get(ids[i], {})
-        s1_availability = set(s1.get("availability", []))
-        for j in range(i + 1, student_count):
-            s2 = students.get(ids[j], {})
-
-            w_currentGPA = s1.get("currentGPA", 4.5) - s2.get("currentGPA", 4.5) 
-            w_currentGPA = 1 / (1 + abs(w_currentGPA))
-
-            w_goalGPA = s1.get("goalGPA", 4.0) - s2.get("goalGPA", 4.0)
-            w_goalGPA = 1 / (1 + abs(w_goalGPA))
-
-            w_availability = 0.2 * sum(1 for time in s2.get("availability", []) if time in s1_availability)
-
-            weight = w_currentGPA + w_goalGPA + w_availability
-            matrix[i][j] = matrix[j][i] = weight
-            max_weight = max(max_weight, weight)
-
-    # Normalise matrix weights
-    for i in range(len(ids)):
-        for j in range(i + 1, len(ids)):
-            matrix[i][j] = matrix[j][i] = matrix[i][j] / max_weight
-
-    return matrix
-
-
-# -----------------------------
-# Discussion
-# -----------------------------
-
-
-@socketio.on("start_discussion", namespace="/staff")
-@_with_tutorial_auth
-def start_discussion(user_id, code, tutorial):
-    tutorial["state"] = "discussion"
-    tutorial["timer"]["remaining"] = tutorial["timer"]["duration"]
-    tutorial["timer"]["running"] = True
-    timer.start(code)
-
-    academic = DiscussionQuestion.query.filter_by(category_name="academic").order_by(func.random()).first()
-    casual = DiscussionQuestion.query.filter_by(category_name="casual").order_by(func.random()).first()
-    study = DiscussionQuestion.query.filter_by(category_name="study").order_by(func.random()).first()
-
-    questions = [academic.question, casual.question, study.question]
-    tutorial["questions"] = questions
-
-    utils._emit_tutorial_update(code)
-
-
-@socketio.on("start_timer", namespace="/staff")
-@_with_tutorial_auth
-def start_timer(user_id, code, tutorial):
-    tutorial["timer"]["running"] = True
-    timer.start(code)
-    utils._emit_tutorial_update(code)
-
-
-@socketio.on("stop_timer", namespace="/staff")
-@_with_tutorial_auth
-def stop_timer(user_id, code, tutorial):
-    tutorial["timer"]["running"] = False
-    timer.stop(code)
-    utils._emit_tutorial_update(code)
-
-
-@socketio.on("reset_timer", namespace="/staff")
-@_with_tutorial_auth
-def reset_timer(user_id, code, tutorial, data):
-    new_time = math.ceil(float(data.get("time", 5)) * 60) or 300
-    tutorial["timer"]["duration"] = new_time
-    tutorial["timer"]["remaining"] = new_time
-    tutorial["timer"]["running"] = False
-    timer.stop(code)
-    utils._emit_tutorial_update(code)
-
-
-@socketio.on("leave_tutorial", namespace="/staff")
-def leave_tutorial():
-    user_id = utils.sessions.get(request.sid)
-    if not user_id:
-        return
-
-    code = utils.users.get(user_id, {}).get("tutorial")
-    if not code:
-        return
-
-    tutorial = utils.tutorials.get(code)
-    if not tutorial or tutorial.get("staff") != user_id:
-        return
-
-    tutorial["timer"]["running"] = False
-    timer.stop(code)
-
-    emit("tutorial_ended", room=code, namespace="/")
-
-    student_ids = list(tutorial.get("students", {}).keys())
-    for student_id in student_ids:
-        if student_id in utils.users:
-            utils.users[student_id]["tutorial"] = None
-
-    utils.tutorials.pop(code, None)
-    utils.users[user_id]["tutorial"] = None
-
-    leave_room(code, namespace="/staff")
-    emit("left_tutorial", to=request.sid, namespace="/staff")
-
-
-@socketio.on("delete_tutorial", namespace="/staff")
-def delete_tutorial():
-    user_id = utils.sessions.get(request.sid)
-    if not user_id:
-        return
-
-    code = utils.users.get(user_id, {}).get("tutorial")
-    if not code:
-        return
-
-    tutorial = utils.tutorials.get(code)
-    if not tutorial or tutorial.get("staff") != user_id:
-        return
-
-    tutorial["timer"]["running"] = False
-    timer.stop(code)
-
-    emit("tutorial_ended", room=code, namespace="/")
-    emit("session_cleared", {"message": "Session cleared"}, room=code, namespace="/")
-
-    student_ids = list(tutorial.get("students", {}).keys())
-    for student_id in student_ids:
-        if student_id in utils.users:
-            utils.users[student_id]["tutorial"] = None
-
-    utils.tutorials.pop(code, None)
-    utils.users[user_id]["tutorial"] = None
-    utils.disconnected_staff.pop(code, None)
-
-    emit("tutorial_deleted", {"code": code}, to=request.sid, namespace="/staff")
+    emit_tutorial_update(code)

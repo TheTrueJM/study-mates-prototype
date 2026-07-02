@@ -1,141 +1,83 @@
-import { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import Card from '../../components/Card';
-import Button from '../../components/Button';
-import { getSocket } from '../../socket';
-import { useAuth } from '../../hooks/useAuth';
-import LobbyLayout from './LobbyLayout';
-import GroupLayout from './GroupLayout';
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+
+import { useTutorial } from "../../contexts/TutorialContext";
+
+import Card from "../../components/Card";
+import Button from "../../components/Button";
+import Modal from "../../components/Modal";
+
+import LobbyLayout from "./LobbyLayout";
+import GroupLayout from "./GroupLayout";
+
 
 function Tutorial() {
-  const { code } = useParams();
   const navigate = useNavigate();
+  const { code } = useParams();
 
-  const [socketInstance, setSocketInstance] = useState(null);
-  const { setStudent } = useAuth();
+  const {
+    studentName, attributes, sharedAttributes, attributesComplete,
+    tutorialCode, tutorialName, tutorialState, availableAttributes,
+    groupNumber, groupMembers, questions, timeRemaining, timeRunning,
+    enterTutorial, updateDetails, confirmDetails, leaveTutorial
+  } = useTutorial();
 
-  const [username, setUsername] = useState('Unknown');
-
-  const [tutorialCode, setTutorialCode] = useState(code || '');
-  const [tutorialState, setTutorialState] = useState('lobby');
-  const [tutorialName, setTutorialName] = useState('QUT Tutorial');
-
-  const [groupNumber, setGroupNumber] = useState(null);
-  const [groupMembers, setGroupMembers] = useState([]);
-  const [questions, setQuestions] = useState([]);
-
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-
-  const hasJoinedRef = useRef(false);
 
   useEffect(() => {
-    const socket = getSocket();
-    setSocketInstance(socket);
-
-    const tutorialCode = localStorage.getItem("code");
-    if (tutorialCode && !hasJoinedRef.current) {
-      socket.emit("join_tutorial", { code: tutorialCode });
-      hasJoinedRef.current = true;
-    } else if (!tutorialCode) {
-      socket.emit("fetch_tutorial");
+    // TODO: Handle Errors and Navigation
+    if (!tutorialCode) {
+      enterTutorial(code);
+    } else if (tutorialCode != code) {
+      enterTutorial(tutorialCode);
     }
-
-    const onStudentUpdate = (tutorial) => {
-      if (!tutorial) return;
-
-      setUsername(tutorial.username || 'Unknown');
-
-      setTutorialCode(tutorial.tutorial_code || code || '');
-      setTutorialState(tutorial.state || 'lobby');
-      setTutorialName(`${tutorial.name || 'QUT Tutorial'}${tutorialCode ? ` - ${tutorialCode}` : ''}`);
-
-      setGroupNumber(tutorial.group_number || null);
-      setGroupMembers(tutorial.group_members || []);
-
-      setQuestions(tutorial.questions || []);
-
-      if (tutorial.timer) {
-        setTimeRemaining(tutorial.timer.remaining || 0);
-        setIsRunning(!!tutorial.timer.running);
-      }
-    };
-
-    const onTimerSync = (data) => {
-      setTimeRemaining(data.remaining || 0);
-    };
-
-    const onTimerNotification = (data) => {
-      if (data && data.message) alert(data.message);
-    };
-
-    const onTutorialEnded = () => {
-      localStorage.removeItem("code");
-      localStorage.removeItem("studentDetails");
-      setStudent(null);
-      navigate("/");
-    };
-
-    const onSessionCleared = () => {
-      localStorage.removeItem("code");
-      localStorage.removeItem("studentDetails");
-      setStudent(null);
-      navigate("/");
-    };
-
-    const onError = (err) => {
-      if (err && err.message) {
-        localStorage.removeItem("code");
-        setStudent(null);
-        navigate("/");
-      }
-    };
-
-    socket.on('student_update', onStudentUpdate);
-    socket.on('timer_sync', onTimerSync);
-    socket.on('timer_notification', onTimerNotification);
-    socket.on('tutorial_ended', onTutorialEnded);
-    socket.on('session_cleared', onSessionCleared);
-    socket.on('error', onError);
-
-    return () => {
-      socket.off('student_update', onStudentUpdate);
-      socket.off('timer_sync', onTimerSync);
-      socket.off('timer_notification', onTimerNotification);
-      socket.off('tutorial_ended', onTutorialEnded);
-      socket.off('session_cleared', onSessionCleared);
-      socket.off('error', onError);
-    };
-  }, [navigate]);
-
-  const handleLeave = () => {
-    socketInstance.emit("reset_session");
-  };
+  }, [code, navigate]);
 
   return (
-    <div className="container container-sm mt-lg">
+    <div className="container container-md mt-lg">
       <Card
         title={tutorialName}
         actions={
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <Button variant="outline" onClick={handleLeave}>Leave Tutorial</Button>
+            {/* {(tutorialState === "groups" || tutorialState === "discussion") && (
+              <Button variant="outline" onClick={() => setShowDetailsModal(true)}>
+                Edit Details
+              </Button>
+            )} */}
+            <Button variant="outline" onClick={leaveTutorial}>Leave Tutorial</Button>
           </div>
         }
       >
         {/* tutorial components split across separate files */}
-        {tutorialState === 'lobby' && <LobbyLayout username={username} />}
-        {(tutorialState === 'groups' ||tutorialState === 'discussion') && (
+        {tutorialState === "lobby" && (
+          <LobbyLayout
+            code={code}
+            username={studentName}
+            attributes={attributes}
+            sharedAttributes={sharedAttributes}
+            attributesComplete={attributesComplete}
+            availableAttributes={availableAttributes}
+            updateDetails={updateDetails}
+            confirmDetails={confirmDetails}
+          />
+        )}
+        {(tutorialState === "grouping" || tutorialState === "discussion") && (
           <GroupLayout
+            code={code}
             state={tutorialState}
-            username={username}
+            username={studentName}
             groupNumber={groupNumber}
             groupMembers={groupMembers}
             questions={questions}
             timeRemaining={timeRemaining}
-            isRunning={isRunning}
+            timeRunning={timeRunning}
           />
         )}
       </Card>
+
+
+      {/* <Modal title="Tutorial Session Settings" isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)}> */}
+        {/* TODO: Add Student Attributes Inputs */}
+      {/* </Modal> */}
     </div>
   );
 }

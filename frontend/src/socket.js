@@ -1,47 +1,80 @@
 import { io } from "socket.io-client";
 
-const sockets = {};
 
-export function getSocket(namespace = "/") {
-  if (sockets[namespace]) {
-    return sockets[namespace];
+// Independent socket instances for each namespace
+let studentSocket = null;
+let staffSocket = null;
+
+
+export function getStudentSocket() {
+  if (!studentSocket) {
+    studentSocket = io("/", {
+      path: "/socket.io",
+      auth: { user_id: null, code: null },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 10,
+      timeout: 20000
+    });
+    console.log("Student Socket Created:", studentSocket);
   }
-
-  const uuid = localStorage.getItem("uuid");
-  const code = localStorage.getItem("code");
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-  const url = namespace === "/" ? `${BACKEND_URL}` : `${BACKEND_URL}${namespace}`;
-
-  const socket = io(url, {
-    auth: { uuid, code },
-    withCredentials: true,
-    transports: ["websocket"],
-    path: '/socket.io',
-  });
-  
-  socket.on("session", (data) => {
-    if (data) {
-      if (data.uuid) { localStorage.setItem("uuid", data.uuid); }
-      if (data.code) { localStorage.setItem("code", data.code); }
-    }
-  });
-
-  socket.on("error", (error) => {
-    console.error("Socket error:", error);
-  });
-
-  sockets[namespace] = socket;
-  return socket;
+  return studentSocket;
 }
 
 export function getStaffSocket() {
-  return getSocket('/staff');
+  if (!staffSocket) {
+    staffSocket = io("/staff", {
+      path: "/socket.io",
+      auth: { user_id: null, code: null, token: null },
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 10,
+      timeout: 20000
+    });
+    console.log("Staff Socket Created:", staffSocket);
+  }
+  return staffSocket;
 }
 
-export function disconnectSocket(namespace = "/") {
-  const s = sockets[namespace];
-  if (s) {
-    try { s.disconnect(); } catch (e) {}
-    delete sockets[namespace];
+export function getSocket(namespace = "/") {
+  if (namespace === "/staff") {
+    return getStaffSocket();
   }
+  return getStudentSocket();
+}
+
+
+export function setSocketAuth(namespace, authParams) {
+  const socket = namespace === "/staff" ? staffSocket : studentSocket;
+  if (socket) {
+    socket.auth = { ...authParams };
+    console.log(`Auth updated for ${namespace} socket:`, socket.auth);
+  }
+}
+
+
+export function disconnectSocket(namespace = "/") {
+  if (namespace === "/staff" && staffSocket) {
+    staffSocket.disconnect();
+    staffSocket = null;
+    console.log("Staff Socket Disconnected");
+  } else if (namespace === "/" && studentSocket) {
+    studentSocket.disconnect();
+    studentSocket = null;
+    console.log("Student Socket Disconnected");
+  }
+}
+
+export function disconnectAllSockets() {
+  if (studentSocket) {
+    studentSocket.disconnect();
+    studentSocket = null;
+  }
+  if (staffSocket) {
+    staffSocket.disconnect();
+    staffSocket = null;
+  }
+  console.log("All Sockets Disconnected");
 }

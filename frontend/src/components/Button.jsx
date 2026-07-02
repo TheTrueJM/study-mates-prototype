@@ -1,17 +1,15 @@
-// Button - Reusable button component
-// Variants: 'primary' (blue), 'secondary' (orange), 'outline' (border only)
-
-function Button({ variant = 'primary', fullWidth = false, onClick, children }) {
+// Variants: "primary" (blue), "secondary" (orange), "outline" (border only)
+function Button({ children, onClick, variant = "primary", fullWidth = false, disabled = false }) {
   const className = [
-    'btn',
+    "btn",
     `btn-${variant}`,
-    fullWidth && 'btn-full'
+    fullWidth && "btn-full"
   ]
     .filter(Boolean)
-    .join(' ');
+    .join(" ");
 
   return (
-    <button className={className} onClick={onClick}>
+    <button className={className} onClick={onClick} disabled={disabled}>
       {children}
     </button>
   );

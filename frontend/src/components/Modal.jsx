@@ -1,6 +1,6 @@
-// Modal - Generic modal overlay component
+export default function Modal({ title, isOpen, onClose, children }) {
+  if (!isOpen) return null;
 
-export default function Modal({ title, onClose, children }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>

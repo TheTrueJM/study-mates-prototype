@@ -1,21 +1,20 @@
-import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig, loadEnv } from "vite"
+import react from "@vitejs/plugin-react"
 
-// Vite config exported as a function so we can load environment variables
-export default ({ mode }) => {
-  // Merge all env variables into process.env so import.meta.env works in the client
-  const env = loadEnv(mode, process.cwd(), '');
-  const BACKEND_URL = env.VITE_BACKEND_URL || 'http://localhost:5000';
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const BACKEND_URL = env.VITE_BACKEND_URL || "http://localhost:5000";
 
-  return defineConfig({
+  return {
     plugins: [react()],
     server: {
+      host: true,
       port: 5173,
+      proxy: {
+        "/staff": { target: BACKEND_URL + "/api", changeOrigin: true },
+        "/student": { target: BACKEND_URL + "/api", changeOrigin: true },
+        "/socket.io": { target: BACKEND_URL, ws: true, changeOrigin: true },
+      },
     },
-    proxy: {
-      '/staff': { target: BACKEND_URL, changeOrigin: true },
-      '/student': { target: BACKEND_URL, changeOrigin: true },
-      '/socket.io': { target: BACKEND_URL, ws: true, changeOrigin: true },
-    },
-  });
-};
+  }
+});

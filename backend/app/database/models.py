@@ -1,30 +1,27 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin
 from sqlalchemy.sql import func
 
 
 db = SQLAlchemy()
 
 
-class Staff(db.Model, UserMixin):
+class Staff(db.Model):
     __tablename__ = "staff"
 
-    username = db.Column(db.String(50), primary_key=True)
-    password_hash = db.Column(db.String(255), nullable=False)
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(50), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
 
     invites = db.relationship("AccountInvite", backref="staff")
     
     def __repr__(self):
         return f"{self.id}: {self.username}"
     
-    def get_id(self):
-        return self.username
-    
 class AccountInvite(db.Model):
     __tablename__ = "account_invites"
 
     code = db.Column(db.String(20), primary_key=True)
-    staff_username = db.Column(db.String(50), db.ForeignKey("staff.username"), nullable=False)
+    staff_id = db.Column(db.Integer, db.ForeignKey("staff.id"), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
     active = db.Column(db.Boolean, default=True)
 

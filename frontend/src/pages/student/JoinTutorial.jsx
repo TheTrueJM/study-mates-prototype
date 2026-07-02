@@ -1,91 +1,33 @@
-// JoinTutorial - Student enters a tutorial code and joins a session
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
-import Button from '../../components/Button';
-import { useAuth } from '../../hooks/useAuth';
-import { getSocket } from '../../socket';
+import { useTutorial } from "../../contexts/TutorialContext";
+
+import Button from "../../components/Button";
 
 function JoinTutorial() {
-  const [socketInstance, setSocketInstance] = useState(null);
-  const [code, setCode] = useState('');
   const navigate = useNavigate();
-  const { studentDetails, setStudent } = useAuth();
 
-  const hasJoinedRef = useRef(false);
+  const { enterTutorial } = useTutorial();
 
-  useEffect(() => {
-    const socket = getSocket();
-    setSocketInstance(socket);
+  const [code, setCode] = useState("");
 
-    const onTutorialFound = (tutorial) => {
-      if (tutorial && tutorial.tutorial_code) {
-        navigate(`/tutorial/${tutorial.tutorial_code}`);
-      }
-    };
 
-    socket.on("student_update", onTutorialFound);
+  const handleJoin = (e) => {
+    e.preventDefault();
+    enterTutorial(code);
+  }
 
-    return () => {
-      socket.off("student_update", onTutorialFound);
-    };
-  }, [navigate]);
+  // TODO: Handle Socket Errors (e.g. Invalid Tutorial Code)
 
-  const handleJoin = async () => {
-    if (!code.trim()) {
-      alert("Please enter a tutorial code.");
-      return;
-    }
-
-    if (hasJoinedRef.current) {
-      return;
-    }
-
-    localStorage.setItem("tutorial_code", code);
-    localStorage.setItem("code", code);
-    
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-
-    const apiPost = (endpoint, payload) =>
-      fetch(`${BACKEND_URL}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      }).then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || res.statusText);
-        return data;
-      });
-
-    try {
-      // Update frontend state with tutorial code
-      setStudent({
-        ...studentDetails,
-        code: code.trim().toUpperCase()
-      });
-
-      hasJoinedRef.current = true;
-
-      const onError = (err) => {
-        alert(err.message || "An error occurred while joining the tutorial.");
-        socketInstance.off("error", onError);
-      };
-
-      socketInstance.emit("join_tutorial", { code: code.trim().toUpperCase(), details: studentDetails });
-      socketInstance.on("error", onError);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
 
   return (
     <div className="container container-sm mt-lg">
       <div className="card">
         <h1 className="card-header">Join Tutorial Session</h1>
 
-        <div className="flex-col gap-md" style={{ display: 'flex' }}>
-          {/* Tutorial code input */}
+        <div className="flex-col gap-md" style={{ display: "flex" }}>
+          {/* Tutorial Code Input */}
           <div className="form-group">
             <label className="input-label">Enter Tutorial Code</label>
             <input

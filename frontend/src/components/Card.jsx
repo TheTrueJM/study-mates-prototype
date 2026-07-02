@@ -1,5 +1,3 @@
-// Card - Reusable card wrapper with optional title header
-
 function Card({ title, actions, children }) {
   return (
     <div className="card">
