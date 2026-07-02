@@ -86,7 +86,7 @@ def emit_tutorial_update(code):
         for ns in ["/", "/staff"]:
             emit("error", {"message": "Tutorial Not Found"}, room=code, namespace=ns)
         return
-                    
+    
     students = tutorial.get("students", {})
     groups = tutorial.get("groups", {})
     
@@ -168,9 +168,14 @@ def cleanup_expired_tutorials(): # TODO Run this Periodically in Application
 def get_public_attributes(student):
     public_attributes = {}
     if all_attributes := student.get("attributes"):
+        if str(AttributeType.YEAR) in all_attributes and (year := all_attributes.get(str(AttributeType.YEAR))):
+            public_attributes[str(AttributeType.YEAR)] = year
+        if str(AttributeType.SEMESTER) in all_attributes and (semester := all_attributes.get(str(AttributeType.SEMESTER))):
+            public_attributes[str(AttributeType.SEMESTER)] = semester
+
         for attribute in student.get("shared_attributes", []):
             match attribute:
-                case AttributeType.AVAILABILITY:
+                case str(AttributeType.AVAILABILITY):
                     public_attributes[attribute] = [
                         format_availability(code)
                         for code in sort_availability(all_attributes.get(attribute, []))

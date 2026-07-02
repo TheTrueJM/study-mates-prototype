@@ -52,49 +52,49 @@ export default function GroupLayout({ code, state, username, groupNumber, groupM
                 >
                   <div className="member-name">{member.name}</div>
                   {/* TODO: Improve Styling */}
-                  {expandedMember === member.name && member.sharedAttributes && (
+                  {expandedMember === member.name && member.attributes && (
                     <>
-                      {member.sharedAttributes.includes("current_gpa") && member.current_gpa && (
+                      {member.attributes.current_gpa && (
                         <div className="member-current-gpa" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
                           {/* TODO: Translate to Category (i.e. P, C, H, HD) */}
-                          <strong>Current GPA:</strong> {member.current_gpa || "None Specified"}
+                          <strong>Current GPA:</strong> {member.attributes.current_gpa || "None Specified"}
                         </div>
                       )}
 
-                      {member.sharedAttributes.includes("goal_grade") && member.goal_grade && (
+                      {member.attributes.goal_grade && (
                         <div className="member-goal-grade" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
                           {/* TODO: Translate to Category (i.e. P, C, H, HD) */}
-                          <strong>Goal Grade:</strong> {member.goal_grade || "None Specified"}
+                          <strong>Goal Grade:</strong> {member.attributes.goal_grade || "None Specified"}
                         </div>
                       )}
 
-                      {member.sharedAttributes.includes("availability") && member.availability && (
+                      {member.attributes.availability && (
                         <div className="member-availability" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          <strong>Availability:</strong> {member.availability.join(", ") || "None Specified"}
+                          <strong>Availability:</strong> {member.attributes.availability.join(", ") || "None Specified"}
                         </div>
                       )}
 
-                      {member.sharedAttributes.includes("communication") && member.communication && (
+                      {member.attributes.communication && (
                         <div className="member-availability" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          <strong>Communication Methods:</strong> {member.communication.join(", ") || "None Specified"}
+                          <strong>Communication Methods:</strong> {member.attributes.communication.join(", ") || "None Specified"}
                         </div>
                       )}
 
-                      {member.sharedAttributes.includes("meeting_mode") && member.meeting_mode && (
+                      {member.attributes.meeting_mode && (
                         <div className="member-meeting-mode" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          <strong>Meeting Mode:</strong> {member.meeting_mode || "None Specified"}
+                          <strong>Meeting Mode:</strong> {member.attributes.meeting_mode || "None Specified"}
                         </div>
                       )}
 
-                      {member.sharedAttributes.includes("year") && member.year && (
+                      {member.attributes.year && (
                         <div className="member-year" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          <strong>Study Year:</strong> {member.year || "None Specified"}
+                          <strong>Study Year:</strong> {member.attributes.year || "None Specified"}
                         </div>
                       )}
 
-                      {member.sharedAttributes.includes("semester") && member.semester && (
+                      {member.attributes.semester && (
                         <div className="member-semester" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          <strong>Study Semester:</strong> {member.semester || "None Specified"}
+                          <strong>Study Semester:</strong> {member.attributes.semester || "None Specified"}
                         </div>
                       )}
                     </>

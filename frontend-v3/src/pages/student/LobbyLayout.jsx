@@ -19,7 +19,6 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
   const [semester, setSemester] = useState("");
   const [accessibility, setAccessibility] = useState(false);
 
-  const [sharingAttributes, setSharingAttributes] = useState([]);
   const [shareCurrentGPA, setShareCurrentGPA] = useState(false);
   const [shareGoalGrade, setShareGoalGrade] = useState(false);
   const [shareAvailability, setShareAvailability] = useState(false);
@@ -66,6 +65,14 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
     {value: 2, label: "Second Semester"},
   ];
 
+  const attribute_sharing_map = {
+    shareCurrentGPA: "current_gpa",
+    shareGoalGrade: "goal_grade",
+    shareAvailability: "availability",
+    shareCommunication: "communication",
+    shareMeetingMode: "meeting_mode",
+  };
+
 
   useEffect(() => {
     setCurrentGPA(attributes.current_gpa);
@@ -77,11 +84,46 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
     setSemester(attributes.semester);
     setAccessibility(attributes.accessibility || false);
     
-    // TODO: Handle Attribute Sharing Updating
-    setSharingAttributes(sharedAttributes || []);
+    if (sharedAttributes && Array.isArray(sharedAttributes)) {
+      setShareCurrentGPA(sharedAttributes.includes("current_gpa"));
+      setShareGoalGrade(sharedAttributes.includes("goal_grade"));
+      setShareAvailability(sharedAttributes.includes("availability"));
+      setShareCommunication(sharedAttributes.includes("communication"));
+      setShareMeetingMode(sharedAttributes.includes("meeting_mode"));
+    }
 
     setDisplayAttributes(attributesComplete || false);
   }, [code, navigate]);
+
+
+  const getAttributeSharingList = () => {
+    const sharing = [];
+    for (const [stateKey, attributeKey] of Object.entries(attribute_sharing_map)) {
+      switch (stateKey) {
+        case "shareCurrentGPA":
+          if (shareCurrentGPA) sharing.push(attributeKey);
+          break;
+        case "shareGoalGrade":
+          if (shareGoalGrade) sharing.push(attributeKey);
+          break;
+        case "shareAvailability":
+          if (shareAvailability) sharing.push(attributeKey);
+          break;
+        case "shareCommunication":
+          if (shareCommunication) sharing.push(attributeKey);
+          break;
+        case "shareMeetingMode":
+          if (shareMeetingMode) sharing.push(attributeKey);
+          break;
+      }
+    }
+    return sharing;
+  };
+
+  const toggleSharing = (checked, setShareAttribute) => {
+    setShareAttribute(checked);
+    updateDetails({shared_attributes: getAttributeSharingList()});
+  }
 
 
   const getAvailabilityList = (availableDays) => {
@@ -95,7 +137,6 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
     return availability;
   }
 
-  // Toggle a Time Slot on/off for a Given Day
   const toggleTime = (dayIndex, time) => {
     const newDays = [...availableDays];
     const current = newDays[dayIndex].times;
@@ -110,55 +151,158 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
 
     const newAvailability = getAvailabilityList(newDays);
     setAvailability(newAvailability);
-    updateDetails({availability: newAvailability});
+    updateDetails({
+      availability: newAvailability
+    });
   };
 
 
-  const handleCurrentGPA = (event) => {
-    event.preventDefault();
-    // TODO: Prevalidate
-    const newCurrentGPA = event.target.value;
+  const handleCurrentGPA = (newCurrentGPA) => {
+    // TODO: Improve Prevalidation Feedback Approach
+    const iCurrentGPA = parseFloat(newCurrentGPA);
 
-    setCurrentGPA(newCurrentGPA);
-    updateDetails({current_gpa: newCurrentGPA}); // TODO: Might just need to use event.target.value for these
+    if (!Number.isInteger(iCurrentGPA) || iCurrentGPA < 4 || iCurrentGPA > 7) {
+      alert("Please enter a valid current GPA (between 4 and 7).");
+      return;
+    }
+
+    setCurrentGPA(iCurrentGPA);
+    updateDetails({
+      current_gpa: iCurrentGPA
+    });
   }
 
-  const handleGoalGrade = (event) => {
-    event.preventDefault();
-    const newGoalGrade = event.target.value;
-    
-    setGoalGrade(newGoalGrade);
-    updateDetails({goal_grade: newGoalGrade});
+  const handleGoalGrade = (newGoalGrade) => {
+    // TODO: Improve Prevalidation Feedback Approach
+    const iGoalGrade = parseFloat(newGoalGrade);
+
+    if (!Number.isInteger(iGoalGrade) || iGoalGrade < 4 || iGoalGrade > 7) {
+      alert("Please enter a valid goal grade (between 4 and 7).");
+      return;
+    }
+
+    setGoalGrade(iGoalGrade);
+    updateDetails({
+      goal_grade: iGoalGrade
+    });
   }
 
   const handleAvailability = (event) => {
-    event.preventDefault();
-    const newGoalGrade = event.target.value;
+    const newAvailability = event.target.value;
     
-    setGoalGrade(newGoalGrade);
-    updateDetails({goal_grade: newGoalGrade});
+    setAvailability(newAvailability);
+    updateDetails({
+      availability: newAvailability
+    });
   }
+
+  const handleCommunication = (newCommunicationMethods) => {
+    setCommunication(newCommunicationMethods);
+    updateDetails({
+      communication: newCommunicationMethods
+    });
+  }
+
+  const handleMeetingMode = (newMeetingMode) => {
+    setMeetingMode(newMeetingMode);
+    updateDetails({
+      meeting_mode: newMeetingMode
+    });
+  }
+
+  const handleYear = (newYear) => {
+    // TODO: Improve Prevalidation Feedback Approach
+    const iYear = parseFloat(newYear);
+
+    if (!Number.isInteger(iYear) || iYear < 1 || iYear > 10) {
+      alert("Please enter a valid study year (between 1 and 10).");
+      return;
+    }
+
+    setYear(iYear);
+    updateDetails({
+      year: iYear
+    });
+  }
+
+  const handleSemester = (newSemester) => {
+    // TODO: Improve Prevalidation Feedback Approach
+    const iSemester = parseFloat(newSemester);
+
+    if (!Number.isInteger(iSemester) || iSemester < 1 || iSemester > 2) {
+      alert("Please enter a valid study semester (between 1 and 2).");
+      return;
+    }
+
+    setSemester(iSemester);
+    updateDetails({
+      semester: iSemester
+    });
+  }
+
 
   const handleConfirm = (event) => {
     event.preventDefault();
+
+    // Improve Validation
+    const details = {};
+
+    const iCurrentGPA = parseFloat(currentGPA);
+    const iGoalGrade = parseFloat(goalGrade);
+    const iYear = parseFloat(year);
+    const iSemester = parseFloat(semester);
+    const availability = getAvailabilityList(availableDays);
+
+    console.log('your attributes')
+    console.log(currentGPA, goalGrade, year, semester);
+    console.log(!!currentGPA, !!goalGrade, !!year, !!semester);
+    console.log(availability, communication, meetingMode);
+    console.log(availability.length !== 0, communication.length !== 0, !!meetingMode);
+
+    if (!!currentGPA) {
+      if (!Number.isInteger(iCurrentGPA) || iCurrentGPA < 4 || iCurrentGPA > 7) {
+        alert("Please enter a valid current GPA (between 4 and 7).");
+        return;
+      }
+      details.current_gpa = iCurrentGPA;
+    }
+
+    if (!!goalGrade) {
+      if (!Number.isInteger(iGoalGrade) || iGoalGrade < 4 || iGoalGrade > 7) {
+        alert("Please enter a valid goal grade (between 4 and 7).");
+        return;
+      }
+      details.goal_grade = iGoalGrade;
+    }
+
+    if (!!year) {
+      if (!Number.isInteger(iYear) || iYear < 1 || iYear > 10) {
+        alert("Please enter a valid study year (between 1 and 10).");
+        return;
+      }
+      details.year = iYear;
+    }
+
+    if (!!year) {
+      if (!Number.isInteger(iSemester) || iSemester < 1 || iSemester > 2) {
+        alert("Please enter a valid study semester (between 1 and 2).");
+        return;
+      }
+      details.semester = iSemester;
+    }
 
     // if (availability.length === 0) {
     //   const proceed = window.confirm("You did not select any available times. Submit anyway?");
     //   if (!proceed) return;
     // }
 
-    const availability = getAvailabilityList(availableDays);
+    if (availability.length !== 0) details.availability = availability;
+    if (communication.length !== 0) details.communication = communication;
+    if (!!meetingMode) details.meeting_mode = meetingMode;
 
-    updateDetails({
-      current_gpa: currentGPA,
-      goal_grade: goalGrade,
-      availability: availability,
-      availability: availability,
-      communication: communication,
-      meetingMode: meetingMode,
-      year: year,
-      semester: semester
-    });
+    details.shared_attributes = getAttributeSharingList()
+
+    updateDetails(details);
     confirmDetails();
   }
 
@@ -197,7 +341,9 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
                     name="share-current-gpa-checkbox"
                     label="Share Current GPA with Group Members?"
                     value={shareCurrentGPA}
-                    onChange={setShareCurrentGPA}
+                    onChange={(checked) => {
+                      toggleSharing(checked, setShareCurrentGPA);
+                    }}
                   />
                 </>
               )}
@@ -215,10 +361,12 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
                     onChange={handleGoalGrade}
                   />
                   <CheckboxInput
-                    name="share-current-gpa-checkbox"
+                    name="share-goal-grade-checkbox"
                     label="Share Goal Grade with Group Members?"
                     value={shareGoalGrade}
-                    onChange={setShareGoalGrade}
+                    onChange={(checked) => {
+                      toggleSharing(checked, setShareGoalGrade);
+                    }}
                   />
                 </>
               )}
@@ -253,7 +401,9 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
                     name="share-availability-checkbox"
                     label="Share Availability with Group Members?"
                     value={shareAvailability}
-                    onChange={setShareAvailability}
+                    onChange={(checked) => {
+                      toggleSharing(checked, setShareAvailability);
+                    }}
                   />
                 </div>
               )}
@@ -268,14 +418,16 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
                     value={communication}
                     options={communicationOptions}
                     placeholder="Select Multiple Communication Methods"
-                    onChange={setCommunication}
+                    onChange={handleCommunication}
                     multiple={true}
                   />
                   <CheckboxInput
                     name="share-communication-checkbox"
                     label="Share Communication Methods with Group Members?"
                     value={shareCommunication}
-                    onChange={setShareCommunication}
+                    onChange={(checked) => {
+                      toggleSharing(checked, setShareCommunication);
+                    }}
                   />
                 </>
               )}
@@ -290,13 +442,15 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
                     value={meetingMode}
                     options={meetingModeOptions}
                     placeholder="Select Meeting Mode"
-                    onChange={setMeetingMode}
+                    onChange={handleMeetingMode}
                   />
                   <CheckboxInput
                     name="share-meeting-mode-checkbox"
                     label="Share Meeting Mode with Group Members?"
                     value={shareMeetingMode}
-                    onChange={setShareMeetingMode}
+                    onChange={(checked) => {
+                      toggleSharing(checked, setShareMeetingMode);
+                    }}
                   />
                 </>
               )}
@@ -308,11 +462,11 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
                   <NumberInput
                     name="year"
                     label="Current Study Year"
-                    value={semester}
+                    value={year}
                     min={1}
                     max={10}
                     placeholder="2..."
-                    onChange={setSemester}
+                    onChange={handleYear}
                   />
                   {/* TODO: Add Note that this is Always Shared to Other Students/Group Members */}
                 </>
@@ -328,7 +482,7 @@ export default function LobbyLayout({ code, username, attributes, sharedAttribut
                     value={semester}
                     options={semesterOptions}
                     placeholder="Select Study Semester"
-                    onChange={setSemester}
+                    onChange={handleSemester}
                   />
                   {/* TODO: Add Note that this is Always Shared to Other Students/Group Members */}
                 </>

@@ -32,8 +32,6 @@ def with_tutorial_auth(f):
 def register_student_events(socketio):
     @socketio.on("connect", namespace="/")
     def connect(auth: dict = None):
-        print(f"DEBUG: Student socket connected with auth: {auth}")
-
         user_id = auth.get("uuid") if isinstance(auth, dict) else None
 
         if user_id not in users:
@@ -98,14 +96,14 @@ def register_student_events(socketio):
             emit("error", {"message": "Invalid Data Format"}, to=request.sid, namespace="/")
             return
 
-        current_gpa = data.get(AttributeType.CURRENT_GPA)
-        goal_grade = data.get(AttributeType.GOAL_GRADE)
-        availability = data.get(AttributeType.AVAILABILITY)
-        communication = data.get(AttributeType.COMMUNICATION)
-        meeting_mode = data.get(AttributeType.MEETING_MODE)
-        year = data.get(AttributeType.YEAR)
-        semester = data.get(AttributeType.SEMESTER)
-        accessibility = data.get(AttributeType.ACCESSIBILITY) # TODO Implement into Matching
+        current_gpa = data.get(str(AttributeType.CURRENT_GPA))
+        goal_grade = data.get(str(AttributeType.GOAL_GRADE))
+        availability = data.get(str(AttributeType.AVAILABILITY))
+        communication = data.get(str(AttributeType.COMMUNICATION))
+        meeting_mode = data.get(str(AttributeType.MEETING_MODE))
+        year = data.get(str(AttributeType.YEAR))
+        semester = data.get(str(AttributeType.SEMESTER))
+        accessibility = data.get(str(AttributeType.ACCESSIBILITY)) # TODO Implement into Matching
 
         tutorials[code]["students"][user_id]["attributes"].setdefault(str(AttributeType.CURRENT_GPA), None)
 
@@ -145,14 +143,14 @@ def register_student_events(socketio):
         
         student_attributes.setdefault(str(AttributeType.YEAR), [])
         if str(AttributeType.YEAR) in available_attributes and year:
-             if not isinstance(year, int) and year < 1 or year > 10:
+             if not isinstance(year, int) or year < 1 or year > 10:
                  emit("error", {"message": "Invalid Study Year"}, to=request.sid, namespace="/")
              else:
                  student_attributes[str(AttributeType.YEAR)] = year
 
         student_attributes.setdefault(str(AttributeType.SEMESTER), [])
         if str(AttributeType.SEMESTER) in available_attributes and semester:
-             if not isinstance(semester, int) and semester < 1 or semester > 2:
+             if not isinstance(semester, int) or semester < 1 or semester > 2:
                  emit("error", {"message": "Invalid Study Semester"}, to=request.sid, namespace="/")
              else:
                  student_attributes[str(AttributeType.SEMESTER)] = semester
@@ -161,7 +159,7 @@ def register_student_events(socketio):
 
         shared_attributes = set(data.get("shared_attributes")) if isinstance(data.get("shared_attributes"), list) else set()
         tutorials[code]["students"][user_id]["shared_attributes"] = list(shared_attributes & VALID_ATTRIBUTES)
-        
+
         emit(
             "details_updated",
             {
@@ -229,9 +227,6 @@ def register_student_events(socketio):
 
 
 def join_tutorial(user_id, code):
-    print(f"DEBUG: Joining tutorial with code: {code}")
-    print(f"    ... with all tutorials: {tutorials}")
-
     if not (tutorial := tutorials.get(code)):
         emit("error", {"message": "Tutorial Not Found"}, to=request.sid, namespace="/")
         return

@@ -26,8 +26,6 @@ def form_groups(tutorial):
     REMATCH_RATE = (0.5 / (group_size ** 1.1)) # NOTE This is a Magic Number
     unmatched = set(enumerate(student_ids))
 
-    print("DEBUG: Tutorial with Groups", student_details)
-
     while unmatched:
         # Pick a starting student
         group = [unmatched.pop()]
@@ -48,7 +46,6 @@ def form_groups(tutorial):
                 # Penalise score from student rematches
                 if rematches: score *=  0.4 - (0.4 * (rematches / group_size)) # NOTE This is a Magic Number
 
-                print("DEBUG: Score and Best Score", score, best_score)
                 if score > best_score:
                     best_score = score
                     best_student = (candidate, c_id)
