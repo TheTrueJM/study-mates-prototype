@@ -25,6 +25,9 @@ def form_groups(tutorial):
 
     REMATCH_RATE = (0.5 / (group_size ** 1.1)) # NOTE This is a Magic Number
     unmatched = set(enumerate(student_ids))
+
+    print("DEBUG: Tutorial with Groups", student_details)
+
     while unmatched:
         # Pick a starting student
         group = [unmatched.pop()]
@@ -45,6 +48,7 @@ def form_groups(tutorial):
                 # Penalise score from student rematches
                 if rematches: score *=  0.4 - (0.4 * (rematches / group_size)) # NOTE This is a Magic Number
 
+                print("DEBUG: Score and Best Score", score, best_score)
                 if score > best_score:
                     best_score = score
                     best_student = (candidate, c_id)
@@ -66,46 +70,46 @@ def build_matrix(ids, students, available_attributes):
     max_weight = 0
 
     attribute_averages = calculate_available_averages(students, available_attributes)
-    attribute_averages.setdefault(AttributeType.CURRENT_GPA, GradeType.P)
-    attribute_averages.setdefault(AttributeType.GOAL_GRADE, GradeType.P)
+    attribute_averages.setdefault(str(AttributeType.CURRENT_GPA), int(GradeType.P))
+    attribute_averages.setdefault(str(AttributeType.GOAL_GRADE), int(GradeType.P))
 
     for i in range(student_count):
         s1 = students.get(ids[i], {})
 
-        s1_current_gpa = s1.get(AttributeType.CURRENT_GPA, attribute_averages[AttributeType.CURRENT_GPA])
-        s1_goal_grade = s1.get(AttributeType.GOAL_GRADE, attribute_averages[AttributeType.GOAL_GRADE])
-        s1_availability = set(s1.get(AttributeType.AVAILABILITY, []))
-        s1_communication = set(s1.get(AttributeType.COMMUNICATION, []))
-        s1_meeting = s1.get(AttributeType.MEETING_MODE)
+        s1_current_gpa = s1.get(str(AttributeType.CURRENT_GPA), attribute_averages[str(AttributeType.CURRENT_GPA)])
+        s1_goal_grade = s1.get(str(AttributeType.GOAL_GRADE), attribute_averages[str(AttributeType.GOAL_GRADE)])
+        s1_availability = set(s1.get(str(AttributeType.AVAILABILITY), []))
+        s1_communication = set(s1.get(str(AttributeType.COMMUNICATION), []))
+        s1_meeting = s1.get(str(AttributeType.MEETING_MODE))
 
         for j in range(i + 1, student_count):
             s2 = students.get(ids[j], {})
 
-            s2_current_gpa = s2.get(AttributeType.CURRENT_GPA, attribute_averages[AttributeType.CURRENT_GPA])
-            s2_goal_grade = s2.get(AttributeType.GOAL_GRADE, attribute_averages[AttributeType.GOAL_GRADE])
-            s2_availability = set(s2.get(AttributeType.AVAILABILITY, []))
-            s2_communication = set(s2.get(AttributeType.COMMUNICATION, []))
-            s2_meeting = s2.get(AttributeType.MEETING_MODE)
+            s2_current_gpa = s2.get(str(AttributeType.CURRENT_GPA), attribute_averages[str(AttributeType.CURRENT_GPA)])
+            s2_goal_grade = s2.get(str(AttributeType.GOAL_GRADE), attribute_averages[str(AttributeType.GOAL_GRADE)])
+            s2_availability = set(s2.get(str(AttributeType.AVAILABILITY), []))
+            s2_communication = set(s2.get(str(AttributeType.COMMUNICATION), []))
+            s2_meeting = s2.get(str(AttributeType.MEETING_MODE))
 
             weight = 0
 
             # NOTE All Weights are just Magic Numbers
-            if AttributeType.CURRENT_GPA in available_attributes:
+            if str(AttributeType.CURRENT_GPA) in available_attributes:
                 diff = abs(s1_current_gpa - s2_current_gpa)
                 weight += 5 if diff == 0 else 2.5 if diff == 1 else 0
 
-            if AttributeType.GOAL_GRADE in available_attributes:
+            if str(AttributeType.GOAL_GRADE) in available_attributes:
                 diff = abs(s1_goal_grade - s2_goal_grade)
                 weight += 5 if diff == 0 else 2.5 if diff == 1 else 0
 
-            if AttributeType.AVAILABILITY in available_attributes:
+            if str(AttributeType.AVAILABILITY) in available_attributes:
                 weight += sum(0.5 for time in s2_availability if time in s1_availability)
             
-            if AttributeType.COMMUNICATION in available_attributes:
+            if str(AttributeType.COMMUNICATION) in available_attributes:
                 weight += sum(1 for method in s2_communication if method in s1_communication)
 
-            if AttributeType.MEETING_MODE in available_attributes:
-                if s1_meeting and (s1_meeting == s2_meeting or s1_meeting == MeetingMode.EITHER or s2_meeting == MeetingMode.EITHER):
+            if str(AttributeType.MEETING_MODE) in available_attributes:
+                if s1_meeting and (s1_meeting == s2_meeting or s1_meeting == str(MeetingMode.EITHER) or s2_meeting == str(MeetingMode.EITHER)):
                     weight += 2
 
             matrix[i][j] = matrix[j][i] = weight
@@ -126,21 +130,21 @@ def calculate_available_averages(students, available_attributes):
     total_goal_grade = 0
     students_goal_grade = 0
 
-    for student in students:
-        if AttributeType.CURRENT_GPA in available_attributes:
-            current_gpa = student.get("attributes", {}).get(AttributeType.CURRENT_GPA)
+    for student in students.values():
+        if str(AttributeType.CURRENT_GPA) in available_attributes:
+            current_gpa = student.get("attributes", {}).get(str(AttributeType.CURRENT_GPA))
             if current_gpa and current_gpa in VALID_GRADES:
                 total_current_gpa += current_gpa
                 students_current_gpa += 1
-        if AttributeType.GOAL_GRADE in available_attributes:
-            goal_grade = student.get("attributes", {}).get(AttributeType.GOAL_GRADE)
+        if str(AttributeType.GOAL_GRADE) in available_attributes:
+            goal_grade = student.get("attributes", {}).get(str(AttributeType.GOAL_GRADE))
             if goal_grade and goal_grade in VALID_GRADES:
                 total_goal_grade += goal_grade
                 students_goal_grade += 1
 
     averages = {}
 
-    if students_current_gpa: averages[AttributeType.CURRENT_GPA] = round(total_current_gpa / students_current_gpa)
-    if students_goal_grade: averages[AttributeType.GOAL_GRADE] = round(total_goal_grade / students_goal_grade)
+    if students_current_gpa: averages[str(AttributeType.CURRENT_GPA)] = round(total_current_gpa / students_current_gpa)
+    if students_goal_grade: averages[str(AttributeType.GOAL_GRADE)] = round(total_goal_grade / students_goal_grade)
 
     return averages

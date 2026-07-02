@@ -102,7 +102,7 @@ function Tutorial() {
   return (
     <div className="container container-lg mt-lg">
       <Card
-        title={`${tutorialName} (${tutorialState})`}
+        title={tutorialName}
         actions={
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <Button variant="outline" onClick={() => setShowSettingsModal(true)}>Tutorial Settings</Button>

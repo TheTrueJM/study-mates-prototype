@@ -73,7 +73,7 @@ function Navbar() {
             <br/><br/>
             Our platform groups students based on expected assessment GPA, current academic performance, and shared availability, increasing compatibility and accountability from the start. <strong>Study Mates</strong> runs three unique rounds of grouping so you can meet with a large range of students in the classroom. This approach encourages broader networking, diverse perspectives, and stronger academic balance by combining smart matching with structured rotation. 
           </p>
-          {/* TODO: Update Forms and Links */}
+          {/* TODO: Update Forms, Links, and QR */}
           <div className="divider flex gap-md justify-center">
             <div className="qr-code-container">
               <img src={QRCode} alt="Tutorial QR Code" className="qr-image" />

@@ -18,6 +18,9 @@ class GradeType(Enum):
     D = 6
     HD = 7
 
+    def __int__(self):
+        return self.value
+
 class Day(Enum):
     MON = "MON"
     TUE = "TUE"
@@ -50,6 +53,9 @@ class MeetingMode(Enum):
     VIRTUAL = "virtual"
     EITHER = "either"
 
+    def __str__(self):
+        return self.value
+
 
 class AttributeType(Enum):
     CURRENT_GPA = "current_gpa"
@@ -60,6 +66,9 @@ class AttributeType(Enum):
     YEAR = "year"
     SEMESTER = "semester"
     ACCESSIBILITY = "accessibility"
+
+    def __str__(self):
+        return self.value
 
 
 VALID_GRADES = {grade.value for grade in GradeType}

@@ -128,7 +128,7 @@ def emit_tutorial_update(code):
                         student = students.get(sid, {})
                         student_details = dict()
                         student_details["name"] = student.get("name")
-                        student_details["attributes"] = get_public_attributes()
+                        student_details["attributes"] = get_public_attributes(student)
                         formatted_students[sid] = student_details
                     members.append(formatted_students[sid])
                 formatted_groups[group_number] = members
@@ -203,7 +203,7 @@ def _generate_student_name():
     return f"{random.choice(DESCRIPTORS)}-{random.choice(ANIMALS)}"
 
 def generate_unique_student_name(tutorial_code):
-    student_names = {student.get("name") for student in tutorials[tutorial_code].get("students", [])}
+    student_names = {student.get("name") for student in tutorials[tutorial_code].get("students", {}).values()}
     student_name = _generate_student_name()
     while student_name in student_names:
         student_name = _generate_student_name()

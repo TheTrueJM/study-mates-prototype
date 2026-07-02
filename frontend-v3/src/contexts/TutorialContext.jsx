@@ -118,6 +118,7 @@ export function TutorialProvider({ children }) {
       setTutorialCode(data.tutorial_code);
       setTutorialName(data.tutorial_name);
       setTutorialState(data.state);
+      setAvailableAttributes(data.available_attributes || []);
       setGroupNumber(data.group_number);
       setGroupMembers(data.group_members || []);
       setQuestions(data.questions || []);

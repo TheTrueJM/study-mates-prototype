@@ -16,10 +16,10 @@ function Tutorial() {
   const { code } = useParams();
 
   const {
-    username, attributes, sharedAttributes, attributesComplete,
+    studentName, attributes, sharedAttributes, attributesComplete,
     tutorialCode, tutorialName, tutorialState, availableAttributes,
     groupNumber, groupMembers, questions, timeRemaining, timeRunning,
-    updateDetails, confirmDetails, leaveTutorial
+    enterTutorial, updateDetails, confirmDetails, leaveTutorial
   } = useTutorial();
 
 
@@ -35,7 +35,7 @@ function Tutorial() {
   return (
     <div className="container container-md mt-lg">
       <Card
-        title={`${tutorialName} (${tutorialState})`}
+        title={tutorialName}
         actions={
           <div style={{ display: "flex", gap: "0.5rem" }}>
             {/* {(tutorialState === "groups" || tutorialState === "discussion") && (
@@ -51,7 +51,7 @@ function Tutorial() {
         {tutorialState === "lobby" && (
           <LobbyLayout
             code={code}
-            username={username}
+            username={studentName}
             attributes={attributes}
             sharedAttributes={sharedAttributes}
             attributesComplete={attributesComplete}
@@ -60,11 +60,11 @@ function Tutorial() {
             confirmDetails={confirmDetails}
           />
         )}
-        {(tutorialState === "groups" || tutorialState === "discussion") && (
+        {(tutorialState === "grouping" || tutorialState === "discussion") && (
           <GroupLayout
             code={code}
             state={tutorialState}
-            username={username}
+            username={studentName}
             groupNumber={groupNumber}
             groupMembers={groupMembers}
             questions={questions}

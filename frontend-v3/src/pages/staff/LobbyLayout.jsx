@@ -14,6 +14,7 @@ export default function LobbyLayout({ code, students = {}, onGrouping }) {
             <div className="code-value">{code}</div>
           </div>
           <div className="qr-code-container">
+            {/* TODO: Update Link and QR Code (Automatically Generate with Tutorial Code) */}
             <img src={QRCode} alt="Tutorial QR Code" className="qr-image" />
           </div>
         </div>

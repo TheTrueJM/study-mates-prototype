@@ -224,7 +224,7 @@ def register_staff_events(socketio):
 
             for group_id, members in groups.items():
                 for member_id in members:
-                    tutorials[code]["groups"][group_id].append(member_id)
+                    tutorials[code]["groups"].setdefault(group_id, list()).append(member_id)
                     tutorials[code]["students"][member_id]["group"] = group_id
 
                     tutorials[code]["previous_matches"].setdefault(member_id, set())
