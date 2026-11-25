@@ -83,7 +83,7 @@ Staff creates tutorial → students join via 6-letter code
 |---|---|---|
 | `SECRET_KEY` | `insecure-key` | Flask session secret — **change in production** |
 | `SQLALCHEMY_DATABASE_URI` | `sqlite:///study_mates.sqlite` | Database connection string |
-| `FRONTEND_ORIGINS` | localhost + Vercel URL | Comma-separated CORS allowed origins |
+| `FRONTEND_ORIGINS` | `http://localhost:5173` | Comma-separated CORS allowed origins |
 | `VITE_BACKEND_URL` | `http://localhost:5000` | Backend URL used by the frontend |
 | `PORT` | `5000` | Port the backend listens on |
 | `DEBUG` | `False` | Enable Flask debug mode |
