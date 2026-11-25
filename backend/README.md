@@ -23,7 +23,6 @@ Edit `.env` with your configuration:
 | `JWT_SECRET_KEY` | Secret key for JWT tokens |
 | `DATABASE_URL` | Database connection string |
 | `FRONTEND_ORIGINS` | Allowed frontend CORS origins (comma-separated) |
-| `ADMIN_PASSWORD` | Password for the default admin staff account |
 
 ## Run
 

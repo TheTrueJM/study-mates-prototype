@@ -65,17 +65,6 @@ npm run dev
 
 The app opens at `http://localhost:5173`.
 
-### Default staff account
-
-Staff can also continue as a guest without an account. On first run, a default admin account is created from environment variables (or the fallback values below):
-
-```
-Username: StaffAdmin
-Password: We'reGettingHacked!
-```
-
-Set `ADMIN_USERNAME` and `ADMIN_PASSWORD` in your `.env` before the first run to override these.
-
 ## Session Flow
 
 ```
@@ -94,8 +83,6 @@ Staff creates tutorial → students join via 6-letter code
 |---|---|---|
 | `SECRET_KEY` | `insecure-key` | Flask session secret — **change in production** |
 | `SQLALCHEMY_DATABASE_URI` | `sqlite:///study_mates.sqlite` | Database connection string |
-| `ADMIN_USERNAME` | `StaffAdmin` | Initial staff account username |
-| `ADMIN_PASSWORD` | `We'reGettingHacked!` | Initial staff account password |
 | `FRONTEND_ORIGINS` | localhost + Vercel URL | Comma-separated CORS allowed origins |
 | `VITE_BACKEND_URL` | `http://localhost:5000` | Backend URL used by the frontend |
 | `PORT` | `5000` | Port the backend listens on |

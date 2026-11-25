@@ -1,13 +1,5 @@
-from flask_bcrypt import generate_password_hash
-from dotenv import load_dotenv
-import os
+from .database import db, DiscussionCategory, DiscussionQuestion
 
-from .database import db, Staff, DiscussionCategory, DiscussionQuestion
-
-
-load_dotenv()
-USERNAME = os.getenv("ADMIN_USERNAME", "StaffAdmin")
-PASSWORD = os.getenv("ADMIN_PASSWORD", "We'reGettingHacked!")
 
 # TODO Update Questions
 DISCUSSION = {
@@ -62,16 +54,5 @@ def populate_discussions():
     populate_discussion_questions()
 
 
-def create_staff_admin():
-    if Staff.query.first():
-        return
-
-    username = USERNAME
-    password_hash = generate_password_hash(PASSWORD)
-    db.session.add(Staff(username=username, password_hash=password_hash))
-    db.session.commit()
-
-
 def populate_all():
     populate_discussions()
-    create_staff_admin()
