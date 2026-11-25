@@ -1,150 +1,116 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import { useTutorial } from "../../contexts/TutorialContext";
+import { DEFAULT_AVAILABLE_ATTRIBUTES } from "../../constants/attributes";
 
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import TextInput from "../../components/TextInput";
-import NumberInput from "../../components/NumberInput";
-import SliderInput from "../../components/SliderInput";
-import DropdownInput from "../../components/DropdownInput";
-import CheckboxInput from "../../components/CheckboxInput";
+import ConfirmDialog from "../../components/ConfirmDialog";
+import TutorialSettingsFields from "../../components/TutorialSettingsFields";
+import { validateSettings } from "../../constants/settings";
 
 
 function TutorialSetup() {
+  const navigate = useNavigate();
+  const { tutorialCode, tutorialName, createTutorial, endTutorial } = useTutorial();
+
   const [name, setName] = useState("");
-  const [groupSize, setGroupSize] = useState(5);
-  const [maxGroups, setMaxGroups] = useState("");
-  const [discussionTime, setDiscussionTime] = useState(5);
-  const [availableAttributes, setAvailableAttributes] = useState([]);
-
-  const [enableMaxGroups, setEnableMaxGroups] = useState(false);
-
-  const studentAttributeOptions = [
-    {value: "current_gpa", label: "Current GPA"},
-    {value: "goal_grade", label: "Goal Grade"},
-    {value: "availability", label: "Availability"},
-    {value: "communication", label: "Communication Methods"},
-    {value: "meeting_mode", label: "Prefered Meeting Modes"},
-    {value: "year", label: "Study Year"},
-    {value: "semester", label: "Study Semester"},
-    // {value: "accessibility", label: "Accessibility"}
-  ];
-
-  const { createTutorial, switchToStaff } = useTutorial();
+  const [settings, setSettings] = useState({
+    groupSize: 5,
+    limitGroups: false,
+    maxGroups: "",
+    discussionTime: 5,
+    availableAttributes: [...DEFAULT_AVAILABLE_ATTRIBUTES],
+  });
+  const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [confirmEnd, setConfirmEnd] = useState(false);
+  const [ending, setEnding] = useState(false);
 
 
-  useEffect(() => {
-    // Ensure socket is on /staff namespace when on staff pages
-    // TODO: Verify if Necessary
-    switchToStaff();
-    setAvailableAttributes(["current_gpa", "goal_grade", "availability", "communication"]);
-  }, [])
-
-
-  const handleBegin = (event) => {
+  const handleBegin = async (event) => {
     event.preventDefault();
+    setFormError("");
 
-    const iGroupSize = parseFloat(groupSize);
-    const iMaxGroups = parseFloat(maxGroups);
-    const fDiscussionTime = parseFloat(discussionTime);
+    const { settings: validated, errors: validationErrors } = validateSettings(settings);
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length) return;
 
-    // TODO: Improve Feedback Approach
-    if (!Number.isInteger(iGroupSize) || iGroupSize < 2 || iGroupSize > 10) {
-      alert("Please enter a valid group size (between 2 and 10 students).");
-      return;
+    setCreating(true);
+    const response = await createTutorial({ tutorial_name: name.trim(), ...validated });
+    setCreating(false);
+
+    if (response.ok) {
+      navigate(`/staff/tutorial/${response.tutorial_code}`);
+    } else {
+      setFormError(response.message || "The Session couldn't be Created.");
     }
+  };
 
-    if (enableMaxGroups && !Number.isInteger(iMaxGroups) || iMaxGroups < 2) {
-      alert("Please enter a valid maximum groups (at least 2 groups).");
-      return;
-    }
-
-    if (isNaN(fDiscussionTime) || fDiscussionTime < 1 || fDiscussionTime > 60) {
-      alert("Please enter a valid discussion time (between 1 and 60 minutes).");
-      return;
-    }
-
-    createTutorial({
-      tutorial_name: name,
-      group_size: iGroupSize,
-      max_groups: enableMaxGroups ? iMaxGroups : null,
-      discussion_time: fDiscussionTime,
-      available_attributes: availableAttributes
-    });
+  const handleEnd = async () => {
+    setEnding(true);
+    await endTutorial();
+    setEnding(false);
+    setConfirmEnd(false);
   };
 
 
   return (
-    <div className="container container-md mt-lg">
-      <Card title="Tutorial Session Setup">
-
-        {/* Tutorial Name Input */}
-        <TextInput
-          name="name"
-          label="Enter Tutorial Name"
-          value={name}
-          placeholder="Name..."
-          onChange={setName}
-        />
-
-        {/* Student Group Size Slider (2-10) */}
-        <SliderInput
-          name="group-size"
-          label="Students per Group"
-          value={groupSize}
-          min={2}
-          max={10}
-          onChange={setGroupSize}
-        />
-
-        {/* Maximum Student Groups Input */}
-        <NumberInput
-          name="max-groups"
-          label="Maximum Groups of Students"
-          value={maxGroups}
-          min={2}
-          placeholder="8..."
-          onChange={setMaxGroups}
-          disabled={!enableMaxGroups}
-        />
-        <CheckboxInput
-          name="max-groups-checkbox"
-          label="Enable Maximum Groups"
-          value={enableMaxGroups}
-          onChange={setEnableMaxGroups}
-        />
-
-        {/* Discussion Time Input */}
-        <NumberInput
-          name="discussion-time"
-          label="Discussion Time (minutes)"
-          value={discussionTime}
-          min={1}
-          max={60}
-          placeholder="5..."
-          onChange={setDiscussionTime}
-        />
-
-        {/* Student Attributes Selection */}
-        {/* TODO: Improve Selection Menu and Input Type */}
-        <DropdownInput
-          name="student-attributes"
-          label="Available Student Attributes"
-          value={availableAttributes}
-          options={studentAttributeOptions}
-          placeholder="Select Multiple Attributes"
-          onChange={setAvailableAttributes}
-          multiple={true}
-        />
-
-        <div className="mt-md">
-          <Button variant="secondary" fullWidth onClick={handleBegin}>
-            Begin Tutorial Session
-          </Button>
+    <div className="container container-md page">
+      {tutorialCode && (
+        <div className="callout mb-md">
+          <p>You have a Session in Progress: <strong>{tutorialName || tutorialCode}</strong>.</p>
+          <div className="callout-actions">
+            <Button variant="danger" size="sm" onClick={() => setConfirmEnd(true)}>End It</Button>
+            <Link to={`/staff/tutorial/${tutorialCode}`} className="btn btn-primary btn-sm">Resume Session</Link>
+          </div>
         </div>
+      )}
+
+      <Card title="Start a Tutorial Session">
+        <form onSubmit={handleBegin} noValidate>
+          <TextInput
+            name="name"
+            label="Session Name (optional)"
+            value={name}
+            placeholder="e.g. Tutorial 3, Wednesday 10am"
+            onChange={setName}
+            maxLength={60}
+          />
+
+          <TutorialSettingsFields
+            values={settings}
+            onChange={(values) => {
+              setSettings(values);
+              setErrors({});
+            }}
+            errors={errors}
+          />
+
+          {formError && <p className="input-error mb-sm" role="alert">{formError}</p>}
+
+          <Button type="submit" variant="secondary" fullWidth disabled={creating || !!tutorialCode}>
+            {creating ? "Starting…" : "Begin Tutorial Session"}
+          </Button>
+          {tutorialCode && (
+            <p className="input-hint mt-xs text-center">End or Resume your Current Session to Start a New One.</p>
+          )}
+        </form>
       </Card>
+
+      <ConfirmDialog
+        isOpen={confirmEnd}
+        title="End this Session?"
+        message="All Students will be Removed and their Details Deleted. This can't be Undone."
+        confirmLabel="End Session"
+        danger
+        busy={ending}
+        onConfirm={handleEnd}
+        onCancel={() => setConfirmEnd(false)}
+      />
     </div>
   );
 }

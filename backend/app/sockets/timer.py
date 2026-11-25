@@ -42,26 +42,25 @@ class AsyncTimer:
 
         while self.running:
             for code, remaining, is_done in self._drain_deque():
-                tutorial = tutorials.get(code)
-                if not tutorial:
+                if not tutorials.get(code):
                     continue
 
                 if app_ctx is not None:
                     with app_ctx.app_context():
-                        if is_done:
-                            message = {"message": "Time's up!"}
-                            for namespace in ["/", "/staff"]:
-                                socketio.emit("timer_notification", message, room=code, namespace=namespace)
-                        else:
-                            utils.emit_tutorial_update(code)
+                        self._emit_tick(socketio, utils, code, is_done)
                 else:
-                    if is_done:
-                        for namespace in ["/", "/staff"]:
-                            socketio.emit("timer_notification", message, room=code, namespace=namespace)
-                    else:
-                        utils.emit_tutorial_update(code)
+                    self._emit_tick(socketio, utils, code, is_done)
 
             gevent.sleep(0.01)
+
+    @staticmethod
+    def _emit_tick(socketio, utils, code, is_done):
+        # Always send the Latest Timer State (including final 00:00)
+        utils.emit_tutorial_update(code)
+        if is_done:
+            message = {"message": "Time's up! Discussion time has finished."}
+            for namespace in ["/", "/staff"]:
+                socketio.emit("timer_notification", message, room=code, namespace=namespace)
 
     def _drain_deque(self):
         items = []

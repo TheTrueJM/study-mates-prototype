@@ -1,32 +1,99 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
-import { setSocketAuth } from "../socket";
+import { BACKEND_URL, getStaffToken, setStaffToken } from "../socket";
 
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
+const STAFF_API = `${BACKEND_URL}/api/staff`;
+const SIGNED_OUT = { token: null, staffType: null, username: null };
+
+
+/** Sends a Request to the Staff API, resolving with { ok, status, data, message } (never throws) */
+async function staffRequest(path, options = {}) {
+  try {
+    const response = await fetch(`${STAFF_API}${path}`, options);
+    const data = await response.json().catch(() => ({}));
+    return {
+      ok: response.ok,
+      status: response.status,
+      data,
+      message: data.message || `Something went wrong (HTTP ${response.status}).`,
+    };
+  } catch {
+    return { ok: false, status: 0, data: {}, message: "Couldn't reach the server. Please try again." };
+  }
+}
+
+
+/**
+ * Staff use the Application as a Guest or with an Account. Either way the server issues an Access Token,
+ * which is validated when the App Loads and whenever the Staff Connection is made.
+ */
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [auth, setAuth] = useState(() => ({ ...SIGNED_OUT, token: getStaffToken() }));
+  // A stored sign in is checked with the server before any staff page is shown
+  const [loading, setLoading] = useState(() => !!getStaffToken());
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
-    if (storedToken) setToken(storedToken);
-    setLoading(false);
+  const applyAuth = useCallback((data) => {
+    setStaffToken(data?.token);
+    setAuth(data?.token
+      ? { token: data.token, staffType: data.staff_type ?? null, username: data.username ?? null }
+      : SIGNED_OUT);
   }, []);
 
-  const login = (token) => {
-    localStorage.setItem("token", token);
-    setToken(token);
-  };
+  const logout = useCallback(() => applyAuth(null), [applyAuth]);
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    setToken(null);
-  };
+  useEffect(() => {
+    const token = getStaffToken();
+    if (!token) return;
+
+    let cancelled = false;
+    staffRequest("/me", { headers: { Authorization: `Bearer ${token}` } }).then((response) => {
+      if (cancelled) return;
+
+      if (response.ok) applyAuth({ token, ...response.data });
+      else if (response.status === 401 || response.status === 422) logout();
+      // Otherwise the Server is Unreachable: Keep the Sign In, as the Connection validates it again later
+
+      setLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [applyAuth, logout]);
+
+
+  const continueAsGuest = useCallback(async () => {
+    const response = await staffRequest("/guest", { method: "POST" });
+    if (response.ok && response.data.token) applyAuth(response.data);
+    return response;
+  }, [applyAuth]);
+
+  const signIn = useCallback(async (username, password) => {
+    const response = await staffRequest("/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
+    });
+    if (response.ok && response.data.token) applyAuth(response.data);
+    return response;
+  }, [applyAuth]);
+
+
+  const value = useMemo(() => ({
+    ...auth,
+    isAuthenticated: !!auth.token,
+    isGuest: auth.staffType === "guest",
+    loading,
+    continueAsGuest,
+    signIn,
+    logout,
+  }), [auth, loading, continueAsGuest, signIn, logout]);
 
   return (
-    <AuthContext.Provider value={{ token, isAuthenticated: !!token, login, logout, loading }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

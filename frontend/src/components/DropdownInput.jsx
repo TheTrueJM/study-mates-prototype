@@ -1,6 +1,6 @@
 import InputWrapper from "./InputWrapper";
 
-function DropdownInput({ name, label, hint, value, options, placeholder, onChange, multiple=false, disabled=false }) {
+function DropdownInput({ name, label, hint, error, value, options, placeholder, onChange, multiple = false, disabled = false }) {
   const updateSelection = (event) => {
     if (multiple) {
       const values = Array.from(event.target.selectedOptions, option => option.value);
@@ -11,21 +11,21 @@ function DropdownInput({ name, label, hint, value, options, placeholder, onChang
   };
 
   return (
-    <InputWrapper name={name} label={label} hint={hint}>
-      <select 
+    <InputWrapper name={name} label={label} hint={hint} error={error}>
+      <select
         id={name}
         name={name}
-        value={value} 
+        className={`input ${disabled ? "input-disabled" : ""}`}
+        value={value ?? (multiple ? [] : "")}
         onChange={updateSelection}
         multiple={multiple}
         disabled={disabled}
       >
-        <option value="" disabled>{placeholder}</option>
+        {!multiple && <option value="" disabled>{placeholder}</option>}
         {options.map((option) => (
           <option key={option.value} value={option.value}>{option.label}</option>
         ))}
       </select>
-      {/* TODO: Optionally Display Selection Underneath */}
     </InputWrapper>
   );
 }

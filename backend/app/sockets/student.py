@@ -1,29 +1,35 @@
 from flask import request
-from flask_socketio import emit, join_room, leave_room
+from flask_socketio import emit, join_room
 from functools import wraps
+import time
 
-from .utils import tutorials, users, sessions, generate_unique_user_uuid, generate_unique_student_name, emit_tutorial_update
-from ..enums import TutorialState, AttributeType, VALID_ATTRIBUTES, VALID_GRADES, VALID_MEETING_MODE, parse_availability, parse_communication
+from .utils import tutorials, users, sessions, generate_unique_user_uuid, generate_unique_student_name, emit_tutorial_update, remove_student
+from ..enums import (
+    TutorialState, AttributeType, VALID_GRADES, VALID_MEETING_MODE, SHAREABLE_ATTRIBUTES, DEFAULT_SHARED_ATTRIBUTES,
+    MIN_STUDY_YEAR, MAX_STUDY_YEAR, MIN_STUDY_SEMESTER, MAX_STUDY_SEMESTER, parse_availability, parse_communication
+)
+
+
+def _error(message):
+    """Emits an error to the requesting client, returning a failed acknowledgement"""
+    emit("error", {"message": message}, to=request.sid, namespace="/")
+    return {"ok": False, "message": message}
 
 
 def with_tutorial_auth(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if not (user_id := sessions.get(request.sid)):
-            emit("error", {"message": "User Session Not Found"}, to=request.sid)
-            return
+            return _error("Your session could not be found. Please refresh the page.")
 
         if not (code := users.get(user_id, {}).get("tutorial")):
-            emit("error", {"message": "Not in a Tutorial"}, to=request.sid)
-            return
+            return _error("You are not currently in a tutorial session.")
 
         if not (tutorial := tutorials.get(code)):
-            emit("error", {"message": "Tutorial Not Found"}, to=request.sid)
-            return
+            return _error("This tutorial session could not be found.")
 
-        if user_id not in tutorial.get("students", []):
-            emit("error", {"message": "Not Authorised"}, to=request.sid)
-            return
+        if user_id not in tutorial.get("students", {}):
+            return _error("You are not a member of this tutorial session.")
 
         return f(user_id, code, *args, **kwargs)
     return wrapper
@@ -34,228 +40,145 @@ def register_student_events(socketio):
     def connect(auth: dict = None):
         user_id = auth.get("uuid") if isinstance(auth, dict) else None
 
-        if user_id not in users:
+        # Only an Existing Student's Identity can be resumed (never a Staff Member's)
+        if not isinstance(user_id, str) or users.get(user_id, {}).get("role") != "student":
             user_id = generate_unique_user_uuid()
             users[user_id] = {
                 "sessions": set(),
                 "tutorial": None
             }
 
-        join_room(user_id, namespace="/")
-
-        tutorial_code = auth.get("code") if isinstance(auth, dict) else None
-        if tutorial_code:
-            previous_tutorial = users[user_id]["tutorial"]
-            if previous_tutorial and previous_tutorial in tutorials:
-               leave_tutorial(user_id, previous_tutorial)
-            
-            if tutorial_code in tutorials:
-                join_tutorial(user_id, tutorial_code)
-            else:
-                users[user_id]["tutorial"] = None
-
-        users[user_id]["role"] = "student"
-        users[user_id]["sessions"].add(request.sid)
+        user = users[user_id]
+        user["role"] = "student"
+        user["sessions"].add(request.sid)
         sessions[request.sid] = user_id
 
-        emit("session",
-            {
-                "uuid": user_id,
-                "role": users[user_id]["role"],
-                "code": users[user_id]["tutorial"]
-            }
-        )
+        join_room(user_id, namespace="/")
+
+        # Resume the Student's existing Tutorial (e.g. after a page refresh or network reconnection)
+        code = user.get("tutorial")
+        if code and user_id in tutorials.get(code, {}).get("students", {}):
+            join_room(code, namespace="/")
+        else:
+            user["tutorial"] = code = None
+
+        emit("session", {"uuid": user_id, "role": "student", "code": code})
+
+        if code:
+            emit_tutorial_update(code)
+
+
+    @socketio.on("disconnect", namespace="/")
+    def disconnect(reason=None):
+        _remove_session(request.sid)
 
 
     @socketio.on("enter_tutorial", namespace="/")
-    def enter_tutorial(data):
+    def enter_tutorial(data=None):
         user_id = sessions.get(request.sid)
-        user = users.get(user_id, {})
+        if users.get(user_id, {}).get("role") != "student":
+            return {"ok": False, "message": "Your session could not be found. Please refresh the page."}
 
-        if user.get("role") != "student":
-            emit("error", {"message": "Not Authorised"}, to=request.sid)
-            return
+        code = data.get("code") if isinstance(data, dict) else None
+        code = code.strip().upper() if isinstance(code, str) else ""
+        if not code:
+            return {"ok": False, "message": "Please enter a tutorial code."}
 
-        if not (code := data.get("code")):
-            emit("error", {"message": "Tutorial Code Required"}, to=request.sid)
-            return
-
-        join_tutorial(user_id, code)
-
-    # TODO Verify if Necessary
-    # @socketio.on("fetch_tutorial", namespace="/")
-    # @with_tutorial_auth
-    # def fetch_tutorial(user_id, code, tutorial):
-    #     emit_tutorial_update(code)
+        return join_tutorial(user_id, code)
 
 
     @socketio.on("update_details", namespace="/")
     @with_tutorial_auth
-    def update_details(user_id, code, data):
+    def update_details(user_id, code, data=None):
+        """Updates any provided details (a null or empty value clears the detail) and the shared details"""
         if not isinstance(data, dict):
-            emit("error", {"message": "Invalid Data Format"}, to=request.sid, namespace="/")
-            return
+            return _error("Invalid details format.")
 
-        current_gpa = data.get(str(AttributeType.CURRENT_GPA))
-        goal_grade = data.get(str(AttributeType.GOAL_GRADE))
-        availability = data.get(str(AttributeType.AVAILABILITY))
-        communication = data.get(str(AttributeType.COMMUNICATION))
-        meeting_mode = data.get(str(AttributeType.MEETING_MODE))
-        year = data.get(str(AttributeType.YEAR))
-        semester = data.get(str(AttributeType.SEMESTER))
-        accessibility = data.get(str(AttributeType.ACCESSIBILITY)) # TODO Implement into Matching
+        tutorial = tutorials[code]
+        student = tutorial["students"][user_id]
+        available_attributes = set(tutorial["available_attributes"])
+        attributes = student["attributes"]
+        errors = []
 
-        tutorials[code]["students"][user_id]["attributes"].setdefault(str(AttributeType.CURRENT_GPA), None)
+        for attribute in available_attributes:
+            if attribute not in data:
+                continue
 
-        available_attributes = tutorials[code]["available_attributes"]
-        student_attributes = tutorials[code]["students"][user_id]["attributes"]
+            value, error = _validate_attribute(attribute, data[attribute])
+            if error:
+                errors.append(error)
+            else:
+                attributes[attribute] = value
 
-        student_attributes.setdefault(str(AttributeType.CURRENT_GPA))
-        if str(AttributeType.CURRENT_GPA) in available_attributes and current_gpa:
-             if current_gpa not in VALID_GRADES:
-                 emit("error", {"message": "Invalid Current GPA"}, to=request.sid, namespace="/")
-             else:
-                 student_attributes[str(AttributeType.CURRENT_GPA)] = current_gpa
+        if "shared_attributes" in data:
+            if isinstance(data["shared_attributes"], list):
+                shared_attributes = set(data["shared_attributes"]) & SHAREABLE_ATTRIBUTES
+                student["shared_attributes"] = sorted(shared_attributes)
+            else:
+                errors.append("Invalid shared details.")
 
-        student_attributes.setdefault(str(AttributeType.GOAL_GRADE))
-        if str(AttributeType.GOAL_GRADE) in available_attributes and goal_grade:
-             if goal_grade not in VALID_GRADES:
-                 emit("error", {"message": "Invalid Goal Grade"}, to=request.sid, namespace="/")
-             else:
-                 student_attributes[str(AttributeType.GOAL_GRADE)] = goal_grade
-
-        student_attributes.setdefault(str(AttributeType.AVAILABILITY), [])
-        if str(AttributeType.AVAILABILITY) in available_attributes and availability:
-            if parsed_availability := parse_availability(availability):
-                student_attributes[str(AttributeType.AVAILABILITY)] = parsed_availability
-
-        student_attributes.setdefault(str(AttributeType.COMMUNICATION), [])
-        if str(AttributeType.COMMUNICATION) in available_attributes and communication:
-            if parsed_communication:= parse_communication(communication):
-                student_attributes[str(AttributeType.COMMUNICATION)] = parsed_communication
-
-        student_attributes.setdefault(str(AttributeType.MEETING_MODE))
-        if str(AttributeType.MEETING_MODE) in available_attributes and meeting_mode:
-             if meeting_mode not in VALID_MEETING_MODE:
-                 emit("error", {"message": "Invalid Meeting Mode"}, to=request.sid, namespace="/")
-             else:
-                 student_attributes[str(AttributeType.MEETING_MODE)] = meeting_mode
-        
-        student_attributes.setdefault(str(AttributeType.YEAR), [])
-        if str(AttributeType.YEAR) in available_attributes and year:
-             if not isinstance(year, int) or year < 1 or year > 10:
-                 emit("error", {"message": "Invalid Study Year"}, to=request.sid, namespace="/")
-             else:
-                 student_attributes[str(AttributeType.YEAR)] = year
-
-        student_attributes.setdefault(str(AttributeType.SEMESTER), [])
-        if str(AttributeType.SEMESTER) in available_attributes and semester:
-             if not isinstance(semester, int) or semester < 1 or semester > 2:
-                 emit("error", {"message": "Invalid Study Semester"}, to=request.sid, namespace="/")
-             else:
-                 student_attributes[str(AttributeType.SEMESTER)] = semester
-
-        tutorials[code]["students"][user_id]["attributes"] = student_attributes
-
-        shared_attributes = set(data.get("shared_attributes")) if isinstance(data.get("shared_attributes"), list) else set()
-        tutorials[code]["students"][user_id]["shared_attributes"] = list(shared_attributes & VALID_ATTRIBUTES)
-
-        emit(
-            "details_updated",
-            {
-                "attributes": tutorials[code]["students"][user_id]["attributes"],
-                "shared_attributes":tutorials[code]["students"][user_id]["shared_attributes"]
-            },
-            to=request.sid, namespace="/"
-        )
-
+        tutorial["last_activity"] = _now()
         emit_tutorial_update(code)
+
+        if errors:
+            message = " ".join(errors)
+            emit("error", {"message": message}, to=request.sid, namespace="/")
+            return {"ok": False, "message": message}
+        return {"ok": True}
+
 
     @socketio.on("confirm_details", namespace="/")
     @with_tutorial_auth
-    def confirm_details(user_id, code):
+    def confirm_details(user_id, code, data=None):
         tutorials[code]["students"][user_id]["attributes_complete"] = True
-        emit(
-            "details_confirmed",
-            {
-                "attributes": tutorials[code]["students"][user_id]["attributes"],
-                "shared_attributes":tutorials[code]["students"][user_id]["shared_attributes"]
-            },
-            to=request.sid, namespace="/"
-        )
         emit_tutorial_update(code)
+        return {"ok": True}
 
 
     @socketio.on("leave_tutorial", namespace="/")
     @with_tutorial_auth
-    def leave_tutorial(user_id, code):
-        del tutorials[code]["students"][user_id]
-        users[user_id]["tutorial"] = None
-
-        leave_room(code, namespace="/")
-        emit("left_tutorial", to=request.sid, namespace="/")
-
-
-    # TODO Verify if Necessary
-    # @socketio.on("reset_session", namespace="/")
-    # def reset_session():
-    #     if not (user_id := utils.sessions.get(request.sid)):
-    #         emit("error", ERR_SESSION_NOT_FOUND, to=request.sid)
-    #         return
-
-    #     code = utils.users.get(user_id, {}).get("tutorial")
-    #     if code and code in utils.tutorials:
-    #         tutorial = utils.tutorials[code]
-    #         if user_id in tutorial.get("students", {}):
-    #             student_data = tutorial["students"].get(user_id, {})
-    #             group_id = student_data.get("group")
-
-    #             utils.users[user_id]["last_group"] = group_id
-
-    #             tutorial["students"].pop(user_id, None)
-
-    #             # Clean up from groups
-    #             for group_id, members in tutorial.get("groups", {}).items():
-    #                 if user_id in members:
-    #                     members[:] = [m for m in members if m != user_id]
-            
-    #         utils._emit_tutorial_update(code)
-
-    #     utils.users[user_id]["tutorial"] = None
-
-    #     emit("session_cleared", {"message": "Session cleared"}, to=request.sid)
+    def leave_tutorial(user_id, code, data=None):
+        remove_student(user_id, code)
+        emit("left_tutorial", {"tutorial_code": code}, room=user_id, namespace="/")
+        emit_tutorial_update(code)
+        return {"ok": True}
 
 
 def join_tutorial(user_id, code):
     if not (tutorial := tutorials.get(code)):
-        emit("error", {"message": "Tutorial Not Found"}, to=request.sid, namespace="/")
-        return
+        return {"ok": False, "message": "No session was found with that code. Check the code and try again."}
 
-    if not (user := users.get(user_id)) or not isinstance(user, dict):
-        emit("error", {"message": "User Session Not Found"}, to=request.sid, namespace="/")
-        return
+    if not (user := users.get(user_id)) or user.get("role") != "student":
+        return {"ok": False, "message": "Your session could not be found. Please refresh the page."}
 
-    if user.get("role") != "student":
-        emit("error", {"message": "Invalid User Role"}, to=request.sid, namespace="/")
-        return
+    # Leave any Other Tutorial the Student was previously in
+    previous_code = user.get("tutorial")
+    if previous_code and previous_code != code and previous_code in tutorials:
+        remove_student(user_id, previous_code)
+        emit_tutorial_update(previous_code)
 
     user["tutorial"] = code
-    tutorial["students"][user_id] = {
-        "name": generate_unique_student_name(code),
-        "attributes": dict(),
-        "shared_attributes": list(),
-        "attributes_complete": False,
-        "group": None
-    }
 
-    state = tutorial.get("state")
-    if state in {TutorialState.GROUPING, TutorialState.INTRODUCTION, TutorialState.DISCUSSION}:
-        late_assignment_to_group(code, user_id)
+    # Joining a Tutorial the Student is already in resumes their Existing Details
+    if user_id not in tutorial["students"]:
+        tutorial["students"][user_id] = {
+            "name": generate_unique_student_name(code),
+            "attributes": dict(),
+            "shared_attributes": list(DEFAULT_SHARED_ATTRIBUTES),
+            "attributes_complete": False,
+            "group": None
+        }
 
-    join_room(code, namespace="/")
-    emit("tutorial_joined", {"tutorial_code": code}, to=request.sid, namespace="/")
+        if tutorial.get("state") in {TutorialState.GROUPING, TutorialState.INTRODUCTION, TutorialState.DISCUSSION}:
+            late_assignment_to_group(code, user_id)
 
+    for sid in user.get("sessions", set()):
+        join_room(code, sid=sid, namespace="/")
+
+    emit("tutorial_joined", {"tutorial_code": code}, room=user_id, namespace="/")
     emit_tutorial_update(code)
+
+    return {"ok": True, "tutorial_code": code}
 
 
 def late_assignment_to_group(tutorial_code, student_id):
@@ -265,13 +188,78 @@ def late_assignment_to_group(tutorial_code, student_id):
 
     if not groups or not students.get(student_id):
         return False
-    
-    group_ids = list(groups.keys())
-    best_group_id = group_ids[-1]
-    for group_id in group_ids:
-        if len(groups[group_id]) < len(groups[best_group_id]):
-            best_group_id = group_id
-    
+
+    best_group_id = min(groups.keys(), key=lambda group_id: len(groups[group_id]))
+
     groups[best_group_id].append(student_id)
     students[student_id]["group"] = best_group_id
     return True
+
+
+def _validate_attribute(attribute, value):
+    """Returns a tuple of the cleaned attribute value (None or [] if cleared) and an error message"""
+    match attribute:
+        case AttributeType.CURRENT_GPA.value | AttributeType.GOAL_GRADE.value:
+            if value in (None, ""):
+                return None, None
+            grade = _to_int(value)
+            if grade not in VALID_GRADES:
+                label = "current GPA" if attribute == str(AttributeType.CURRENT_GPA) else "goal grade"
+                return None, f"Invalid {label}."
+            return grade, None
+
+        case AttributeType.AVAILABILITY.value:
+            return parse_availability(value), None
+
+        case AttributeType.COMMUNICATION.value:
+            return parse_communication(value), None
+
+        case AttributeType.MEETING_MODE.value:
+            if value in (None, ""):
+                return None, None
+            if value not in VALID_MEETING_MODE:
+                return None, "Invalid meeting mode."
+            return value, None
+
+        case AttributeType.YEAR.value:
+            if value in (None, ""):
+                return None, None
+            year = _to_int(value)
+            if year is None or not MIN_STUDY_YEAR <= year <= MAX_STUDY_YEAR:
+                return None, "Invalid year of study."
+            return year, None
+
+        case AttributeType.SEMESTER.value:
+            if value in (None, ""):
+                return None, None
+            semester = _to_int(value)
+            if semester is None or not MIN_STUDY_SEMESTER <= semester <= MAX_STUDY_SEMESTER:
+                return None, "Invalid semester of study."
+            return semester, None
+
+    return None, None
+
+
+def _to_int(value):
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, str) and value.strip().isdigit():
+        return int(value.strip())
+    return None
+
+
+def _now():
+    return int(time.time())
+
+
+def _remove_session(sid):
+    """Forgets a closed connection; the user (and their tutorial membership) remains so they can reconnect"""
+    user_id = sessions.pop(sid, None)
+    if user := users.get(user_id):
+        user["sessions"].discard(sid)
+        if not user["sessions"] and not user.get("tutorial"):
+            del users[user_id]

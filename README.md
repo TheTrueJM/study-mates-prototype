@@ -11,11 +11,11 @@ A real-time tutorial session management tool for university tutorials. Staff (tu
 
 ## Features
 
-- **Staff**: Create and manage tutorial sessions, configure group size and discussion time, trigger automatic group assignment, and control the discussion timer
+- **Staff**: Continue as a guest or sign in to an account, then create and manage tutorial sessions, configure group size, discussion time, and which student details are asked for, trigger automatic group assignment, and control the discussion timer
 - **Students**: Join sessions anonymously via code, input GPA and availability, get assigned to a compatible group, and participate in guided discussions
 - **Smart Grouping**: Groups are formed using a compatibility matrix scored on GPA similarity, goal alignment, and schedule overlap — with rematch penalties to avoid repeated pairings across rounds
 - **Real-time Updates**: All session state (lobby, groups, discussion) is pushed live to all connected clients via WebSocket
-- **Reconnection Handling**: Students have a 5-second grace period and staff have a 30-second grace period to reconnect before being removed from a session
+- **Reconnection Handling**: Students and staff keep their place in a session across page refreshes and dropped connections (students stay in the session until they leave or it ends)
 
 ## Tech Stack
 
@@ -23,7 +23,7 @@ A real-time tutorial session management tool for university tutorials. Staff (tu
 |---|---|
 | Frontend | React 18, Vite, React Router DOM v7, Socket.IO Client |
 | Backend | Python, Flask, Flask-SocketIO (eventlet) |
-| Auth | Flask-Login (staff), UUID + localStorage (students) |
+| Auth | JWT access tokens for staff (guest or account), anonymous UUID + sessionStorage (students) |
 | Database | SQLite via Flask-SQLAlchemy (swappable via env var) |
 | Grouping | NumPy (compatibility matrix calculation) |
 | Deployment | Vercel (frontend), Render (backend) |
@@ -67,7 +67,7 @@ The app opens at `http://localhost:5173`.
 
 ### Default staff account
 
-On first run, a default admin account is created from environment variables (or the fallback values below):
+Staff can also continue as a guest without an account. On first run, a default admin account is created from environment variables (or the fallback values below):
 
 ```
 Username: StaffAdmin

@@ -1,9 +1,8 @@
 from flask import Blueprint, request, jsonify
 from flask_bcrypt import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required
-from datetime import datetime, timedelta
-import random, string
+from flask_jwt_extended import get_jwt, jwt_required
 
+from ..auth import GUEST, ACCOUNT, create_staff_token, get_staff_identity
 from ..database import db, Staff, AccountInvite
 
 
@@ -12,26 +11,47 @@ staff_bp = Blueprint("staff", __name__, url_prefix="/staff")
 
 @staff_bp.route("/login", methods=["POST"])
 def login():
-    data = request.get_json()
-
+    data = request.get_json(silent=True)
     if not isinstance(data, dict):
         return jsonify({"message": "Invalid login data or format"}), 400
-    
+
     username = data.get("username")
     password = data.get("password")
-    
-    staff: Staff | None =  Staff.query.filter_by(username=username).first()
+    if not isinstance(username, str) or not isinstance(password, str) or not username or not password:
+        return jsonify({"message": "Enter your username and password"}), 400
 
-    # Validate staff identity and password
-    if not isinstance(staff, Staff):
-        return jsonify({"message": "Staff username not found"}), 400
-    if not check_password_hash(staff.password_hash, password):
-        return jsonify({"message": "Incorrect password"}), 401
-    
-    # Generate JWT
-    token = create_access_token(identity=staff.id)
-    
-    return jsonify({"token": token, "message": "Login successful"}), 200
+    # The same message for an Unknown Username or Wrong Password, so Usernames can't be discovered
+    staff: Staff | None = Staff.query.filter_by(username=username).first()
+    if not staff or not check_password_hash(staff.password_hash, password):
+        return jsonify({"message": "Incorrect username or password"}), 401
+
+    return jsonify({
+        "token": create_staff_token(staff),
+        "staff_type": ACCOUNT,
+        "username": staff.username,
+        "message": "Login successful",
+    }), 200
+
+
+@staff_bp.route("/guest", methods=["POST"])
+def guest():
+    return jsonify({
+        "token": create_staff_token(),
+        "staff_type": GUEST,
+        "username": None,
+        "message": "Continuing as a guest",
+    }), 200
+
+
+@staff_bp.route("/me", methods=["GET"])
+@jwt_required()
+def me():
+    """Validates the request's access token, returning the staff identity it belongs to"""
+    identity = get_staff_identity(get_jwt())
+    if not identity:
+        return jsonify({"message": "Your sign in is no longer valid"}), 401
+
+    return jsonify({"staff_type": identity["type"], "username": identity["username"]}), 200
 
 
 @staff_bp.route("/create-tutorial", methods=["POST"])
@@ -43,70 +63,3 @@ def create_tutorial():
 def end_tutorial():
     # This endpoint is handled via Socket.IO events
     return jsonify({"message": "Use Socket.IO to end tutorial"}), 400
-
-
-# ===== [VERY OLD] Staff Account Invitation & Registration ===== #
-
-# @staff_bp.route("/invite", methods=["GET", "POST"])
-# @login_required
-# def generate_invite():
-#     if request.method == "POST":
-#         code = _generate_invite_code()
-
-#         if code:
-#             invite = AccountInvite(code=code, staff=current_user)
-#             db.session.add(invite)
-#             db.session.commit()
-
-#             invite_url = url_for("staff.register", code=code, _external=True)
-#             print(invite_url)
-
-#     client_path = os.path.join(os.getcwd(), "../frontend/public/staff/invites.html")
-#     return send_file(client_path)
-
-# def _generate_invite_code(length = 20):
-#     codes: list[AccountInvite] = AccountInvite.query.with_entities(AccountInvite.code).all()
-#     for _ in range(1 + len(codes) * 2):
-#         code = ''.join(random.choices(string.ascii_letters, k=length))
-#         if code not in codes:
-#             return code
-#     return None
-
-
-# @staff_bp.route("/register/<code>", methods=["GET", "POST"])
-# def register(code: str):
-#     invite = AccountInvite.query.filter_by(code=code).first()
-
-#     if not invite or not invite.active:
-#         return jsonify({"error": "This invitation is invalid or has already been used"}), 400
-    
-#     if current_user.is_authenticated:
-#         return jsonify({"error": "Your are already authenticated"}), 401
-    
-#     data = request.get_json()
-
-#     if not isinstance(data, dict):
-#         return jsonify({"error": "Invalid login data or format"}), 400
-    
-#     username = data.get("username")
-#     password = data.get("password")
-
-#     staff: Staff | None =  Staff.query.filter_by(username=username).first()
-
-#     # Validate staff identity and password
-#     if isinstance(staff, Staff):
-#         return jsonify({"error": "Staff username is already taken"}), 400
-#     if not username or not password:
-#         return jsonify({"error": "Must provide a username and password"}), 400
-
-#     staff = Staff(
-#         username=username,
-#         password_hash=generate_password_hash(password),
-#     )
-#     db.session.add(staff)
-#     invite.active = False # Expire invite
-#     db.session.commit()
-
-#     login_user(staff)
-
-#     return jsonify({"message": "Register successful"}), 200

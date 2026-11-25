@@ -1,138 +1,83 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-
 import Button from "../../components/Button";
-import Modal from "../../components/Modal";
+import TimerDisplay from "../../components/TimerDisplay";
+import QuestionList from "../../components/QuestionList";
+
+import MemberCard from "./MemberCard";
 
 
-export default function GroupLayout({ code, state, username, groupNumber, groupMembers, questions, timeRemaining, timeRunning }) {
-  const navigate = useNavigate();
+export default function GroupLayout({
+  state, username, groupNumber, groupMembers = [], attributes, availableAttributes = [], attributesComplete,
+  questions = [], timeRemaining, timeRunning, onEdit,
+}) {
+  const canEdit = availableAttributes.length > 0;
 
-  const [expandedMember, setExpandedMember] = useState("");
-  const [showQuestionsModal, setShowQuestionsModal] = useState(false);
+  if (groupNumber === null || groupNumber === undefined) {
+    return (
+      <div className="waiting">
+        <h2 className="waiting-title">Groups are being Formed…</h2>
+        <div className="loading-dots" aria-hidden="true">
+          <div className="dot" />
+          <div className="dot" />
+          <div className="dot" />
+        </div>
+        <p className="text-muted">You'll see your Group here as soon as you're Placed In One.</p>
+      </div>
+    );
+  }
 
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const toggleMember = (name) => {
-    setExpandedMember(expandedMember === name ? "" : name);
-  };
-
+  // Show the Student First, then the rest of the Group Members
+  const members = [...groupMembers].sort((a, b) => (b.name === username) - (a.name === username));
 
   return (
-    <>
-      {groupNumber === null ? (
-        <div className="text-center">
-          <p>Waiting for Group Allocation...</p>
-        </div>
-      ) : (
-        <>
-          <div className="card-subtitle">Group {groupNumber}</div>
-
-          {state === "discussion" && (
-            <div className="timer-display mb-md">
-              <div className="timer-value">{formatTime(timeRemaining)}</div>
-              <div className="timer-status">Remaining Discussion Time</div>
-            </div>
-          )}
-
-          <div className="flex-col gap-xs" style={{ display: "flex" }}>
-            {groupMembers
-              .filter((member, index, self) => index === self.findIndex(m => m.name === member.name))
-              .map((member) => (
-                <div
-                  key={member.name}
-                  className={`member-card ${member.name === username ? "current-user" : ""}`}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => toggleMember(member.name)}
-                >
-                  <div className="member-name">{member.name}</div>
-                  {/* TODO: Improve Styling */}
-                  {expandedMember === member.name && member.attributes && (
-                    <>
-                      {member.attributes.current_gpa && (
-                        <div className="member-current-gpa" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          {/* TODO: Translate to Category (i.e. P, C, H, HD) */}
-                          <strong>Current GPA:</strong> {member.attributes.current_gpa || "None Specified"}
-                        </div>
-                      )}
-
-                      {member.attributes.goal_grade && (
-                        <div className="member-goal-grade" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          {/* TODO: Translate to Category (i.e. P, C, H, HD) */}
-                          <strong>Goal Grade:</strong> {member.attributes.goal_grade || "None Specified"}
-                        </div>
-                      )}
-
-                      {member.attributes.availability && (
-                        <div className="member-availability" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          <strong>Availability:</strong> {member.attributes.availability.join(", ") || "None Specified"}
-                        </div>
-                      )}
-
-                      {member.attributes.communication && (
-                        <div className="member-availability" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          <strong>Communication Methods:</strong> {member.attributes.communication.join(", ") || "None Specified"}
-                        </div>
-                      )}
-
-                      {member.attributes.meeting_mode && (
-                        <div className="member-meeting-mode" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          <strong>Meeting Mode:</strong> {member.attributes.meeting_mode || "None Specified"}
-                        </div>
-                      )}
-
-                      {member.attributes.year && (
-                        <div className="member-year" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          <strong>Study Year:</strong> {member.attributes.year || "None Specified"}
-                        </div>
-                      )}
-
-                      {member.attributes.semester && (
-                        <div className="member-semester" style={{ marginTop: "0.5rem", fontSize: "0.875rem", color: "#666" }}>
-                          <strong>Study Semester:</strong> {member.attributes.semester || "None Specified"}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              ))}
-          </div>
-        </>
-      )}
-
+    <div className="stack">
+      <div className="group-hero">
+        <span className="group-hero-label">Your Group</span>
+        <span className="group-hero-number">{groupNumber}</span>
+        <p className="group-hero-text">
+          {state === "discussion"
+            ? "Discussion Time! Get to know your Group Members."
+            : "Find your Group Members below and Sit Together."}
+        </p>
+      </div>
 
       {state === "discussion" && (
-        <div className="divider mt-md">
-          <Button variant="secondary" onClick={() => setShowQuestionsModal(true)} fullWidth>
-            View Discussion Topics
-          </Button>
+        <TimerDisplay remaining={timeRemaining} running={timeRunning} size="md" />
+      )}
 
-          <p className="mt-sm" style={{ fontSize: "0.875rem", color: "#888" }}>
-            Discuss the Topics and Questions to get to know your Group Members!
-          </p>
+      {canEdit && !attributesComplete && (
+        <div className="callout">
+          <p>You haven't Finished adding your Details. Add them so your Group can get to Know You.</p>
+          <Button size="sm" onClick={onEdit}>Add details</Button>
         </div>
       )}
 
+      {state === "discussion" && (
+        <section>
+          <h2 className="section-title">Discussion Prompts</h2>
+          <QuestionList questions={questions} />
+        </section>
+      )}
 
-      <Modal title="Tutorial Session Settings" isOpen={showQuestionsModal} onClose={() => setShowQuestionsModal(false)}>
-        {questions.length === 0 ? (
-          <p style={{ color: "#888" }}>No Topics Available Yet.</p>
-        ) : (
-          <div className="flex-col gap-xs" style={{ display: "flex" }}>
-            {questions.map((question, index) => (
-              <div key={index} className="question-item">
-                <div className="question-number">{index + 1}</div>
-                <div>{question}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Modal>
-    </>
+      <section>
+        <div className="section-header">
+          <h2 className="section-title">Group Members ({members.length})</h2>
+          <span className="section-hint">Select a Member to see their Details</span>
+        </div>
+        <div className="member-list">
+          {members.map((member) => (
+            <MemberCard
+              key={member.name}
+              member={member}
+              isSelf={member.name === username}
+              ownAttributes={attributes}
+            />
+          ))}
+        </div>
+      </section>
+
+      {canEdit && (
+        <Button variant="outline" fullWidth onClick={onEdit}>Edit my Details</Button>
+      )}
+    </div>
   );
 }

@@ -1,93 +1,101 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import Card from "../../components/Card";
-import Button from '../../components/Button';
+import Button from "../../components/Button";
 import TextInput from "../../components/TextInput";
 
 import { useAuth } from "../../contexts/AuthContext";
 
 
+// Staff choose to continue as a Guest or Sign In to an Account, before landing on the Tutorial Setup Page
 export default function Login() {
   const navigate = useNavigate();
+  const { isAuthenticated, continueAsGuest, signIn } = useAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [guestError, setGuestError] = useState("");
+  const [busy, setBusy] = useState(""); // "" | guest | account
 
-  const [feedback, setFeedback] = useState("");
-  const [feedbackType, setFeedbackType] = useState("");
-
-  const { login } = useAuth();
-
-  const LOGIN_URL = "/staff/login";
+  useEffect(() => {
+    if (isAuthenticated) navigate("/staff/", { replace: true });
+  }, [isAuthenticated, navigate]);
 
 
-  const loginUser = (event) => {
-    event.preventDefault();
-
-    fetch(LOGIN_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ username, password }),
-    })
-      .then(async response => {
-        const data = await response.json();
-        if (!response.ok || data.error) {
-          throw new Error(`Error: ${data.message || "HTTP " + response.status}`);
-        }
-        return data;
-      })
-      // TODO: Implement Proper Feedback Handling
-      .then(data => {
-        login(data.token);
-        setFeedback("Account login successful. Redirecting...");
-        setFeedbackType("success");
-        setTimeout(() => navigate("/staff/"));//, 2500);
-      })
-      .catch(error => {
-        setFeedback(error.message);
-        setFeedbackType("error");
-      });
+  const handleGuest = async () => {
+    setBusy("guest");
+    setGuestError("");
+    const response = await continueAsGuest();
+    setBusy("");
+    if (!response.ok) setGuestError(response.message);
   };
 
-  
+  const handleSignIn = async (event) => {
+    event.preventDefault();
+
+    if (!username.trim() || !password) {
+      setError("Enter your Username and Password.");
+      return;
+    }
+
+    setBusy("account");
+    setError("");
+    const response = await signIn(username.trim(), password);
+    setBusy("");
+    if (!response.ok) setError(response.message);
+  };
+
+
   return (
-    <div className="container container-sm mt-lg">
-      <Card title="Staff Login">
-        <div className="flex-col gap-md" style={{ display: 'flex' }}>
-          {/* Staff Username Input */}
+    <div className="container container-sm page">
+      <Card title="Staff Access" subtitle="Run a Study Mates Session for your Tutorial.">
+        <section className="access-option">
+          <h2 className="access-option-title">Continue as a Guest</h2>
+          <p className="text-muted">Start a Session straight away. No Account Needed.</p>
+          {guestError && <p className="input-error" role="alert">{guestError}</p>}
+          <Button variant="primary" fullWidth onClick={handleGuest} disabled={!!busy}>
+            {busy === "guest" ? "Starting…" : "Continue as Guest"}
+          </Button>
+        </section>
+
+        <div className="access-divider" role="separator"><span>or</span></div>
+
+        <form className="access-option" onSubmit={handleSignIn} noValidate>
+          <h2 className="access-option-title">Sign In to your Account</h2>
+
           <TextInput
             name="username"
-            label="Enter Username"
-            onChange={setUsername}
-            placeholder="Username..."
+            label="Username"
+            value={username}
+            onChange={(value) => {
+              setUsername(value);
+              setError("");
+            }}
+            autoComplete="username"
+            autoCapitalize="none"
           />
 
-          {/* Staff Password Input */}
           <TextInput
             name="password"
-            label="Enter Password"
-            type="password"
-            onChange={setPassword}
-            placeholder="Password..."
+            label="Password"
+            value={password}
+            onChange={(value) => {
+              setPassword(value);
+              setError("");
+            }}
             password={true}
+            autoComplete="current-password"
           />
 
-          <Button variant="primary" fullWidth onClick={loginUser}>
-            Login
+          {error && <p className="input-error mb-sm" role="alert">{error}</p>}
+
+          <Button type="submit" variant="outline" fullWidth disabled={!!busy}>
+            {busy === "account" ? "Signing In…" : "Sign In"}
           </Button>
-        </div>
+        </form>
       </Card>
     </div>
-
-    // <div className="text-center">
-    //   <div className={`feedback ${feedbackType}`}>{feedback}</div>
-    //   <div className="formButtons grid-cols-2">
-    //     <Link className="formButton buttonOutline col-span-2 sm:col-span-1" to="/register">Go to Register</Link>
-    //     <button type="submit" className="formButton buttonAction col-span-2 sm:col-span-1">Login</button>
-    //   </div>
-    // </div>
   );
 }

@@ -1,261 +1,279 @@
-import { createContext, useContext, useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import { getStaffSocket, getStudentSocket, setSocketAuth, disconnectSocket } from "../socket";
+import { getSocket, emitWithAck, setStored, STUDENT_NAMESPACE, STAFF_NAMESPACE } from "../socket";
+import { useAuth } from "./AuthContext";
 
 const TutorialContext = createContext(null);
 
+const INITIAL_TUTORIAL = {
+  tutorialCode: "",
+  tutorialName: "",
+  tutorialState: "",
+  availableAttributes: [],
+  questions: [],
+  timeDuration: 0,
+  timeRemaining: 0,
+  timeRunning: false,
+
+  // Student
+  studentName: "",
+  attributes: {},
+  sharedAttributes: [],
+  attributesComplete: false,
+  studentCount: 0,
+  groupNumber: null,
+  groupMembers: [],
+
+  // Staff
+  students: {},
+  groups: {},
+  groupSize: null,
+  maxGroups: null,
+};
+
+const mapTimer = (timer = {}) => ({
+  timeDuration: timer.duration ?? 0,
+  timeRemaining: timer.remaining ?? 0,
+  timeRunning: !!timer.running,
+});
+
+const mapStudentUpdate = (data) => ({
+  tutorialCode: data.tutorial_code || "",
+  tutorialName: data.tutorial_name || "",
+  tutorialState: data.state || "",
+  availableAttributes: data.available_attributes || [],
+  questions: data.questions || [],
+  ...mapTimer(data.timer),
+  studentName: data.username || "",
+  attributes: data.attributes || {},
+  sharedAttributes: data.shared_attributes || [],
+  attributesComplete: !!data.attributes_complete,
+  studentCount: data.student_count || 0,
+  groupNumber: data.group_number ?? null,
+  groupMembers: data.group_members || [],
+});
+
+const mapStaffUpdate = (data) => ({
+  tutorialCode: data.tutorial_code || "",
+  tutorialName: data.tutorial_name || "",
+  tutorialState: data.state || "",
+  availableAttributes: data.available_attributes || [],
+  questions: data.questions || [],
+  ...mapTimer(data.timer),
+  students: data.students || {},
+  groups: data.groups || {},
+  groupSize: data.group_size ?? null,
+  maxGroups: data.max_groups ?? null,
+});
+
+
 export function TutorialProvider({ children }) {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [UUID, setUUID] = useState("");
-  const [tutorialCode, setTutorialCode] = useState("");
-  const [tutorialName, setTutorialName] = useState("");
-  const [tutorialState, setTutorialState] = useState("");
-  const [availableAttributes, setAvailableAttributes] = useState([]);
-  const [questions, setQuestions] = useState([]);
-  const [timeDuration, setTimeDuration] = useState("");
-  const [timeRemaining, setTimeRemaining] = useState("");
-  const [timeRunning, setTimeRunning] = useState(false);
+  const { token, loading: authLoading, logout } = useAuth();
 
-  const [studentName, setStudentName] = useState("");
-  const [attributes, setAttributes] = useState({});
-  const [sharedAttributes, setSharedAttributes] = useState([]);
-  const [attributesComplete, setAttributesComplete] = useState(false);
-  const [groupNumber, setGroupNumber] = useState("");
-  const [groupMembers, setGroupMembers] = useState({});
+  // The Active Socket Namespace follows the Current Page (staff pages use the staff namespace),
+  // and Staff Pages only Connect once Signed In (reconnecting if the sign in changes)
+  const onStaffPage = location.pathname.startsWith("/staff");
+  const namespace = onStaffPage ? STAFF_NAMESPACE : STUDENT_NAMESPACE;
+  const connectionKey = !onStaffPage ? "student" : (!authLoading && token ? `staff:${token}` : null);
 
-  const [students, setStudents] = useState({});
-  const [groups, setGroups] = useState({});
-  const [groupSize, setGroupSize] = useState("");
-  const [maxGroups, setMaxGroups] = useState("");
+  const [tutorial, setTutorial] = useState(INITIAL_TUTORIAL);
+  const [connected, setConnected] = useState(false);
+  const [connectionLost, setConnectionLost] = useState(false);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [toasts, setToasts] = useState([]);
 
-  const [currentNamespace, setCurrentNamespace] = useState("/");
+  const navigateRef = useRef(navigate);
+  const logoutRef = useRef(logout);
+  const activeKey = useRef(undefined);
+  const activeNamespace = useRef(null);
+  const attachedNamespaces = useRef(new Set());
+
+  useEffect(() => {
+    navigateRef.current = navigate;
+    logoutRef.current = logout;
+  }, [navigate, logout]);
 
 
-  // Helper function to attach all event listeners to a socket instance
-  const attachListeners = (nsSocket) => {
-    nsSocket.on("session", (data) => {
-      console.log("DEBUG Session Socket: ", nsSocket);
+  // Notifications
+  const dismissToast = useCallback((id) => {
+    setToasts((current) => current.filter((toast) => toast.id !== id));
+  }, []);
 
-      if (data) {
-        const uuid = data.uuid;
-        const tutorialCode = data.code;
+  const notify = useCallback((message, type = "info", duration = 4500) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts((current) => [...current.slice(-2), { id, message, type }]);
+    setTimeout(() => dismissToast(id), duration);
+  }, [dismissToast]);
 
-        if (uuid) {
-          localStorage.setItem("uuid", uuid);
-          setUUID(uuid);
-        }
-        if (tutorialCode) {
-          localStorage.setItem("tutorialCode", tutorialCode);
-          setTutorialCode(tutorialCode);
-        }
+
+  // Socket Listeners are attached once per Namespace, and only update state while that Namespace is active
+  const attachListeners = useCallback((ns) => {
+    const socket = getSocket(ns);
+    if (attachedNamespaces.current.has(ns)) return socket;
+    attachedNamespaces.current.add(ns);
+
+    const isActive = () => activeNamespace.current === ns;
+    const homePath = ns === STAFF_NAMESPACE ? "/staff/" : "/";
+
+    socket.on("connect", () => {
+      if (!isActive()) return;
+      setConnected(true);
+      setConnectionLost(false);
+    });
+
+    socket.on("disconnect", (reason) => {
+      if (!isActive()) return;
+      setConnected(false);
+      if (reason !== "io client disconnect") setConnectionLost(true);
+    });
+
+    socket.on("connect_error", (error) => {
+      if (!isActive()) return;
+
+      // The Server refuses Staff whose Sign In has expired or is no longer valid
+      if (ns === STAFF_NAMESPACE && error?.message === "unauthorized") {
+        logoutRef.current();
+        notify("Your Staff Sign In has Expired. Please Sign In again.", "error", 6000);
+        return;
+      }
+      setConnectionLost(true);
+    });
+
+    socket.on("session", (data) => {
+      if (ns === STUDENT_NAMESPACE) setStored(ns, "uuid", data?.uuid);
+      if (!isActive()) return;
+
+      if (data?.code) {
+        setTutorial((current) => ({ ...current, tutorialCode: data.code }));
+      } else {
+        setTutorial(INITIAL_TUTORIAL);
+      }
+      setSessionReady(true);
+    });
+
+    socket.on("error", (error) => {
+      if (isActive() && error?.message) notify(error.message, "error");
+    });
+
+    socket.on("timer_notification", (data) => {
+      if (!isActive()) return;
+      notify(data?.message || "Time's up!", "info", 8000);
+      try {
+        navigator.vibrate?.([200, 100, 200]);
+      } catch {
+        // Vibration not supported
       }
     });
 
-    nsSocket.on("tutorial_ended", () => {
-      setTutorialCode("");
-      setTutorialName("");
-      setTutorialState("");
-      setQuestions([]);
-      setTimeDuration("");
-      setTimeRemaining("");
-      setTimeRunning(false);
-
-      setStudentName("");
-      setAttributes({});
-      setSharedAttributes([]);
-      setAttributesComplete(false);
-      setGroupNumber("");
-      setGroupMembers({});
-
-      setStudents({});
-      setAvailableAttributes([]);
-      setGroups({});
-      setGroupSize("");
-      setMaxGroups("");
-
-      disconnectSocket(currentNamespace);
-
-      // TODO: Redirect to home page or create tutorial page (depending on auth)
-      navigate(currentNamespace == "/staff" ? "/staff/" : "/");
+    socket.on("tutorial_ended", () => {
+      if (!isActive()) return;
+      setTutorial(INITIAL_TUTORIAL);
+      notify(
+        ns === STAFF_NAMESPACE
+          ? "The Tutorial Session has Ended."
+          : "Your Tutor has Ended the Session. Thanks for taking part!",
+        "info"
+      );
+      navigateRef.current(homePath);
     });
 
-    nsSocket.on("error", (error) => {
-      // TODO: Check if Alert causes Issues
-      // alert(error.message);
-      console.log("DEBUG Socket Error: ", error.message);
-    });
+    if (ns === STUDENT_NAMESPACE) {
+      socket.on("tutorial_joined", (data) => {
+        if (isActive()) setTutorial((current) => ({ ...current, tutorialCode: data?.tutorial_code || "" }));
+      });
 
-    // Student Events
-    nsSocket.on("tutorial_joined", (data) => {
-      const tutorialCode = data.tutorial_code;
-      localStorage.setItem("tutorialCode", tutorialCode);
-      setTutorialCode(tutorialCode);
-      navigate(`/tutorial/${tutorialCode}`);
-    });
+      socket.on("left_tutorial", () => {
+        if (!isActive()) return;
+        setTutorial(INITIAL_TUTORIAL);
+        navigateRef.current("/");
+      });
 
-    nsSocket.on("details_updated", (data) => {
-      setAttributes(data.attributes || {});
-      setSharedAttributes(data.sharedAttributes || []);
-      setAttributesComplete(data.attributes_complete);
-    });
+      socket.on("student_update", (data) => {
+        if (isActive()) setTutorial((current) => ({ ...current, ...mapStudentUpdate(data) }));
+      });
+    } else {
+      socket.on("tutorial_created", (data) => {
+        if (isActive()) setTutorial((current) => ({ ...current, tutorialCode: data?.tutorial_code || "" }));
+      });
 
-    nsSocket.on("details_confirmed", (data) => {
-      setAttributes(data.attributes || {});
-      setSharedAttributes(data.sharedAttributes || []);
-      setAttributesComplete(data.attributes_complete);
-    });
+      socket.on("tutorial_update", (data) => {
+        if (isActive()) setTutorial((current) => ({ ...current, ...mapStaffUpdate(data) }));
+      });
+    }
 
-    nsSocket.on("student_update", (data) => {
-      console.log("DEBUG Student Tutorial Update: ", data);
+    return socket;
+  }, [notify]);
 
-      setStudentName(data.username);
-      setAttributes(data.attributes || {});
-      setSharedAttributes(data.shared_attributes || []);
-      setAttributesComplete(data.attributes_complete);
 
-      setTutorialCode(data.tutorial_code);
-      setTutorialName(data.tutorial_name);
-      setTutorialState(data.state);
-      setAvailableAttributes(data.available_attributes || []);
-      setGroupNumber(data.group_number);
-      setGroupMembers(data.group_members || []);
-      setQuestions(data.questions || []);
-
-      const timer = data.timer || {};
-      setTimeDuration(timer.duration);
-      setTimeRemaining(timer.remaining);
-      setTimeRunning(timer.running);
-    });
-
-    // Staff Events
-    nsSocket.on("tutorial_created", (data) => {
-      const tutorialCode = data.tutorial_code;
-      localStorage.setItem("tutorialCode", tutorialCode);
-      setTutorialCode(tutorialCode);
-      navigate(`/staff/tutorial/${tutorialCode}`);
-    });
-
-    nsSocket.on("tutorial_update", (data) => {
-      console.log("DEBUG Staff Tutorial Update: ", data);
-
-      setTutorialCode(data.tutorial_code);
-      setTutorialName(data.tutorial_name);
-      setTutorialState(data.state);
-      setGroupSize(data.group_size);
-      setMaxGroups(data.max_groups);
-      setAvailableAttributes(data.available_attributes || []);
-
-      setStudents(data.students || {});
-      setGroups(data.groups || {});
-      setQuestions(data.questions || []);
-
-      const timer = data.timer || {};
-      setTimeDuration(timer.duration);
-      setTimeRemaining(timer.remaining);
-      setTimeRunning(timer.running);
-    });
-
-    // Timer Events
-    nsSocket.on("timer_notification", (data) => {
-      alert(data.message);
-    });
-  };
-
-  // Initialize student socket on mount
+  // Connect to the Namespace for the Current Page, Disconnecting from the Other
   useEffect(() => {
-    const studentSocket = getStudentSocket();
-    attachListeners(studentSocket);
-    setCurrentNamespace("/");
+    if (activeKey.current === connectionKey) return;
+    activeKey.current = connectionKey;
+
+    const previous = activeNamespace.current;
+    const next = connectionKey ? namespace : null;
+    activeNamespace.current = next;
+    if (previous) getSocket(previous).disconnect();
+
+    setTutorial(INITIAL_TUTORIAL);
+    setSessionReady(false);
+    setConnected(false);
+    setConnectionLost(false);
+
+    if (next) attachListeners(next).connect();
+  }, [connectionKey, namespace, attachListeners]);
+
+
+  // Student Actions (each resolves with the server's acknowledgement)
+  const enterTutorial = useCallback(async (code) => {
+    const response = await emitWithAck(STUDENT_NAMESPACE, "enter_tutorial", { code });
+    if (response.ok) setTutorial((current) => ({ ...current, tutorialCode: response.tutorial_code }));
+    return response;
   }, []);
 
-  const switchToStaff = () => {
-    disconnectSocket("/");
-    const staffSocket = getStaffSocket();
-    attachListeners(staffSocket);
-    setCurrentNamespace("/staff");
-  };
-
-  const switchToStudent = () => {
-    disconnectSocket("/staff");
-    const studentSocket = getStudentSocket();
-    attachListeners(studentSocket);
-    setCurrentNamespace("/");
-  };
-
-  const getActiveSocket = () => {
-    if (currentNamespace === "/staff") {
-      return getStaffSocket();
-    }
-    return getStudentSocket();
-  };
-
-  // Student Actions
-  const enterTutorial = (code) => {
-    getStudentSocket().emit("enter_tutorial", { code });
-  };
-
-  const updateDetails = (details) => {
-    getStudentSocket().emit("update_details", details);
-  };
-
-  const confirmDetails = () => {
-    getStudentSocket().emit("confirm_details");
-  };
-
-  const leaveTutorial = () => {
-    getStudentSocket().emit("leave_tutorial");
-    localStorage.removeItem("tutorialCode");
-  };
+  const updateDetails = useCallback((details) => emitWithAck(STUDENT_NAMESPACE, "update_details", details), []);
+  const confirmDetails = useCallback(() => emitWithAck(STUDENT_NAMESPACE, "confirm_details"), []);
+  const leaveTutorial = useCallback(() => emitWithAck(STUDENT_NAMESPACE, "leave_tutorial"), []);
 
   // Staff Actions
-  const createTutorial = (settings) => {
-    getStaffSocket().emit("create_tutorial", settings);
-  };
+  const createTutorial = useCallback(async (settings) => {
+    const response = await emitWithAck(STAFF_NAMESPACE, "create_tutorial", settings);
+    if (response.ok) setTutorial((current) => ({ ...current, tutorialCode: response.tutorial_code }));
+    return response;
+  }, []);
 
-  const updateTutorial = (settings) => {
-    getStaffSocket().emit("update_settings", settings);
-  };
+  const updateTutorial = useCallback((settings) => emitWithAck(STAFF_NAMESPACE, "update_settings", settings), []);
+  const backToLobby = useCallback(() => emitWithAck(STAFF_NAMESPACE, "return_lobby"), []);
+  const startGrouping = useCallback(() => emitWithAck(STAFF_NAMESPACE, "start_grouping"), []);
+  const startDiscussion = useCallback(() => emitWithAck(STAFF_NAMESPACE, "start_discussion"), []);
+  const startTimer = useCallback(() => emitWithAck(STAFF_NAMESPACE, "start_timer"), []);
+  const stopTimer = useCallback(() => emitWithAck(STAFF_NAMESPACE, "stop_timer"), []);
+  const resetTimer = useCallback(
+    (time) => emitWithAck(STAFF_NAMESPACE, "reset_timer", time === undefined ? {} : { time }),
+    []
+  );
+  const endTutorial = useCallback(() => emitWithAck(STAFF_NAMESPACE, "end_tutorial"), []);
 
-  const backToLobby = () => {
-    getStaffSocket().emit("return_lobby");
-  };
 
-  const startGrouping = () => {
-    getStaffSocket().emit("start_grouping");
-  };
-
-  const startDiscussion = () => {
-    getStaffSocket().emit("start_discussion");
-  };
-
-  const startTimer = () => {
-    getStaffSocket().emit("start_timer");
-  };
-
-  const stopTimer = () => {
-    getStaffSocket().emit("stop_timer");
-  };
-
-  const resetTimer = (time) => {
-    getStaffSocket().emit("reset_timer", { time });
-  };
-
-  const endTutorial = () => {
-    getStaffSocket().emit("end_tutorial");
-    localStorage.removeItem("tutorialCode");
-  };
+  const value = useMemo(() => ({
+    ...tutorial,
+    namespace, connected, connectionLost, sessionReady,
+    toasts, notify, dismissToast,
+    enterTutorial, updateDetails, confirmDetails, leaveTutorial,
+    createTutorial, updateTutorial, backToLobby, startGrouping, startDiscussion,
+    startTimer, stopTimer, resetTimer, endTutorial,
+  }), [
+    tutorial, namespace, connected, connectionLost, sessionReady, toasts, notify, dismissToast,
+    enterTutorial, updateDetails, confirmDetails, leaveTutorial, createTutorial, updateTutorial,
+    backToLobby, startGrouping, startDiscussion, startTimer, stopTimer, resetTimer, endTutorial,
+  ]);
 
   return (
-    <TutorialContext.Provider value={{
-      tutorialCode, tutorialName, tutorialState, questions, timeDuration, timeRemaining, timeRunning,
-      studentName, attributes, sharedAttributes, attributesComplete, groupNumber, groupMembers,
-      students, availableAttributes, groups, groupSize, maxGroups,
-      switchToStaff, switchToStudent, enterTutorial, updateDetails, confirmDetails, leaveTutorial,
-      createTutorial, updateTutorial, backToLobby, startGrouping, startDiscussion, endTutorial,
-      startTimer, stopTimer, resetTimer
-    }}>
+    <TutorialContext.Provider value={value}>
       {children}
     </TutorialContext.Provider>
   );

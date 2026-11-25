@@ -35,17 +35,19 @@ class TimePeriod(Enum):
     A = "A"
     E = "E"
 
-class CommunicationMethod(Enum): # TODO Refine this Option List
+class CommunicationMethod(Enum):
     EMAIL = "email"
     TEAMS = "teams"
     SLACK = "slack"
     DISCORD = "discord"
+    WHATSAPP = "whatsapp"
+    MESSENGER = "messenger"
     INSTAGRAM = "instagram"
     SNAPCHAT = "snapchat"
-    MESSENGER = "messenger"
     SIGNAL = "signal"
     TELEGRAM = "telegram"
     LINKEDIN = "linkedin"
+    SMS = "sms"
     OTHERS = "others"
 
 class MeetingMode(Enum):
@@ -78,6 +80,53 @@ VALID_MEETING_MODE = {mode.value for mode in MeetingMode}
 
 VALID_ATTRIBUTES = {attribute.value for attribute in AttributeType}
 
+MIN_STUDY_YEAR, MAX_STUDY_YEAR = 1, 10
+MIN_STUDY_SEMESTER, MAX_STUDY_SEMESTER = 1, 2
+
+# Attributes a Staff Member can enable for a Tutorial, in display order
+# NOTE Accessibility is not yet implemented into the Student Form or Matching
+SELECTABLE_ATTRIBUTES = [
+    str(AttributeType.GOAL_GRADE),
+    str(AttributeType.CURRENT_GPA),
+    str(AttributeType.AVAILABILITY),
+    str(AttributeType.MEETING_MODE),
+    str(AttributeType.COMMUNICATION),
+    str(AttributeType.YEAR),
+    str(AttributeType.SEMESTER),
+]
+
+# Attributes used by the Matching Algorithm, which Students may choose to hide from Other Students
+SHAREABLE_ATTRIBUTES = {
+    str(AttributeType.CURRENT_GPA),
+    str(AttributeType.GOAL_GRADE),
+    str(AttributeType.AVAILABILITY),
+    str(AttributeType.COMMUNICATION),
+    str(AttributeType.MEETING_MODE),
+}
+
+# Display-Only Attributes (not used for Matching), always visible to other students when provided
+PUBLIC_ATTRIBUTES = {
+    str(AttributeType.YEAR),
+    str(AttributeType.SEMESTER),
+}
+
+# Attributes enabled for a Tutorial when the Staff Member does not specify any
+DEFAULT_AVAILABLE_ATTRIBUTES = [
+    str(AttributeType.GOAL_GRADE),
+    str(AttributeType.CURRENT_GPA),
+    str(AttributeType.AVAILABILITY),
+    str(AttributeType.MEETING_MODE),
+    str(AttributeType.COMMUNICATION),
+]
+
+# Attributes a new Student shares with their group by default
+DEFAULT_SHARED_ATTRIBUTES = [
+    str(AttributeType.GOAL_GRADE),
+    str(AttributeType.AVAILABILITY),
+    str(AttributeType.MEETING_MODE),
+    str(AttributeType.COMMUNICATION),
+]
+
 
 def get_availability_code(day: Day, period: TimePeriod) -> str:
     return f"{day.value}{period.value}"
@@ -100,4 +149,13 @@ def parse_communication(communication_raw) -> list[str]:
     else:
         return list()
 
-    return list(methods & VALID_COMMUNICATION_METHODS)
+    order = [method.value for method in CommunicationMethod]
+    return sorted(methods & VALID_COMMUNICATION_METHODS, key=order.index)
+
+def parse_available_attributes(attributes_raw) -> list[str] | None:
+    """Filters a list of attribute names to those selectable, in display order (None if not a list)"""
+    if not isinstance(attributes_raw, list):
+        return None
+
+    requested = {attribute for attribute in attributes_raw if isinstance(attribute, str)}
+    return [attribute for attribute in SELECTABLE_ATTRIBUTES if attribute in requested]

@@ -1,10 +1,11 @@
-from flask_socketio import emit
+from flask_socketio import emit, leave_room
 import random, string, uuid, time
 
-from ..enums import TutorialState, AttributeType, VALID_ATTRIBUTES
+from ..enums import TutorialState, AttributeType, SHAREABLE_ATTRIBUTES, PUBLIC_ATTRIBUTES
 
 
-users = dict() # { UUID: {sessions: {sID, ...}, role: student|staff|None, tutorial: code|None}, ... }
+# Students are identified by a Random UUID, and Staff by their Access Token
+users = dict() # { ID: {sessions: {sID, ...}, role: student|staff, tutorial: code|None, [staff_type, username]}, ... }
 sessions = dict() # { sID: UUID }
 tutorials = dict()
 # {
@@ -13,7 +14,7 @@ tutorials = dict()
 #       name: str,
 #       state: TutorialState,
 #       group_size: int,
-#       max_groups: int,
+#       max_groups: int | None,
 #       available_attributes: [ ... ],
 #       students: {
 #           UUID: {
@@ -71,9 +72,6 @@ ANIMALS = (
 day_index = {k: i for i, k in enumerate(DAYS.keys())}
 time_index = {k: i for i, k in enumerate(TIMES.keys())}
 
-format_availability = lambda code: (
-    f"{DAYS.get(code[:3], code[:3])}-{TIMES.get(code[3:], code[3:])}" if len(code) == 4 else code
-)
 sort_availability = lambda codes: sorted(
     codes, key=lambda code: (day_index.get(code[:3], 99), time_index.get(code[3:], 99))
 )
@@ -82,14 +80,13 @@ sort_availability = lambda codes: sorted(
 def emit_tutorial_update(code):
     tutorial = tutorials.get(code)
     if not tutorial:
-        # TODO Update Error Messages
         for ns in ["/", "/staff"]:
-            emit("error", {"message": "Tutorial Not Found"}, room=code, namespace=ns)
+            emit("error", {"message": "This tutorial session could not be found."}, room=code, namespace=ns)
         return
-    
+
     students = tutorial.get("students", {})
     groups = tutorial.get("groups", {})
-    
+
     tutorial_name = tutorial.get("name")
     state = str(tutorial.get("state"))
     available_attributes = tutorial.get("available_attributes", [])
@@ -103,35 +100,29 @@ def emit_tutorial_update(code):
         "group_size": tutorial.get("group_size"),
         "max_groups": tutorial.get("max_groups"),
         "available_attributes": available_attributes,
-        "students": students,
+        "students": {
+            student_id: {"name": student.get("name"), "attributes_complete": student.get("attributes_complete")}
+            for student_id, student in students.items()
+        },
         "groups": groups,
         "questions": questions,
         "timer": timer,
     }
     emit("tutorial_update", staff_payload, room=code, namespace="/staff")
 
-    formatted_students = dict()
+    # Public Details of each Grouped Student, as seen by Other Students
     formatted_groups = dict()
-    for student_id, student_data in tutorial.get("students", {}).items():
-        group_number = student_data.get("group")
-        group = tutorial.get("groups", {}).get(group_number)
-        students = tutorial.get("students", {})
+    for group_number, member_ids in groups.items():
+        formatted_groups[group_number] = [
+            {
+                "name": students[member_id].get("name"),
+                "attributes": get_public_attributes(students[member_id], available_attributes),
+            }
+            for member_id in member_ids if member_id in students
+        ]
 
-        members = None
-        if group:
-            if group_number in formatted_groups:
-                members = formatted_groups[group_number]
-            else:
-                members = []
-                for sid in group:
-                    if sid and sid not in formatted_students:
-                        student = students.get(sid, {})
-                        student_details = dict()
-                        student_details["name"] = student.get("name")
-                        student_details["attributes"] = get_public_attributes(student)
-                        formatted_students[sid] = student_details
-                    members.append(formatted_students[sid])
-                formatted_groups[group_number] = members
+    for student_id, student_data in students.items():
+        group_number = student_data.get("group")
 
         payload = {
             "username": student_data.get("name"),
@@ -142,47 +133,75 @@ def emit_tutorial_update(code):
             "tutorial_name": tutorial_name,
             "state": state,
             "available_attributes": available_attributes,
+            "student_count": len(students),
             "group_number": group_number,
-            "group_members": members,
+            "group_members": formatted_groups.get(group_number),
             "questions": questions,
             "timer": timer,
         }
         emit("student_update", payload, room=student_id, namespace="/")
 
 
+def remove_student(user_id, code):
+    """Removes a student (and their connections) from a tutorial, including any groups"""
+    tutorial = tutorials.get(code)
+    if not tutorial or user_id not in tutorial.get("students", {}):
+        return False
+
+    del tutorial["students"][user_id]
+
+    for group_number in list(tutorial.get("groups", {}).keys()):
+        members = tutorial["groups"][group_number]
+        if user_id in members:
+            members.remove(user_id)
+        if not members:
+            del tutorial["groups"][group_number]
+
+    previous_matches = tutorial.get("previous_matches", {})
+    previous_matches.pop(user_id, None)
+    for matches in previous_matches.values():
+        matches.discard(user_id)
+
+    if user := users.get(user_id):
+        if user.get("tutorial") == code:
+            user["tutorial"] = None
+        for sid in user.get("sessions", set()):
+            leave_room(code, sid=sid, namespace="/")
+
+    return True
+
+
 def cleanup_expired_tutorials(): # TODO Run this Periodically in Application
     current_time = time.time()
-    
+
     # TODO Emit Closure to Users
-    for code, tutorial in tutorials.items():
+    for code, tutorial in list(tutorials.items()):
         if tutorial["state"] == TutorialState.ENDED:
             del tutorials[code]
             continue
-        
+
         # Auto-expire if idle for 60 minutes
         if current_time - tutorial.get("last_activity", 0) > 3600:
             tutorial["state"] = TutorialState.ENDED
             del tutorials[code]
 
 
-def get_public_attributes(student):
+def get_public_attributes(student, available_attributes):
+    """Details of a student that other students may see: provided details that are enabled and shared"""
     public_attributes = {}
-    if all_attributes := student.get("attributes"):
-        if str(AttributeType.YEAR) in all_attributes and (year := all_attributes.get(str(AttributeType.YEAR))):
-            public_attributes[str(AttributeType.YEAR)] = year
-        if str(AttributeType.SEMESTER) in all_attributes and (semester := all_attributes.get(str(AttributeType.SEMESTER))):
-            public_attributes[str(AttributeType.SEMESTER)] = semester
+    all_attributes = student.get("attributes") or {}
+    shared_attributes = set(student.get("shared_attributes", []))
 
-        for attribute in student.get("shared_attributes", []):
-            match attribute:
-                case str(AttributeType.AVAILABILITY):
-                    public_attributes[attribute] = [
-                        format_availability(code)
-                        for code in sort_availability(all_attributes.get(attribute, []))
-                    ]
-                case _:
-                    if attribute in VALID_ATTRIBUTES:
-                        public_attributes[attribute] = all_attributes.get(attribute)
+    for attribute in available_attributes:
+        value = all_attributes.get(attribute)
+        if value is None or value == []:
+            continue
+
+        if attribute in PUBLIC_ATTRIBUTES or (attribute in SHAREABLE_ATTRIBUTES and attribute in shared_attributes):
+            if attribute == str(AttributeType.AVAILABILITY):
+                value = sort_availability(value)
+            public_attributes[attribute] = value
+
     return public_attributes
 
 
@@ -205,7 +224,7 @@ def generate_unique_user_uuid():
     return user_uuid
 
 def _generate_student_name():
-    return f"{random.choice(DESCRIPTORS)}-{random.choice(ANIMALS)}"
+    return f"{random.choice(DESCRIPTORS).capitalize()}-{random.choice(ANIMALS).capitalize()}"
 
 def generate_unique_student_name(tutorial_code):
     student_names = {student.get("name") for student in tutorials[tutorial_code].get("students", {}).values()}

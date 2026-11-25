@@ -1,35 +1,36 @@
 import Button from "../../components/Button";
 
+import GroupGrid from "./GroupGrid";
 
-export default function GroupsLayout({ code, students = {}, groups = {}, onGrouping, onDiscussion }) {
+
+export default function GroupsLayout({ students = {}, groups = {}, onGrouping, onDiscussion, busy = "" }) {
+  const groupCount = Object.keys(groups).length;
+  const studentCount = Object.values(groups).reduce((total, members) => total + members.length, 0);
+
   return (
     <>
-      <div className="card-subtitle">Group Formation Results</div>
+      <div className="section-header">
+        <h2 className="section-title">Group Formation Results</h2>
+        <span className="text-muted">{groupCount} Groups · {studentCount} Students</span>
+      </div>
+      <p className="text-muted mb-md">Direct each Group to a Table. Once everyone is Seated, begin the Discussion.</p>
 
-      {/* Group cards in responsive grid */}
-      {Object.keys(groups).length === 0 ? (
-        <div className="text-center mb-lg">
-          <p>No groups formed yet. Click "Reform Groups" to create groups.</p>
-        </div>
+      {groupCount === 0 ? (
+        <div className="empty-state mb-lg">No Groups Formed Yet. Select "Reform groups" to create them.</div>
       ) : (
-        <div className="grid grid-cols-3 mb-lg">
-          {Object.entries(groups).map(([id, members]) => (
-            <div key={id} className="group-card">
-              <div className="group-card-header">Group {id}</div>
-              <div className="group-card-body">
-                {members.map((member) => (
-                  <div key={member} className="group-member">{students[member]?.name || "Unknown"}</div>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="mb-lg">
+          <GroupGrid groups={groups} students={students} />
         </div>
       )}
 
       {/* Action buttons */}
       <div className="btn-group">
-        <Button variant="outline" onClick={onGrouping}>Reform Groups</Button>
-        <Button variant="secondary" onClick={onDiscussion}>Begin Discussion Time</Button>
+        <Button variant="outline" onClick={onGrouping} disabled={!!busy}>
+          {busy === "grouping" ? "Reforming…" : "Reform Groups"}
+        </Button>
+        <Button variant="secondary" onClick={onDiscussion} disabled={!!busy || groupCount === 0}>
+          {busy === "discussion" ? "Starting…" : "Begin Discussion"}
+        </Button>
       </div>
     </>
   );

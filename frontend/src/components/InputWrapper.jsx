@@ -1,11 +1,15 @@
-function InputWrapper({ children, name, label, hint }) {
+function InputWrapper({ children, name, label, hint, error }) {
   return (
     <div className="form-group">
       {label && <label htmlFor={name} className="input-label">{label}</label>}
 
       {children}
 
-      {hint && <div className="input-hint">{hint}</div>}
+      {error ? (
+        <div className="input-error" id={`${name}-error`} role="alert">{error}</div>
+      ) : (
+        hint && <div className="input-hint" id={`${name}-hint`}>{hint}</div>
+      )}
     </div>
   );
 }

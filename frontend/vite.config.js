@@ -11,8 +11,7 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: 5173,
       proxy: {
-        "/staff": { target: BACKEND_URL + "/api", changeOrigin: true },
-        "/student": { target: BACKEND_URL + "/api", changeOrigin: true },
+        "/api": { target: BACKEND_URL, changeOrigin: true },
         "/socket.io": { target: BACKEND_URL, ws: true, changeOrigin: true },
       },
     },

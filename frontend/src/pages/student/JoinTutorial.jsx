@@ -1,49 +1,88 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { useTutorial } from "../../contexts/TutorialContext";
 
+import Card from "../../components/Card";
 import Button from "../../components/Button";
+import TextInput from "../../components/TextInput";
+
+
+const CODE_LENGTH = 6;
+const cleanCode = (value = "") => value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, CODE_LENGTH);
+
 
 function JoinTutorial() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const { enterTutorial } = useTutorial();
+  const { enterTutorial, tutorialCode, tutorialName } = useTutorial();
 
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(() => cleanCode(searchParams.get("code") || ""));
+  const [error, setError] = useState("");
+  const [joining, setJoining] = useState(false);
 
 
-  const handleJoin = (e) => {
-    e.preventDefault();
-    enterTutorial(code);
-  }
+  const handleJoin = async (event) => {
+    event.preventDefault();
 
-  // TODO: Handle Socket Errors (e.g. Invalid Tutorial Code)
+    if (!code) {
+      setError("Enter the Code shown on your Tutor's Screen.");
+      return;
+    }
+
+    setJoining(true);
+    setError("");
+    const response = await enterTutorial(code);
+    setJoining(false);
+
+    if (response.ok) {
+      navigate(`/tutorial/${response.tutorial_code}`);
+    } else {
+      setError(response.message || "Unable to Join this Session.");
+    }
+  };
 
 
   return (
-    <div className="container container-sm mt-lg">
-      <div className="card">
-        <h1 className="card-header">Join Tutorial Session</h1>
+    <div className="container container-sm page">
+      {tutorialCode && (
+        <div className="callout mb-md">
+          <p>You're Still In <strong>{tutorialName || tutorialCode}</strong>.</p>
+          <Link to={`/tutorial/${tutorialCode}`} className="btn btn-primary btn-sm">Return to Session</Link>
+        </div>
+      )}
 
-        <div className="flex-col gap-md" style={{ display: "flex" }}>
-          {/* Tutorial Code Input */}
-          <div className="form-group">
-            <label className="input-label">Enter Tutorial Code</label>
-            <input
-              type="text"
-              className="input"
+      <Card title="Join a tutorial session">
+        <p className="text-muted mb-md">
+          Enter the Code shown on your Tutor's Screen. You'll get a Random Anonymous Name, so no Personal Details are required.
+        </p>
+
+        <form onSubmit={handleJoin} noValidate>
+          <div className="code-input">
+            <TextInput
+              name="tutorial-code"
+              label="Tutorial code"
               value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="ABCDEF..."
+              onChange={(value) => {
+                setCode(cleanCode(value));
+                setError("");
+              }}
+              placeholder="ABCDEF"
+              error={error}
+              autoComplete="off"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="go"
             />
           </div>
 
-          <Button variant="primary" fullWidth onClick={handleJoin}>
-            Confirm
+          <Button type="submit" variant="primary" fullWidth disabled={joining}>
+            {joining ? "Joining…" : "Join Session"}
           </Button>
-        </div>
-      </div>
+        </form>
+      </Card>
     </div>
   );
 }

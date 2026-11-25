@@ -5,11 +5,10 @@ import { useTutorial } from "../../contexts/TutorialContext";
 
 import Card from "../../components/Card";
 import Button from "../../components/Button";
-import NumberInput from "../../components/NumberInput";
-import SliderInput from "../../components/SliderInput";
-// import DropdownInput from "../../components/DropdownInput";
-import CheckboxInput from "../../components/CheckboxInput";
 import Modal from "../../components/Modal";
+import ConfirmDialog from "../../components/ConfirmDialog";
+import TutorialSettingsFields from "../../components/TutorialSettingsFields";
+import { validateSettings } from "../../constants/settings";
 
 import LobbyLayout from "./LobbyLayout";
 import GroupsLayout from "./GroupsLayout";
@@ -20,186 +19,183 @@ function Tutorial() {
   const navigate = useNavigate();
   const { code } = useParams();
 
-  const [groupSizeSetting, setGroupSizeSetting] = useState(5);
-  const [maxGroupsSetting, setMaxGroupsSetting] = useState("");
-  const [discussionTimeSetting, setDiscussionTimeSetting] = useState(5);
-  const [availableAttributesSetting, setAvailableAttributesSetting] = useState([]);
-
-  const [enableMaxGroups, setEnableMaxGroups] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
-
   const {
-    tutorialCode, tutorialName, tutorialState, groupSize, maxGroups, availableAttributes,
+    sessionReady, tutorialCode, tutorialName, tutorialState, groupSize, maxGroups, availableAttributes,
     students, groups, questions, timeDuration, timeRemaining, timeRunning,
     updateTutorial, backToLobby, startGrouping, startDiscussion, endTutorial,
-    startTimer, stopTimer, resetTimer
+    startTimer, stopTimer, resetTimer, notify,
   } = useTutorial();
 
+  const [settingsValues, setSettingsValues] = useState(null);
+  const [settingsErrors, setSettingsErrors] = useState({});
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [confirmEnd, setConfirmEnd] = useState(false);
+  const [ending, setEnding] = useState(false);
+  const [busy, setBusy] = useState("");
 
+
+  // Once the Session is Known, redirect if this isn't the Staff Member's Running Tutorial
   useEffect(() => {
-    // TODO: Handle Errors and Navigation
+    if (!sessionReady) return;
     if (!tutorialCode) {
-      navigate("/staff/");
-    } else if (tutorialCode != code) {
-      navigate(`/staff/tutorial/${tutorialCode}`);
+      navigate("/staff/", { replace: true });
+    } else if (tutorialCode !== code) {
+      navigate(`/staff/tutorial/${tutorialCode}`, { replace: true });
     }
-
-    setGroupSizeSetting(groupSize);
-    setMaxGroupsSetting(maxGroups);
-    setEnableMaxGroups(!!maxGroups)
-    setDiscussionTimeSetting(timeDuration / 60);
-    setAvailableAttributesSetting(availableAttributes)
-  }, [code, navigate]);
+  }, [sessionReady, tutorialCode, code, navigate]);
 
 
-  // Tutorial State Handling
-  const handleLobby = () => backToLobby();
-  const handleGrouping = () => startGrouping();
-  const handleDiscussion = () => startDiscussion();
-  const handleClose = () => {
-    if (confirm("Are you sure you want to close this Tutorial?")) {
-      endTutorial();
-    }
+  // Errors are Reported by the Server as Notifications
+  const run = (key, action) => async () => {
+    setBusy(key);
+    await action();
+    setBusy("");
   };
-  const handleTimerStart = () => startTimer();
-  const handleTimerStop = () => stopTimer();
 
-
-  const handleUpdateSettings = (event) => {
-    event.preventDefault();
-
-    const iGroupSize = parseFloat(groupSizeSetting);
-    const iMaxGroups = parseFloat(maxGroupsSetting);
-    const fDiscussionTime = parseFloat(discussionTimeSetting);
-
-    // TODO: Improve Feedback Approach (take from SetupTutorial)
-    if (!Number.isInteger(iGroupSize) || iGroupSize < 2 || iGroupSize > 10) {
-      alert("Please enter a valid group size (between 2 and 10 students).");
-      return;
-    }
-
-    if (enableMaxGroups && !Number.isInteger(iMaxGroups) || iMaxGroups < 2) {
-      alert("Please enter a valid maximum groups (at least 2 groups).");
-      return;
-    }
-
-    if (isNaN(fDiscussionTime) || fDiscussionTime < 1 || fDiscussionTime > 60) {
-      alert("Please enter a valid discussion time (between 1 and 60 minutes).");
-      return;
-    }
-
-    updateTutorial({
-      group_size: iGroupSize,
-      max_groups: enableMaxGroups ? iMaxGroups : null,
-      discussion_time: fDiscussionTime,
-      available_attributes: availableAttributes
+  const openSettings = () => {
+    setSettingsErrors({});
+    setSettingsValues({
+      groupSize: groupSize ?? 5,
+      limitGroups: !!maxGroups,
+      maxGroups: maxGroups ?? "",
+      discussionTime: timeDuration ? Math.round((timeDuration / 60) * 100) / 100 : 5,
+      availableAttributes: [...availableAttributes],
     });
-
-    setShowSettingsModal(false);
   };
 
+  const handleSaveSettings = async () => {
+    const { settings, errors } = validateSettings(settingsValues);
+    setSettingsErrors(errors);
+    if (Object.keys(errors).length) return;
+
+    setSavingSettings(true);
+    const response = await updateTutorial(settings);
+    setSavingSettings(false);
+
+    if (response.ok) {
+      setSettingsValues(null);
+      notify("Settings Updated.", "success");
+    }
+  };
+
+  const handleEnd = async () => {
+    setEnding(true);
+    await endTutorial();
+    setEnding(false);
+    setConfirmEnd(false);
+  };
+
+
+  if (!tutorialState || tutorialCode !== code) {
+    return (
+      <div className="container container-sm page">
+        <div className="card text-center">
+          <div className="loading-dots mb-sm" aria-hidden="true">
+            <div className="dot" />
+            <div className="dot" />
+            <div className="dot" />
+          </div>
+          <p>Loading Session…</p>
+        </div>
+      </div>
+    );
+  }
+
+  const studentCount = Object.keys(students).length;
 
   return (
-    <div className="container container-lg mt-lg">
+    <div className="container container-lg page">
       <Card
         title={tutorialName}
+        subtitle={<>Code <strong className="code-inline">{code}</strong> · {studentCount} Student{studentCount === 1 ? "" : "s"}</>}
         actions={
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <Button variant="outline" onClick={() => setShowSettingsModal(true)}>Tutorial Settings</Button>
-            {(tutorialState !== "lobby") && (
-              <Button onClick={handleLobby}>Back to Lobby</Button>
+          <>
+            {tutorialState !== "lobby" && (
+              <Button variant="outline" size="sm" onClick={run("lobby", backToLobby)} disabled={!!busy}>
+                Back to Lobby
+              </Button>
             )}
-          </div>
+            <Button variant="outline" size="sm" onClick={openSettings}>Settings</Button>
+            <Button variant="danger" size="sm" onClick={() => setConfirmEnd(true)}>End Session</Button>
+          </>
         }
       >
-        {/* tutorial components split across separate files */}
         {tutorialState === "lobby" && (
           <LobbyLayout
             code={code}
             students={students}
-            onGrouping={handleGrouping}
+            availableAttributes={availableAttributes}
+            onGrouping={run("grouping", startGrouping)}
+            busy={busy === "grouping"}
           />
         )}
-        {tutorialState === "grouping" && (
+        {(tutorialState === "grouping" || tutorialState === "introduction") && (
           <GroupsLayout
-            code={code}
             students={students}
             groups={groups}
-            onGrouping={handleGrouping}
-            onDiscussion={handleDiscussion}
+            onGrouping={run("grouping", startGrouping)}
+            onDiscussion={run("discussion", startDiscussion)}
+            busy={busy}
           />
         )}
         {tutorialState === "discussion" && (
           <DiscussionLayout
-            code={code}
             questions={questions}
             timeRemaining={timeRemaining}
+            timeDuration={timeDuration}
             timeRunning={timeRunning}
-            onGrouping={handleGrouping}
-            onStartTimer={handleTimerStart}
-            onStopTimer={handleTimerStop}
+            students={students}
+            groups={groups}
+            onGrouping={run("grouping", startGrouping)}
+            onStartTimer={startTimer}
+            onStopTimer={stopTimer}
+            onResetTimer={() => resetTimer()}
+            busy={busy}
           />
         )}
       </Card>
 
 
-      <Modal title="Tutorial Session Settings" isOpen={showSettingsModal} onClose={() => setShowSettingsModal(false)}>
-        {/* Student Group Size Slider (2-10) */}
-        <SliderInput
-          name="group-size"
-          label="Students per Group"
-          value={groupSizeSetting}
-          min={2}
-          max={10}
-          onChange={setGroupSizeSetting}
-        />
-
-        {/* Maximum Student Groups Input */}
-        <NumberInput
-          name="max-groups"
-          label="Maximum Groups of Students"
-          value={maxGroups}
-          min={2}
-          placeholder="8..."
-          onChange={setMaxGroupsSetting}
-          disabled={!enableMaxGroups}
-        />
-        <CheckboxInput
-          name="max-groups-checkbox"
-          label="Enable Maximum Groups"
-          value={enableMaxGroups}
-          onChange={setEnableMaxGroups}
-        />
-
-        {/* Discussion Time Input */}
-        <NumberInput
-          name="discussion-time"
-          label="Discussion Time (minutes)"
-          value={discussionTimeSetting}
-          min={1}
-          max={60}
-          placeholder="5..."
-          onChange={setDiscussionTimeSetting}
-        />
-
-        {/* Student Attributes Selection */}
-        {/* TODO: Include and Improve Selection Menu and Input Type */}
-        {/* <DropdownInput
-          name="student-attributes"
-          label="Available Student Attributes"
-          value={availableAttributes}
-          options={studentAttributeOptions}
-          placeholder="Select Multiple Attributes"
-          onChange={setAvailableAttributes}
-          multiple={true}
-        /> */}
-
-        {/* Action buttons */}
-        <div className="btn-group">
-          <Button variant="outline" onClick={handleClose}>Close Tutorial</Button>
-          <Button variant="primary" onClick={handleUpdateSettings}>Update Settings</Button>
-        </div>
+      <Modal
+        title="Session settings"
+        isOpen={!!settingsValues}
+        onClose={() => setSettingsValues(null)}
+        footer={
+          <div className="btn-group">
+            <Button variant="outline" onClick={() => setSettingsValues(null)}>Cancel</Button>
+            <Button variant="primary" onClick={handleSaveSettings} disabled={savingSettings}>
+              {savingSettings ? "Saving…" : "Save Settings"}
+            </Button>
+          </div>
+        }
+      >
+        {settingsValues && (
+          <>
+            <TutorialSettingsFields
+              values={settingsValues}
+              onChange={(values) => {
+                setSettingsValues(values);
+                setSettingsErrors({});
+              }}
+              errors={settingsErrors}
+            />
+            <p className="input-hint">
+              Group Settings apply from the Next Grouping Round. Changes to Student Details update Students' Forms straight away.
+            </p>
+          </>
+        )}
       </Modal>
+
+      <ConfirmDialog
+        isOpen={confirmEnd}
+        title="End this Session?"
+        message="All Students will be Removed and their Details Deleted. This can't be Undone."
+        confirmLabel="End Session"
+        danger
+        busy={ending}
+        onConfirm={handleEnd}
+        onCancel={() => setConfirmEnd(false)}
+      />
     </div>
   );
 }

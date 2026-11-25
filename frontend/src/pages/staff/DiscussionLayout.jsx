@@ -1,48 +1,48 @@
 import Button from "../../components/Button";
+import TimerDisplay from "../../components/TimerDisplay";
+import QuestionList from "../../components/QuestionList";
+
+import GroupGrid from "./GroupGrid";
 
 
-export default function DiscussionLayout({ code, questions = [], timeRemaining = 0, timeRunning = false, onGrouping, onStartTimer, onStopTimer }) {
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  };
-
+export default function DiscussionLayout({
+  questions = [], timeRemaining = 0, timeDuration = 0, timeRunning = false, students = {}, groups = {},
+  onGrouping, onStartTimer, onStopTimer, onResetTimer, busy = "",
+}) {
+  const finished = timeRemaining <= 0;
+  const untouched = !timeRunning && timeRemaining === timeDuration;
 
   return (
-    <>
-      <div className="card-subtitle">Group Discussion</div>
-
-      {/* Timer display */}
-      <div className="form-group">
-        <label className="input-label">Time Remaining</label>
-        <div className="timer-display">
-          <div className="timer-value">{formatTime(timeRemaining)}</div>
-          <div className="timer-status">{timeRunning ? "Timer Running" : "Timer Ready"}</div>
+    <div className="stack">
+      <div className="discussion-timer">
+        <TimerDisplay remaining={timeRemaining} running={timeRunning} size="xl" />
+        <div className="btn-group mt-sm">
+          {timeRunning ? (
+            <Button variant="outline" onClick={onStopTimer}>Pause Timer</Button>
+          ) : (
+            <Button variant="secondary" onClick={onStartTimer}>
+              {finished ? "Restart Timer" : untouched ? "Start Timer" : "Resume Timer"}
+            </Button>
+          )}
+          <Button variant="outline" onClick={onResetTimer} disabled={untouched}>Reset Timer</Button>
         </div>
       </div>
 
-      {/* Discussion questions */}
-      <div className="mb-md">
-        <label className="input-label">Discussion Topics and Questions</label>
-        <div className="flex-col gap-xs" style={{ display: "flex" }}>
-          {questions.map((question, index) => (
-            <div key={index} className="question-item">
-              <div className="question-number">{index + 1}</div>
-              <div>{question}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      <section>
+        <h2 className="section-title">Discussion Prompts</h2>
+        <QuestionList questions={questions} />
+      </section>
 
-      <div className="btn-group">
-        {!timeRunning ? (
-          <Button variant="secondary" onClick={onStartTimer}>Resume Discussion Timer</Button>
-        ) : (
-          <Button variant="outline" onClick={onStopTimer}>Pause Discussion Timer</Button>
-        )}
-        <Button variant="primary" onClick={onGrouping}>Next Group Forming Round</Button>
-      </div>
-    </>
+      <details className="disclosure">
+        <summary>Show Groups ({Object.keys(groups).length})</summary>
+        <div className="disclosure-body">
+          <GroupGrid groups={groups} students={students} />
+        </div>
+      </details>
+
+      <Button variant="primary" fullWidth onClick={onGrouping} disabled={!!busy}>
+        {busy === "grouping" ? "Forming Groups…" : "Next Group Round"}
+      </Button>
+    </div>
   );
 }
