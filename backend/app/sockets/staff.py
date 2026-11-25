@@ -175,7 +175,7 @@ def register_staff_events(socketio):
         tutorial = tutorials[code]
 
         if len(tutorial["students"]) < 2:
-            return _error("At least 2 students need to join before groups can be formed.")
+            return _error("At least 2 @tudents need to join before Groups can be Formed.")
 
         try:
             groups = form_groups(tutorial)

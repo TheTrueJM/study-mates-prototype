@@ -157,7 +157,7 @@ function Tutorial() {
 
 
       <Modal
-        title="Session settings"
+        title="Session Settings"
         isOpen={!!settingsValues}
         onClose={() => setSettingsValues(null)}
         footer={

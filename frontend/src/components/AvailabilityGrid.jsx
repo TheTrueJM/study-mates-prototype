@@ -97,7 +97,7 @@ export function AvailabilityPreview({ value = [], shared = [] }) {
       <p className="availability-preview-text">
         {formatAvailability(value)}
         {shared.length > 0 && (
-          <span className="availability-preview-common"> · Free the same time as you: {formatAvailability(shared)}</span>
+          <span className="availability-preview-common"> · Free the Same Time as You: {formatAvailability(shared)}</span>
         )}
       </p>
     </div>

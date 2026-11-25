@@ -175,7 +175,7 @@ export function TutorialProvider({ children }) {
       notify(
         ns === STAFF_NAMESPACE
           ? "The Tutorial Session has Ended."
-          : "Your Tutor has Ended the Session. Thanks for taking part!",
+          : "Your Tutor has Ended the Session. Thanks for Taking Part!",
         "info"
       );
       navigateRef.current(homePath);

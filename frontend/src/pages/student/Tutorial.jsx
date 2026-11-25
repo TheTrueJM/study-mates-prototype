@@ -84,7 +84,7 @@ function Tutorial() {
     setLeaving(false);
     if (response.ok) {
       setConfirmLeave(false);
-      notify("You left the session.", "info");
+      notify("You left the Session.", "info");
     }
   };
 

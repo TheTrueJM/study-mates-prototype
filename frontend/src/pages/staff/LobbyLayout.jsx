@@ -19,7 +19,7 @@ export default function LobbyLayout({ code, students = {}, availableAttributes =
       await navigator.clipboard.writeText(joinUrl);
       notify("Join Link Copied.", "success");
     } catch {
-      notify("The Link couldn't be copied. Students can enter the Code instead.", "error");
+      notify("The Link couldn't be Copied. Students can enter the Code instead.", "error");
     }
   };
 

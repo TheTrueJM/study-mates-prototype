@@ -53,7 +53,7 @@ function JoinTutorial() {
         </div>
       )}
 
-      <Card title="Join a tutorial session">
+      <Card title="Join a Tutorial Session">
         <p className="text-muted mb-md">
           Enter the Code shown on your Tutor's Screen. You'll get a Random Anonymous Name, so no Personal Details are required.
         </p>
