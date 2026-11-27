@@ -3,7 +3,7 @@ import gevent
 import pytest
 
 from app.sockets import utils
-from app.sockets.staff import TIMER_ADJUSTMENT
+from app.sockets.staff import TIMER_ADJUSTMENT_SECONDS
 from app.sockets.timer import timer
 from app.sockets.utils import tutorials, users
 
@@ -187,21 +187,21 @@ def test_adding_time(staff, connect_student):
     start_discussion(staff, connect_student)
     state = tutorials[staff.code]["timer"]
 
-    assert adjust(staff, TIMER_ADJUSTMENT)["ok"]
-    assert timer.is_running(state) and 299 < timer.get_remaining(state) - TIMER_ADJUSTMENT <= 300
+    assert adjust(staff, TIMER_ADJUSTMENT_SECONDS)["ok"]
+    assert timer.is_running(state) and 299 < timer.get_remaining(state) - TIMER_ADJUSTMENT_SECONDS <= 300
 
     staff.emit("stop_timer")
     paused = timer.get_remaining(state)
-    adjust(staff, TIMER_ADJUSTMENT)
-    assert not timer.is_running(state) and timer.get_remaining(state) == pytest.approx(paused + TIMER_ADJUSTMENT)
+    adjust(staff, TIMER_ADJUSTMENT_SECONDS)
+    assert not timer.is_running(state) and timer.get_remaining(state) == pytest.approx(paused + TIMER_ADJUSTMENT_SECONDS)
 
     state["remaining"] = 0 # Finished
-    adjust(staff, TIMER_ADJUSTMENT)
-    assert timer.is_running(state) and timer.get_remaining(state) <= TIMER_ADJUSTMENT
+    adjust(staff, TIMER_ADJUSTMENT_SECONDS)
+    assert timer.is_running(state) and timer.get_remaining(state) <= TIMER_ADJUSTMENT_SECONDS
 
     staff.emit("stop_timer")
     state["remaining"] = 60 * 60
-    assert not adjust(staff, TIMER_ADJUSTMENT)["ok"]
+    assert not adjust(staff, TIMER_ADJUSTMENT_SECONDS)["ok"]
     staff.emit("reset_timer")
     assert state["remaining"] == state["duration"] == 300
 
@@ -209,21 +209,21 @@ def test_removing_time(staff, connect_student):
     student = start_discussion(staff, connect_student)[0]
     state = tutorials[staff.code]["timer"]
 
-    assert adjust(staff, -TIMER_ADJUSTMENT)["ok"]
+    assert adjust(staff, -TIMER_ADJUSTMENT_SECONDS)["ok"]
     assert timer.is_running(state) and 269 < timer.get_remaining(state) <= 270
 
     staff.emit("stop_timer")
-    adjust(staff, -TIMER_ADJUSTMENT)
+    adjust(staff, -TIMER_ADJUSTMENT_SECONDS)
     assert not timer.is_running(state) and 239 < timer.get_remaining(state) <= 240
 
     # Removing the last of the time finishes the Timer
     staff.emit("start_timer")
     state["ends_at"] = time.monotonic() + 10
     student.received("timer_notification")
-    adjust(staff, -TIMER_ADJUSTMENT)
+    adjust(staff, -TIMER_ADJUSTMENT_SECONDS)
     assert not timer.is_running(state) and state["remaining"] == 0
     assert len(student.received("timer_notification")) == 1
-    assert not adjust(staff, -TIMER_ADJUSTMENT)["ok"]
+    assert not adjust(staff, -TIMER_ADJUSTMENT_SECONDS)["ok"]
 
 @pytest.mark.parametrize("data", [{}, {"seconds": 60}, {"seconds": "30"}, {"seconds": True}, {"seconds": 30.5}, "30"])
 def test_invalid_adjustments(staff, connect_student, data):
