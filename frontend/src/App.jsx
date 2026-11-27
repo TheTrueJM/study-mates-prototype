@@ -1,67 +1,79 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
+
+import { useAuth } from "./contexts/AuthContext";
+
 import Navbar from "./components/Navbar";
-import { PublicRoute, ProtectedStudentRoute, ProtectedStaffRoute } from "./components/ProtectedRoute";
+import Toaster from "./components/Toaster";
+import ConnectionBanner from "./components/ConnectionBanner";
 
-// Student pages
+// Student Pages
 import JoinTutorial from "./pages/student/JoinTutorial";
-import EnterDetails from "./pages/student/EnterDetails";
-import StudentTutorial from './pages/student/Tutorial';
+import StudentTutorial from "./pages/student/Tutorial";
 
-// Staff pages
-import Login from './pages/staff/Login';
-import TutorialSetup from './pages/staff/TutorialSetup';
-import StaffTutorial from './pages/staff/Tutorial';
+// Staff Pages
+import Login from "./pages/staff/Login";
+import Register from "./pages/staff/Register";
+import SetupTutorial from "./pages/staff/SetupTutorial";
+import StaffTutorial from "./pages/staff/Tutorial";
 
-// Error pages
-import NotFound from './pages/NotFound';
+// Error Pages
+import NotFound from "./pages/NotFound";
+
+
+// ProtectedStudentRoute - Requires Student ...
+export function ProtectedStudentRoute({ children }) {
+  return children;
+}
+
+// ProtectedStaffRoute - Requires Staff Authentication
+export function ProtectedStaffRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/staff/login" replace />;
+  }
+
+  return children;
+}
+
 
 function App() {
   return (
     <>
       <Navbar />
-      <Routes>
-        {/* Home Route */}
-        <Route 
-          path="/" 
-          element={<PublicRoute> <EnterDetails /> </PublicRoute> } 
-        />
+      <ConnectionBanner />
+      <main className="main">
+        <Routes>
+          {/* Home Route */}
+          <Route path="/" element={<JoinTutorial />} />
 
-        {/* Student Routes */}
-        <Route 
-          path="/details" 
-          element={<PublicRoute> <EnterDetails /> </PublicRoute>} 
-        />
-        <Route 
-          path="/join" 
-          element={<ProtectedStudentRoute> <JoinTutorial /> </ProtectedStudentRoute>} 
-        />
-        <Route 
-          path="/tutorial/:code" 
-          element={<ProtectedStudentRoute requiresJoin={true}> <StudentTutorial /> </ProtectedStudentRoute>} 
-        />
+          {/* Student Routes */}
+          <Route path="/join" element={<JoinTutorial />} />
+          <Route path="/tutorial/:code"
+            element={<ProtectedStudentRoute><StudentTutorial /></ProtectedStudentRoute>}
+          />
 
-        {/* Staff Routes */}
-        <Route 
-          path="/staff/login" 
-          element={<PublicRoute> <Login /> </PublicRoute>} 
-        />
-        <Route W
-          path="/staff/" 
-          element={<ProtectedStaffRoute> <TutorialSetup /> </ProtectedStaffRoute>} 
-        />
-        <Route 
-          path="/staff/tutorial/:code" 
-          element={ <ProtectedStaffRoute> <StaffTutorial /> </ProtectedStaffRoute>} 
-        />
+          {/* Staff Routes */}
+          <Route path="/staff/login" element={<Login />} />
+          <Route path="/staff/register" element={<Register />} />
+          <Route path="/staff/"
+            element={<ProtectedStaffRoute><SetupTutorial /></ProtectedStaffRoute>}
+          />
+          <Route path="/staff/tutorial/:code"
+            element={<ProtectedStaffRoute><StaffTutorial /></ProtectedStaffRoute>}
+          />
 
-        {/* 404 - Catch all unspecified routes */}
-        <Route
-          path="*"
-          element={<PublicRoute> <NotFound /> </PublicRoute>}
-        />
-      </Routes>
+          {/* 404 - Catch All Unspecified Routes */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      <Toaster />
     </>
-  );
+  )
 }
 
-export default App;
+export default App

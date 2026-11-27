@@ -1,107 +1,88 @@
-// JoinTutorial - Student enters a tutorial code and joins a session
+import { useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
-import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useRef } from 'react';
-import Button from '../../components/Button';
-import { useAuth } from '../../hooks/useAuth';
-import { getSocket } from '../../socket';
+import { useTutorial } from "../../contexts/TutorialContext";
+
+import Card from "../../components/Card";
+import Button from "../../components/Button";
+import TextInput from "../../components/TextInput";
+
+
+const CODE_LENGTH = 6;
+const cleanCode = (value = "") => value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, CODE_LENGTH);
+
 
 function JoinTutorial() {
-  const [socketInstance, setSocketInstance] = useState(null);
-  const [code, setCode] = useState('');
   const navigate = useNavigate();
-  const { studentDetails, setStudent } = useAuth();
+  const [searchParams] = useSearchParams();
 
-  const hasJoinedRef = useRef(false);
+  const { enterTutorial, tutorialCode, tutorialName } = useTutorial();
 
-  useEffect(() => {
-    const socket = getSocket();
-    setSocketInstance(socket);
+  const [code, setCode] = useState(() => cleanCode(searchParams.get("code") || ""));
+  const [error, setError] = useState("");
+  const [joining, setJoining] = useState(false);
 
-    const onTutorialFound = (tutorial) => {
-      if (tutorial && tutorial.tutorial_code) {
-        navigate(`/tutorial/${tutorial.tutorial_code}`);
-      }
-    };
 
-    socket.on("student_update", onTutorialFound);
+  const handleJoin = async (event) => {
+    event.preventDefault();
 
-    return () => {
-      socket.off("student_update", onTutorialFound);
-    };
-  }, [navigate]);
-
-  const handleJoin = async () => {
-    if (!code.trim()) {
-      alert("Please enter a tutorial code.");
+    if (!code) {
+      setError("Enter the Code shown on your Tutor's Screen.");
       return;
     }
 
-    if (hasJoinedRef.current) {
-      return;
-    }
+    setJoining(true);
+    setError("");
+    const response = await enterTutorial(code);
+    setJoining(false);
 
-    localStorage.setItem("tutorial_code", code);
-    localStorage.setItem("code", code);
-    
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-
-    const apiPost = (endpoint, payload) =>
-      fetch(`${BACKEND_URL}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      }).then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || res.statusText);
-        return data;
-      });
-
-    try {
-      // Update frontend state with tutorial code
-      setStudent({
-        ...studentDetails,
-        code: code.trim().toUpperCase()
-      });
-
-      hasJoinedRef.current = true;
-
-      const onError = (err) => {
-        alert(err.message || "An error occurred while joining the tutorial.");
-        socketInstance.off("error", onError);
-      };
-
-      socketInstance.emit("join_tutorial", { code: code.trim().toUpperCase(), details: studentDetails });
-      socketInstance.on("error", onError);
-    } catch (err) {
-      alert(err.message);
+    if (response.ok) {
+      navigate(`/tutorial/${response.tutorial_code}`);
+    } else {
+      setError(response.message || "Unable to Join this Session.");
     }
   };
 
-  return (
-    <div className="container container-sm mt-lg">
-      <div className="card">
-        <h1 className="card-header">Join Tutorial Session</h1>
 
-        <div className="flex-col gap-md" style={{ display: 'flex' }}>
-          {/* Tutorial code input */}
-          <div className="form-group">
-            <label className="input-label">Enter Tutorial Code</label>
-            <input
-              type="text"
-              className="input"
+  return (
+    <div className="container container-sm page">
+      {tutorialCode && (
+        <div className="callout mb-md">
+          <p>You're Still In <strong>{tutorialName || tutorialCode}</strong>.</p>
+          <Link to={`/tutorial/${tutorialCode}`} className="btn btn-primary btn-sm">Return to Session</Link>
+        </div>
+      )}
+
+      <Card title="Join a Tutorial Session">
+        <p className="text-muted mb-md">
+          Enter the Code shown on your Tutor's Screen. You'll get a Random Anonymous Name, so no Personal Details are required.
+        </p>
+
+        <form onSubmit={handleJoin} noValidate>
+          <div className="code-input">
+            <TextInput
+              name="tutorial-code"
+              label="Tutorial code"
               value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="ABCDEF..."
+              onChange={(value) => {
+                setCode(cleanCode(value));
+                setError("");
+              }}
+              placeholder="ABCDEF"
+              error={error}
+              autoComplete="off"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="go"
             />
           </div>
 
-          <Button variant="primary" fullWidth onClick={handleJoin}>
-            Confirm
+          <Button type="submit" variant="primary" fullWidth disabled={joining}>
+            {joining ? "Joining…" : "Join Session"}
           </Button>
-        </div>
-      </div>
+        </form>
+      </Card>
     </div>
   );
 }

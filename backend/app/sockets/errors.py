@@ -1,9 +1,0 @@
-ERR_TUTORIAL_NOT_FOUND = {"errno": 1, "message": "Tutorial not found. The tutorial code may be invalid or the session has ended."}
-ERR_CODE_REQUIRED = {"errno": 2, "message": "Tutorial code is required to join a session."}
-ERR_SESSION_NOT_FOUND = {"errno": 3, "message": "Session not found. Please refresh the page and try again."}
-ERR_NO_ACTIVE_TUTORIAL = {"errno": 4, "message": "No active tutorial. You are not currently in a tutorial session."}
-ERR_UNAUTHORISED = {"errno": 5, "message": "Unauthorized. You do not have permission to perform this action."}
-ERR_ALREADY_IN_TUTORIAL = {"errno": 6, "message": "You are already in a tutorial. Please leave your current session before joining another."}
-ERR_INVALID_GROUP_SIZE = {"errno": 7, "message": "Invalid group size. Group size must be at least 2 students."}
-ERR_NOT_IN_TUTORIAL = {"errno": 8, "message": "You are not currently in a tutorial session."}
-ERR_INVALID_GPA = {"errno": 9, "message": "Invalid GPA. Values must be between 0.0 and 7.0."}

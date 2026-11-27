@@ -1,89 +1,87 @@
-import { useState } from 'react';
-import Button from '../../components/Button';
-import Modal from '../../components/Modal';
+import { useCountdown } from "../../hooks/useCountdown";
 
-export default function GroupLayout({ state = 'groups', username, groupNumber, groupMembers = [], questions = [], timeRemaining = 0, isRunning = false }) {
-  const [expandedMember, setExpandedMember] = useState(null);
-  const [showQuestionsModal, setShowQuestionsModal] = useState(false);
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+import Button from "../../components/Button";
+import TimerDisplay from "../../components/TimerDisplay";
+import QuestionList from "../../components/QuestionList";
+
+import MemberCard from "./MemberCard";
 
 
-  const toggleMember = (name) => {
-    setExpandedMember(expandedMember === name ? null : name);
-  };
+export default function GroupLayout({
+  state, username, round = 0, groupNumber, groupMembers = [], attributes, availableAttributes = [], attributesComplete,
+  questions = [], timeRemaining, timeRunning, timeEndsAt, onEdit,
+}) {
+  const remaining = useCountdown(timeRemaining, timeEndsAt);
+
+  const canEdit = availableAttributes.length > 0;
+
+  if (groupNumber === null || groupNumber === undefined) {
+    return (
+      <div className="waiting">
+        <h2 className="waiting-title">Groups are being Formed…</h2>
+        <div className="loading-dots" aria-hidden="true">
+          <div className="dot" />
+          <div className="dot" />
+          <div className="dot" />
+        </div>
+        <p className="text-muted">You'll see your Group here as soon as you're Placed In One.</p>
+      </div>
+    );
+  }
+
+  // Show the Student First, then the rest of the Group Members
+  const members = [...groupMembers].sort((a, b) => (b.name === username) - (a.name === username));
 
   return (
-    <>
-        {groupNumber === null ? (
-          <div className="text-center">
-            <p>Waiting for Group Formation...</p>
-          </div>
-        ) : (
-          <>
-            <div className="card-subtitle">Group {groupNumber}</div>
+    <div className="stack">
+      <div className="group-hero">
+        <span className="group-hero-label">{round > 0 && `Round ${round} · `}Your Group</span>
+        <span className="group-hero-number">{groupNumber}</span>
+        <p className="group-hero-text">
+          {state === "discussion"
+            ? "Discussion Time! Get to know your Group Members."
+            : "Find your Group Members below and Sit Together."}
+        </p>
+      </div>
 
-            {state === 'discussion' && (
-              <div className="timer-display mb-md">
-                <div className="timer-value">{formatTime(timeRemaining)}</div>
-                <div className="timer-status">Remaining Discussion Time</div>
-              </div>
-            )}
+      {state === "discussion" && (
+        <TimerDisplay remaining={remaining} running={timeRunning} size="md" />
+      )}
 
-            <div className="flex-col gap-xs" style={{ display: 'flex' }}>
-              {groupMembers
-                .filter((member, index, self) => index === self.findIndex(m => m.name === member.name))
-                .map((member) => (
-                  <div
-                    key={member.name}
-                    className={`member-card ${member.name === username ? 'current-user' : ''}`}
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => toggleMember(member.name)}
-                  >
-                    <div className="member-name">{member.name}</div>
-                    {expandedMember === member.name && member.availability && (
-                      <div className="member-availability" style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#666' }}>
-                        <strong>Availability:</strong> {member.availability.join(', ') || 'None specified'}
-                      </div>
-                    )}
-                  </div>
-                ))}
-            </div>
-          </>
-        )}
+      {canEdit && !attributesComplete && (
+        <div className="callout">
+          <p>You haven't Finished adding your Details. Add them so your Group can get to Know You.</p>
+          <Button size="sm" onClick={onEdit}>Add details</Button>
+        </div>
+      )}
 
-        {state === 'discussion' && (
-          <div className="divider mt-md">
-            <Button variant="secondary" onClick={() => setShowQuestionsModal(true)} fullWidth>
-              View Discussion Topics
-            </Button>
+      {state === "discussion" && (
+        <section>
+          <h2 className="section-title">Discussion Prompts</h2>
+          <QuestionList questions={questions} />
+        </section>
+      )}
 
-            <p className="mt-sm" style={{ fontSize: '0.875rem', color: '#888' }}>
-              Discuss the Topics and Questions to get to know your Group Members!
-            </p>
-          </div>
-        )}
+      <section>
+        <div className="section-header">
+          <h2 className="section-title">Group Members ({members.length})</h2>
+          <span className="section-hint">Select a Member to see their Details</span>
+        </div>
+        <div className="member-list">
+          {members.map((member) => (
+            <MemberCard
+              key={member.name}
+              member={member}
+              isSelf={member.name === username}
+              ownAttributes={attributes}
+            />
+          ))}
+        </div>
+      </section>
 
-        {showQuestionsModal && (
-          <Modal title="Discussion Topics/Questions" onClose={() => setShowQuestionsModal(false)}>
-            {questions.length === 0 ? (
-              <p style={{ color: '#888' }}>No topics available yet.</p>
-            ) : (
-              <div className="flex-col gap-xs" style={{ display: 'flex' }}>
-                {questions.map((question, index) => (
-                  <div key={index} className="question-item">
-                    <div className="question-number">{index + 1}</div>
-                    <div>{question}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Modal>
-        )}
-    </>
+      {canEdit && (
+        <Button variant="outline" fullWidth onClick={onEdit}>Edit my Details</Button>
+      )}
+    </div>
   );
 }
-

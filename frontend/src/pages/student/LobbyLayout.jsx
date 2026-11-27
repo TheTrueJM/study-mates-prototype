@@ -1,34 +1,118 @@
-export default function LobbyLayout({ username }) {
-  return (
-    <>
-        <div className="text-center">
-          {/* Username display */}
-          <div className="stat-box mb-md">
-            <div className="stat-label">Your Username</div>
-            <div className="stat-value" style={{ fontSize: '1.25rem' }}>
-              {username}
-            </div>
-          </div>
+import { useState } from "react";
 
-          {/* Waiting messages and loading animation */}
-          <div className="mb-md" style={{ padding: '2rem 0' }}>
-            <h2 style={{ color: 'var(--color-primary)', marginBottom: '1rem' }}>
-              Waiting for group formation...
-            </h2>
+import { ATTRIBUTES, isProvided, sortAttributes } from "../../constants/attributes";
 
-            <div className="loading-dots mb-md">
-              <div className="dot"></div>
-              <div className="dot"></div>
-              <div className="dot"></div>
-            </div>
-          </div>
+import Button from "../../components/Button";
+import AttributeValue from "../../components/AttributeValue";
+import StudentDetailsForm from "../../components/StudentDetailsForm";
 
-          <div className="divider">
-            <p style={{ fontSize: '0.875rem', color: '#888' }}>
-              Please wait until the Tutor forms the Discussion Groups
-            </p>
-          </div>
+
+export default function LobbyLayout({
+  username, studentCount, attributes, sharedAttributes, attributesComplete, availableAttributes = [],
+  editing, onEdit, onSave, onDone,
+}) {
+  const [showDetails, setShowDetails] = useState(false);
+
+  const hasDetails = availableAttributes.length > 0;
+  const shownAttributes = sortAttributes(availableAttributes);
+  const isVisible = (attribute) => !ATTRIBUTES[attribute].shareable || sharedAttributes.includes(attribute);
+  const providedCount = shownAttributes.filter((attribute) => isProvided(attributes[attribute])).length;
+  const visibleCount = shownAttributes
+    .filter((attribute) => isProvided(attributes[attribute]) && isVisible(attribute)).length;
+
+  if (hasDetails && editing) {
+    return (
+      <>
+        <div className="welcome">
+          <span className="eyebrow">Your Anonymous Name</span>
+          <span className="welcome-name">{username}</span>
+          <p className="welcome-text">
+            Add a few Details to help Match you with Classmates. <strong>Everything is Optional</strong>, and you choose what your Group can see.
+          </p>
         </div>
-    </>
+
+        <StudentDetailsForm
+          availableAttributes={availableAttributes}
+          initialAttributes={attributes}
+          initialShared={sharedAttributes}
+          onSave={onSave}
+          onDone={onDone}
+          doneLabel={attributesComplete ? "Done" : "I'm Ready"}
+        />
+      </>
+    );
+  }
+
+  return (
+    <div className="stack">
+      <div className="waiting">
+        <span className="eyebrow">Your Anonymous Name</span>
+        <span className="welcome-name">{username}</span>
+
+        <h2 className="waiting-title">You're All Set!</h2>
+        <div className="loading-dots" aria-hidden="true">
+          <div className="dot" />
+          <div className="dot" />
+          <div className="dot" />
+        </div>
+        <p className="text-muted">
+          Waiting for your Tutor to Form Groups.
+          {studentCount > 0 && ` ${studentCount} Student${studentCount === 1 ? " has" : "s have"} Joined so far.`}
+        </p>
+        {!hasDetails && (
+          <p className="text-muted mt-xs">Your Tutor isn't asking for any Details in this Session.</p>
+        )}
+      </div>
+
+      {hasDetails && (
+        <section className="summary-card">
+          <div className="summary-header">
+            <button
+              type="button"
+              className="summary-toggle"
+              aria-expanded={showDetails}
+              aria-controls="your-details"
+              onClick={() => setShowDetails(!showDetails)}
+            >
+              <span className={`chevron ${showDetails ? "is-open" : ""}`} aria-hidden="true" />
+              <span className="summary-toggle-text">
+                <span className="summary-title">Your Details</span>
+                <span className="summary-meta">
+                  {providedCount} of {shownAttributes.length} Provided · {visibleCount} Visible to your Group
+                </span>
+              </span>
+            </button>
+            <Button variant="outline" size="sm" onClick={onEdit}>Edit</Button>
+          </div>
+
+          {showDetails && (
+            <div id="your-details" className="summary-body">
+              <dl className="detail-list">
+                {shownAttributes.map((attribute) => {
+                  const provided = isProvided(attributes[attribute]);
+                  const visible = isVisible(attribute);
+
+                  return (
+                    <div
+                      key={attribute}
+                      className={`detail-row ${attribute === "availability" && provided ? "detail-row-block" : ""}`}
+                    >
+                      <dt>
+                        {ATTRIBUTES[attribute].label}
+                        {provided && (
+                          <span className={`tag ${visible ? "tag-primary" : ""}`}>{visible ? "Visible" : "Hidden"}</span>
+                        )}
+                      </dt>
+                      <dd><AttributeValue attribute={attribute} value={attributes[attribute]} /></dd>
+                    </div>
+                  );
+                })}
+              </dl>
+              <p className="member-note">You can Change these at any time, including during Group Rounds.</p>
+            </div>
+          )}
+        </section>
+      )}
+    </div>
   );
 }

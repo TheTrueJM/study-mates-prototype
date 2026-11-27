@@ -1,14 +1,14 @@
-from app import create_app, socketio
+from dotenv import load_dotenv
 import os
 
-from dotenv import load_dotenv
+from app import create_app
+
+
 load_dotenv()
+PORT = int(os.getenv("PORT")) if os.getenv("PORT", "").isdigit() else 5000
+DEBUG = os.getenv("DEBUG", "false").lower() in {"true", "t", "1"}
+
 
 if __name__ == "__main__":
-    app = create_app()
-    socketio.run(
-        app,
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000)),
-        debug=bool(os.environ.get("DEBUG", False))
-    )
+    app, socketio = create_app()
+    socketio.run(app, host="0.0.0.0", port=PORT, debug=DEBUG)

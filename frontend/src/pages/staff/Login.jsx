@@ -1,77 +1,105 @@
-// Login - Staff enters their username and password to authetnicate
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
-import { useState } from 'react';
-import { useNavigate } from "react-router-dom";
-import { useAuth } from '../../hooks/useAuth';
-import Input from '../../components/Input';
-import Button from '../../components/Button';
+import Card from "../../components/Card";
+import Button from "../../components/Button";
+import TextInput from "../../components/TextInput";
 
-function Login() {
+import { useAuth } from "../../contexts/AuthContext";
+
+
+// Staff choose to continue as a Guest or Sign In/Up to an Account, before landing on the Tutorial Setup Page
+export default function Login() {
+  const navigate = useNavigate();
+  const { isAuthenticated, continueAsGuest, signIn } = useAuth();
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
-  const { setStaff } = useAuth();  
+  const [error, setError] = useState("");
+  const [guestError, setGuestError] = useState("");
+  const [busy, setBusy] = useState(""); // "" | guest | account
 
-  const handleLogin= async () => {
-    if (!username || !password) {
-      alert("Please enter both a username and password.");
+  useEffect(() => {
+    if (isAuthenticated) navigate("/staff/", { replace: true });
+  }, [isAuthenticated, navigate]);
+
+
+  const handleGuest = async () => {
+    setBusy("guest");
+    setGuestError("");
+    const response = await continueAsGuest();
+    setBusy("");
+    if (!response.ok) setGuestError(response.message);
+  };
+
+  const handleSignIn = async (event) => {
+    event.preventDefault();
+
+    if (!username.trim() || !password) {
+      setError("Enter your Username and Password.");
       return;
     }
 
-    const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
-
-    const apiPost = (endpoint, payload) =>
-      fetch(`${BACKEND_URL}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      }).then(async (res) => {
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || res.statusText);
-        return data;
-      });
-
-    try {
-      await apiPost("/staff/login", { username, password });
-      
-      // Update frontend state
-      setStaff();
-      
-      navigate("/staff/");
-    } catch (err) {
-      alert(err.message);
-    }
+    setBusy("account");
+    setError("");
+    const response = await signIn(username.trim(), password);
+    setBusy("");
+    if (!response.ok) setError(response.message);
   };
 
+
   return (
-    <div className="container container-sm mt-lg">
-      <div className="card">
-        <h1 className="card-header">Staff Login</h1>
-
-        <div className="flex-col gap-md" style={{ display: 'flex' }}>
-          {/* Staff username input */}
-          <Input
-            label="Enter Username"
-            onChange={setUsername}
-            placeholder="Username..."
-          />
-
-          {/* Password username input */}
-          <Input
-            label="Enter Password"
-            type="password"
-            onChange={setPassword}
-            placeholder="Password..."
-          />
-
-          <Button variant="primary" fullWidth onClick={handleLogin}>
-            Login
+    <div className="container container-sm page">
+      <Card title="Staff Access" subtitle="Run a Study Mates Session for your Tutorial.">
+        <section className="access-option">
+          <h2 className="access-option-title">Continue as a Guest</h2>
+          <p className="text-muted">Start a Session straight away. No Account Needed.</p>
+          {guestError && <p className="input-error" role="alert">{guestError}</p>}
+          <Button variant="primary" fullWidth onClick={handleGuest} disabled={!!busy}>
+            {busy === "guest" ? "Starting…" : "Continue as Guest"}
           </Button>
-        </div>
-      </div>
+        </section>
+
+        <div className="access-divider" role="separator"><span>or</span></div>
+
+        <form className="access-option" onSubmit={handleSignIn} noValidate>
+          <h2 className="access-option-title">Sign In to your Account</h2>
+
+          <TextInput
+            name="username"
+            label="Username"
+            value={username}
+            onChange={(value) => {
+              setUsername(value);
+              setError("");
+            }}
+            autoComplete="username"
+            autoCapitalize="none"
+          />
+
+          <TextInput
+            name="password"
+            label="Password"
+            value={password}
+            onChange={(value) => {
+              setPassword(value);
+              setError("");
+            }}
+            password={true}
+            autoComplete="current-password"
+          />
+
+          {error && <p className="input-error mb-sm" role="alert">{error}</p>}
+
+          <Button type="submit" variant="outline" fullWidth disabled={!!busy}>
+            {busy === "account" ? "Signing In…" : "Sign In"}
+          </Button>
+        </form>
+
+        <p className="access-switch">
+          Don't have an Account? <Link to="/staff/register">Sign Up</Link>
+        </p>
+      </Card>
     </div>
   );
 }
-
-export default Login;

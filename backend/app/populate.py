@@ -1,9 +1,7 @@
-from flask_bcrypt import generate_password_hash
-import os
-
-from .database import db, Staff, DiscussionCategory, DiscussionQuestion
+from .database import db, DiscussionCategory, DiscussionQuestion
 
 
+# TODO Update Questions
 DISCUSSION = {
     "academic": [
         "What are your career goals after graduation, and how do you plan to achieve them?",
@@ -56,16 +54,5 @@ def populate_discussions():
     populate_discussion_questions()
 
 
-def create_staff_admin():
-    if Staff.query.first():
-        return
-
-    username = os.getenv("ADMIN_USERNAME", "StaffAdmin")
-    password_hash = generate_password_hash(os.getenv("ADMIN_PASSWORD", "We'reGettingHacked!"))
-    db.session.add(Staff(username=username, password_hash=password_hash))
-    db.session.commit()
-
-
 def populate_all():
     populate_discussions()
-    create_staff_admin()

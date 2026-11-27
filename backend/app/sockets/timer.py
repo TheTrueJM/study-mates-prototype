@@ -1,145 +1,106 @@
-from threading import Thread, Lock
-from time import monotonic, sleep
-from collections import deque
+from time import monotonic
+import gevent
 
 
 class AsyncTimer:
-    __slots__ = (
-        "codes",
-        "lock",
-        "tutorials",
-        "running",
-        "next_tick",
-        "socketio",
-        "app_ctx",
-        "deque",
-        "_timer_thread",
-    )
+    """
+    Runs the Discussion Timer of each Tutorial. A running Timer only stores when it ends, so clients
+    count down by themselves and are only updated when the Timer changes (rather than every second).
+    """
 
     def __init__(self):
-        self.codes = set()
-        self.lock = Lock()
-        self.tutorials = None
-        self.running = False
-        self.next_tick = None
         self.socketio = None
         self.app_ctx = None
-        self.deque = deque()
-        self._timer_thread = None
+        self.greenlets = dict() # { code: Greenlet waiting for the Timer to finish }
+
+    @staticmethod
+    def create(duration):
+        return {"duration": duration, "remaining": duration, "ends_at": None}
+
+    @staticmethod
+    def is_running(timer):
+        return timer["ends_at"] is not None
+
+    @staticmethod
+    def get_remaining(timer):
+        if timer["ends_at"] is None:
+            return timer["remaining"]
+        return max(0, timer["ends_at"] - monotonic())
+
+    def get_state(self, timer):
+        """The Timer as sent to clients, where the remaining seconds are from the moment it is sent"""
+        return {
+            "duration": timer["duration"],
+            "remaining": round(self.get_remaining(timer), 3),
+            "running": self.is_running(timer),
+        }
 
     def start(self, code):
-        from . import utils
-
-        if not utils.tutorials.get(code):
+        if not (timer := self._get_timer(code)) or self.is_running(timer):
             return
 
-        with self.lock:
-            self.codes.add(code)
-
-        if self.tutorials is None:
-            self.tutorials = utils.tutorials
-
-        if not self.running:
-            self.running = True
-            self.next_tick = monotonic() + 1
-            self.deque.clear()
-            self._timer_thread = Thread(target=self._timer_loop, daemon=True)
-            self._timer_thread.start()
-            self.socketio.start_background_task(self._emit_loop)
-
-    def _emit_loop(self):
-        import eventlet
-        from . import utils
-
-        socketio = self.socketio
-        tutorials = self.tutorials
-        dq = self.deque
-        app_ctx = self.app_ctx
-
-        while self.running:
-            while dq:
-                try:
-                    item = dq.popleft()
-                except IndexError:
-                    break
-
-                if item is None:
-                    return
-
-                code, remaining, is_done = item
-                tutorial = tutorials.get(code)
-                if not tutorial:
-                    continue
-
-                with app_ctx.app_context():
-                    if is_done:
-                        message = {"message": "Time's up!"}
-                        socketio.emit(
-                            "timer_notification", message, room=code, namespace="/"
-                        )
-                        socketio.emit(
-                            "timer_notification", message, room=code, namespace="/staff"
-                        )
-                    else:
-                        utils._emit_tutorial_update(code)
-
-            eventlet.sleep(0.001)
-
-    def _timer_loop(self):
-        tutorials = self.tutorials
-        dq = self.deque
-        next_tick = self.next_tick or 0.0
-
-        while self.running:
-            sleep(max(0, next_tick - monotonic()))
-
-            with self.lock:
-                if not (codes := list(self.codes)):
-                    self.running = False
-                    dq.append(None)
-                    return
-
-                next_tick += 1
-                self.next_tick = next_tick
-
-                finished = []
-
-                for c in codes:
-                    tutorial = tutorials.get(c) if tutorials else None
-                    if not tutorial:
-                        finished.append(c)
-                        continue
-
-                    timer = tutorial.get("timer")
-                    if not timer or not timer.get("running", False):
-                        finished.append(c)
-                        continue
-
-                    remaining = timer["remaining"] - 1
-                    timer["remaining"] = max(0, remaining)
-
-                    if remaining <= 0:
-                        timer["running"] = False
-                        dq.append((c, remaining, True))
-                        finished.append(c)
-                    else:
-                        dq.append((c, remaining, False))
-
-                if finished:
-                    for c in finished:
-                        self.codes.discard(c)
+        timer["ends_at"] = monotonic() + timer["remaining"]
+        self._schedule(code, timer["remaining"])
 
     def stop(self, code):
-        with self.lock:
-            self.codes.discard(code)
+        self._cancel(code)
+        if timer := self._get_timer(code):
+            timer["remaining"] = self.get_remaining(timer)
+            timer["ends_at"] = None
 
-    def _reset(self):
-        self.codes.clear()
-        self.running = False
-        self.next_tick = None
-        self.tutorials = None
-        self.deque.clear()
-        self._timer_thread = None
+    def reset(self, code, duration=None):
+        self.stop(code)
+        if timer := self._get_timer(code):
+            if duration is not None:
+                timer["duration"] = duration
+            timer["remaining"] = timer["duration"]
+
+    def adjust(self, code, seconds):
+        """
+        Adds (or removes) time from the Timer. Adding time continues the Timer if it was running or had finished,
+        while removing all of the remaining time finishes it.
+        """
+        if not (timer := self._get_timer(code)):
+            return
+
+        running = self.is_running(timer)
+        resume = running or (seconds > 0 and timer["remaining"] <= 0)
+        self.stop(code)
+        timer["remaining"] = max(0, timer["remaining"] + seconds)
+
+        if timer["remaining"] > 0 and resume:
+            self.start(code)
+        elif timer["remaining"] <= 0 and running:
+            self._finish(code)
+
+    def _get_timer(self, code):
+        from . import utils
+        return utils.tutorials.get(code, {}).get("timer")
+
+    def _schedule(self, code, seconds):
+        self._cancel(code)
+        self.greenlets[code] = gevent.spawn_later(seconds, self._finish, code)
+
+    def _cancel(self, code):
+        if greenlet := self.greenlets.pop(code, None):
+            greenlet.kill(block=False)
+
+    def _finish(self, code):
+        from . import utils
+
+        self.greenlets.pop(code, None)
+        if not (timer := self._get_timer(code)):
+            return
+
+        timer["remaining"] = 0
+        timer["ends_at"] = None
+        utils.record_activity(code)
+
+        with self.app_ctx.app_context():
+            utils.emit_tutorial_update(code)
+            message = {"message": "Time's up! Discussion time has finished."}
+            for namespace in ["/", "/staff"]:
+                self.socketio.emit("timer_notification", message, room=code, namespace=namespace)
 
 
 timer = AsyncTimer()
