@@ -11,7 +11,7 @@ import pytest
 
 from app import create_app
 from app.auth import auth_attempts
-from app.database import db, Staff
+from app.database import db, Staff, SavedAttribute
 from app.sockets.utils import tutorials, users, sessions
 from app.sockets.timer import timer
 
@@ -31,6 +31,7 @@ def app(server):
     for state in (tutorials, users, sessions, auth_attempts):
         state.clear()
     with app.app_context():
+        SavedAttribute.query.delete()
         Staff.query.delete()
         db.session.commit()
 

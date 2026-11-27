@@ -33,6 +33,9 @@ export function validateSettings(values) {
       max_groups: values.limitGroups ? maxGroups : null,
       discussion_time: discussionTime,
       available_attributes: values.availableAttributes,
+      custom_attributes: (values.customAttributes || []).map(({ id, label, hint, options, multiple, matching, saved_id }) => (
+        { id, label, hint, options, multiple, matching, saved_id: saved_id ?? null }
+      )),
     },
   };
 }

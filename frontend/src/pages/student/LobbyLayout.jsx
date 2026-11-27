@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-import { ATTRIBUTES, isProvided, sortAttributes } from "../../constants/attributes";
+import { isProvided, sortAttributes } from "../../constants/attributes";
+import { useAttributeCatalog } from "../../hooks/useAttributeCatalog";
 
 import Button from "../../components/Button";
 import AttributeValue from "../../components/AttributeValue";
@@ -12,10 +13,11 @@ export default function LobbyLayout({
   editing, onEdit, onSave, onDone,
 }) {
   const [showDetails, setShowDetails] = useState(false);
+  const catalog = useAttributeCatalog();
 
   const hasDetails = availableAttributes.length > 0;
-  const shownAttributes = sortAttributes(availableAttributes);
-  const isVisible = (attribute) => !ATTRIBUTES[attribute].shareable || sharedAttributes.includes(attribute);
+  const shownAttributes = sortAttributes(availableAttributes, catalog);
+  const isVisible = (attribute) => !catalog.meta[attribute]?.shareable || sharedAttributes.includes(attribute);
   const providedCount = shownAttributes.filter((attribute) => isProvided(attributes[attribute])).length;
   const visibleCount = shownAttributes
     .filter((attribute) => isProvided(attributes[attribute]) && isVisible(attribute)).length;
@@ -98,7 +100,7 @@ export default function LobbyLayout({
                       className={`detail-row ${attribute === "availability" && provided ? "detail-row-block" : ""}`}
                     >
                       <dt>
-                        {ATTRIBUTES[attribute].label}
+                        {catalog.meta[attribute]?.label ?? attribute}
                         {provided && (
                           <span className={`tag ${visible ? "tag-primary" : ""}`}>{visible ? "Visible" : "Hidden"}</span>
                         )}

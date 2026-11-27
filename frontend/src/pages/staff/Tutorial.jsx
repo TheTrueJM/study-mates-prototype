@@ -9,6 +9,7 @@ import Modal from "../../components/Modal";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import TutorialSettingsFields from "../../components/TutorialSettingsFields";
 import { validateSettings } from "../../constants/settings";
+import { isCustomAttribute } from "../../constants/attributes";
 
 import LobbyLayout from "./LobbyLayout";
 import GroupsLayout from "./GroupsLayout";
@@ -21,7 +22,7 @@ function Tutorial() {
   const { code } = useParams();
 
   const {
-    sessionReady, tutorialCode, tutorialName, tutorialState, locked, groupSize, maxGroups, availableAttributes,
+    sessionReady, tutorialCode, tutorialName, tutorialState, locked, groupSize, maxGroups, availableAttributes, customAttributes,
     students, groups, round, questions, discussionTime, timeDuration, timeRemaining, timeRunning, timeEndsAt,
     updateTutorial, lockTutorial, removeStudent, moveStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction, wrapUp, endTutorial,
     startTimer, stopTimer, resetTimer, adjustTimer, notify,
@@ -69,7 +70,8 @@ function Tutorial() {
       limitGroups: !!maxGroups,
       maxGroups: maxGroups ?? "",
       discussionTime: discussionTime ? Math.round((discussionTime / 60) * 100) / 100 : 5,
-      availableAttributes: [...availableAttributes],
+      availableAttributes: availableAttributes.filter((attribute) => !isCustomAttribute(attribute)),
+      customAttributes: customAttributes.map((detail) => ({ ...detail, options: [...detail.options] })),
     });
   };
 

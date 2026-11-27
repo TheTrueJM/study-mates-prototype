@@ -3,6 +3,7 @@ import random, string, uuid, time
 
 from .timer import timer
 from ..enums import TutorialState, AttributeType, SHAREABLE_ATTRIBUTES, PUBLIC_ATTRIBUTES
+from ..custom_attributes import is_shareable, public_definition, coerce_custom_value
 
 
 # Students are identified by a Random UUID, and Staff by their Access Token
@@ -17,7 +18,8 @@ tutorials = dict()
 #       locked: bool,
 #       group_size: int,
 #       max_groups: int | None,
-#       available_attributes: [ ... ],
+#       available_attributes: [ ... ], (built-in details, then the IDs of custom details)
+#       custom_attributes: [{ id, label, hint, options, multiple, matching, saved_id }, ...],
 #       students: {
 #           UUID: {
 #               name: str,
@@ -102,6 +104,7 @@ def emit_staff_update(code):
         "group_size": tutorial.get("group_size"),
         "max_groups": tutorial.get("max_groups"),
         "available_attributes": tutorial.get("available_attributes", []),
+        "custom_attributes": tutorial.get("custom_attributes", []),
         "students": {
             student_id: {
                 "name": student.get("name"),
@@ -134,6 +137,8 @@ def emit_tutorial_update(code):
     tutorial_name = tutorial.get("name")
     state = str(tutorial.get("state"))
     available_attributes = tutorial.get("available_attributes", [])
+    custom_attributes = tutorial.get("custom_attributes", [])
+    public_custom_attributes = [public_definition(definition) for definition in custom_attributes]
     questions = tutorial.get("questions", [])
     timer_state = timer.get_state(tutorial["timer"])
 
@@ -143,7 +148,7 @@ def emit_tutorial_update(code):
         formatted_groups[group_number] = [
             {
                 "name": students[member_id].get("name"),
-                "attributes": get_public_attributes(students[member_id], available_attributes),
+                "attributes": get_public_attributes(students[member_id], available_attributes, custom_attributes),
             }
             for member_id in member_ids if member_id in students
         ]
@@ -160,6 +165,7 @@ def emit_tutorial_update(code):
             "tutorial_name": tutorial_name,
             "state": state,
             "available_attributes": available_attributes,
+            "custom_attributes": public_custom_attributes,
             "student_count": len(students),
             "group_number": group_number,
             "group_members": formatted_groups.get(group_number),
@@ -266,18 +272,55 @@ def run_cleanup(app, socketio):
             app.logger.exception("Tutorials could not be cleaned up")
 
 
-def get_public_attributes(student, available_attributes):
+def get_shareable_attributes(tutorial):
+    """Details a Student in the tutorial may choose to hide from their Group"""
+    custom = {d["id"] for d in tutorial.get("custom_attributes", []) if is_shareable(d)}
+    return SHAREABLE_ATTRIBUTES | custom
+
+
+def apply_custom_attributes(tutorial, custom_attributes):
+    """
+    Changes a tutorial's Custom Details, keeping as much of each Student's answers as are still valid.
+    Details which become shareable are visible to each Student's Group (until they choose to hide them).
+    """
+    previous = {d["id"]: d for d in tutorial.get("custom_attributes", [])}
+    current = {d["id"]: d for d in custom_attributes}
+    newly_shareable = {
+        attribute_id for attribute_id, definition in current.items()
+        if is_shareable(definition) and not (attribute_id in previous and is_shareable(previous[attribute_id]))
+    }
+
+    tutorial["custom_attributes"] = custom_attributes
+
+    for student in tutorial["students"].values():
+        attributes = student["attributes"]
+        for attribute_id in list(attributes):
+            if attribute_id in previous and attribute_id not in current:
+                del attributes[attribute_id]
+        for attribute_id, definition in current.items():
+            if attribute_id in attributes:
+                attributes[attribute_id] = coerce_custom_value(definition, attributes[attribute_id])
+
+        shared = set(student["shared_attributes"]) | newly_shareable
+        student["shared_attributes"] = sorted(shared & get_shareable_attributes(tutorial))
+
+
+def get_public_attributes(student, available_attributes, custom_attributes=()):
     """Details of a student that other students may see: provided details that are enabled and shared"""
     public_attributes = {}
     all_attributes = student.get("attributes") or {}
     shared_attributes = set(student.get("shared_attributes", []))
+    custom = {definition["id"]: definition for definition in custom_attributes}
 
     for attribute in available_attributes:
         value = all_attributes.get(attribute)
         if value is None or value == []:
             continue
 
-        if attribute in PUBLIC_ATTRIBUTES or (attribute in SHAREABLE_ATTRIBUTES and attribute in shared_attributes):
+        if attribute in custom:
+            if not is_shareable(custom[attribute]) or attribute in shared_attributes:
+                public_attributes[attribute] = value
+        elif attribute in PUBLIC_ATTRIBUTES or (attribute in SHAREABLE_ATTRIBUTES and attribute in shared_attributes):
             if attribute == str(AttributeType.AVAILABILITY):
                 value = sort_availability(value)
             public_attributes[attribute] = value

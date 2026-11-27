@@ -135,8 +135,51 @@ export const ATTRIBUTES = {
 
 export const isMatchingAttribute = (attribute) => !!ATTRIBUTES[attribute]?.shareable;
 
-export const sortAttributes = (attributes = []) =>
-  ATTRIBUTE_ORDER.filter((attribute) => attributes.includes(attribute));
+
+// ===== Custom Details (created by Staff for their Tutorials) ===== //
+// NOTE Limits mirror backend/app/custom_attributes.py
+
+export const CUSTOM_LIMITS = {
+  details: 5, label: 40, hint: 150, option: 40, minOptions: 2, maxOptions: 12,
+};
+
+export const MATCHING_MODES = [
+  { value: "display", label: "Display Only", hint: "Shown to Group Members, but not used for Matching." },
+  { value: "similar", label: "Group Similar", hint: "Students with the Same Answers are Grouped Together." },
+  { value: "mixed", label: "Mix Different", hint: "Different Answers are Spread Across the Groups." },
+];
+
+export const isCustomAttribute = (attribute) => typeof attribute === "string" && attribute.startsWith("custom_");
+
+export const generateCustomId = () => `custom_${Math.random().toString(36).slice(2, 10) || "detail"}`;
+
+/** Describes a Custom Detail in the same way as the Built-In Details (see ATTRIBUTES) */
+export function customAttributeMeta(definition) {
+  const mode = MATCHING_MODES.find((m) => m.value === definition.matching) ?? MATCHING_MODES[0];
+  return {
+    label: definition.label,
+    question: definition.hint || (definition.multiple ? "Pick as many as you like." : "Pick one."),
+    staffHint: `${definition.options.length} Options · ${definition.multiple ? "Multiple Choice" : "Single Choice"} · ${mode.label}`,
+    type: definition.multiple ? "multiple" : "single",
+    options: definition.options.map((option) => ({ value: option, label: option })),
+    shareable: definition.matching !== "display",
+    custom: true,
+  };
+}
+
+/** All Details of a Tutorial (Built-In and Custom) and their Display Order */
+export function buildAttributeCatalog(customAttributes = []) {
+  const meta = { ...ATTRIBUTES };
+  customAttributes.forEach((definition) => {
+    meta[definition.id] = customAttributeMeta(definition);
+  });
+  return { meta, order: [...ATTRIBUTE_ORDER, ...customAttributes.map((definition) => definition.id)] };
+}
+
+const BUILT_IN_CATALOG = buildAttributeCatalog();
+
+export const sortAttributes = (attributes = [], catalog = BUILT_IN_CATALOG) =>
+  catalog.order.filter((attribute) => attributes.includes(attribute));
 
 export const isProvided = (value) =>
   value !== null && value !== undefined && value !== "" && !(Array.isArray(value) && value.length === 0);
@@ -181,7 +224,7 @@ export function formatAvailability(codes = []) {
 }
 
 /** Values Another Student has in Common with the Current Student, per Attribute */
-export function compareAttributes(own = {}, other = {}) {
+export function compareAttributes(own = {}, other = {}, catalog = BUILT_IN_CATALOG) {
   const common = {};
 
   for (const attribute of ["goal_grade", "current_gpa", "year", "semester"]) {
@@ -197,6 +240,17 @@ export function compareAttributes(own = {}, other = {}) {
   for (const attribute of ["availability", "communication"]) {
     const shared = (other[attribute] || []).filter((value) => (own[attribute] || []).includes(value));
     if (shared.length) common[attribute] = shared;
+  }
+
+  for (const attribute of catalog.order.filter(isCustomAttribute)) {
+    if (!isProvided(own[attribute]) || !isProvided(other[attribute])) continue;
+    if (catalog.meta[attribute]?.type === "multiple") {
+      const ownValues = Array.isArray(own[attribute]) ? own[attribute] : [];
+      const shared = (Array.isArray(other[attribute]) ? other[attribute] : []).filter((value) => ownValues.includes(value));
+      if (shared.length) common[attribute] = shared;
+    } else if (own[attribute] === other[attribute]) {
+      common[attribute] = true;
+    }
   }
 
   return common;

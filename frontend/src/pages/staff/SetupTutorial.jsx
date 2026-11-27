@@ -23,6 +23,7 @@ function TutorialSetup() {
     maxGroups: "",
     discussionTime: 5,
     availableAttributes: [...DEFAULT_AVAILABLE_ATTRIBUTES],
+    customAttributes: [],
   });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");

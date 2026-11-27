@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime, timezone
 
 
 db = SQLAlchemy()
@@ -13,6 +14,23 @@ class Staff(db.Model):
 
     def __repr__(self):
         return f"{self.id}: {self.username}"
+
+
+def _now():
+    return datetime.now(timezone.utc)
+
+
+class SavedAttribute(db.Model):
+    """A Custom Detail saved to a Staff Account, to be reused in their Tutorials"""
+    __tablename__ = "saved_attributes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    staff_id = db.Column(db.Integer, db.ForeignKey("staff.id", ondelete="CASCADE"), nullable=False, index=True)
+    definition = db.Column(db.JSON, nullable=False) # { label, hint, options, multiple, matching }
+    updated_at = db.Column(db.DateTime, default=_now, onupdate=_now)
+
+    def to_dict(self):
+        return {"id": self.id, **self.definition}
 
 
 class DiscussionCategory(db.Model):

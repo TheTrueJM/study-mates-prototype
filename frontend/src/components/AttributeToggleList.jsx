@@ -2,7 +2,7 @@ import { ATTRIBUTES, ATTRIBUTE_ORDER, DEFAULT_AVAILABLE_ATTRIBUTES, sortAttribut
 
 
 // Staff Selection of which Details Students are asked for in a Tutorial Session
-export default function AttributeToggleList({ value = [], onChange, name = "attributes" }) {
+export default function AttributeToggleList({ value = [], onChange, name = "attributes", hasCustom = false }) {
   const toggle = (attribute, checked) => {
     const next = checked ? [...value, attribute] : value.filter((a) => a !== attribute);
     onChange(sortAttributes(next));
@@ -51,7 +51,7 @@ export default function AttributeToggleList({ value = [], onChange, name = "attr
         })}
       </div>
 
-      {value.length === 0 && (
+      {value.length === 0 && !hasCustom && (
         <p className="input-hint mt-xs">No details selected. Groups will be formed randomly.</p>
       )}
     </div>

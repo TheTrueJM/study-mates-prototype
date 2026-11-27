@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
-import { ATTRIBUTES, ATTRIBUTE_ORDER, sortAttributes } from "../constants/attributes";
+import { sortAttributes } from "../constants/attributes";
+import { useAttributeCatalog } from "../hooks/useAttributeCatalog";
 
 import Button from "./Button";
 import ChipGroup from "./ChipGroup";
@@ -11,10 +12,7 @@ import { AvailabilityGrid } from "./AvailabilityGrid";
 
 const SAVE_DELAY = 400;
 
-const emptyValue = (attribute) => (ATTRIBUTES[attribute]?.type === "single" ? null : []);
-
-const initialValues = (attributes = {}) =>
-  Object.fromEntries(ATTRIBUTE_ORDER.map((attribute) => [attribute, attributes[attribute] ?? emptyValue(attribute)]));
+const emptyValue = (meta) => (meta?.type === "single" ? null : []);
 
 
 /**
@@ -24,7 +22,8 @@ const initialValues = (attributes = {}) =>
 export default function StudentDetailsForm({
   availableAttributes = [], initialAttributes, initialShared, onSave, onDone, doneLabel = "Done",
 }) {
-  const [values, setValues] = useState(() => initialValues(initialAttributes));
+  const catalog = useAttributeCatalog();
+  const [values, setValues] = useState(() => initialAttributes || {});
   const [shared, setShared] = useState(() => initialShared || []);
   const [status, setStatus] = useState("idle"); // idle | pending | saving | saved | error
   const [finishing, setFinishing] = useState(false);
@@ -99,7 +98,7 @@ export default function StudentDetailsForm({
   };
 
 
-  const attributes = sortAttributes(availableAttributes);
+  const attributes = sortAttributes(availableAttributes, catalog);
 
   const statusText = {
     pending: "Saving…",
@@ -111,9 +110,11 @@ export default function StudentDetailsForm({
   return (
     <div className="details-form">
       {attributes.map((attribute) => {
-        const meta = ATTRIBUTES[attribute];
+        const meta = catalog.meta[attribute];
+        if (!meta) return null;
         const labelId = `detail-${attribute}-label`;
         const visible = shared.includes(attribute);
+        const value = values[attribute] ?? emptyValue(meta);
 
         return (
           <section key={attribute} className="detail-field" aria-labelledby={labelId}>
@@ -138,14 +139,14 @@ export default function StudentDetailsForm({
 
             {meta.type === "availability" ? (
               <AvailabilityGrid
-                value={values[attribute]}
+                value={value}
                 onChange={(value) => setValue(attribute, value)}
                 ariaLabelledBy={labelId}
               />
             ) : (
               <ChipGroup
                 options={meta.options}
-                value={values[attribute]}
+                value={value}
                 onChange={(value) => setValue(attribute, value)}
                 multiple={meta.type === "multiple"}
                 noneLabel={meta.type === "single" ? (meta.noneLabel || "Skip") : undefined}
@@ -154,7 +155,7 @@ export default function StudentDetailsForm({
               />
             )}
 
-            {meta.type === "multiple" && values[attribute]?.length > 0 && (
+            {meta.type === "multiple" && value?.length > 0 && (
               <button type="button" className="btn-text mt-xs" onClick={() => setValue(attribute, [])}>
                 Clear Selection
               </button>

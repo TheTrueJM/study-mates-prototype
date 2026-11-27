@@ -4,8 +4,9 @@ from functools import wraps
 
 from .utils import (
     tutorials, users, sessions, MAX_STUDENTS, generate_unique_user_uuid, generate_unique_student_name,
-    emit_tutorial_update, emit_staff_update, record_activity, remove_student
+    emit_tutorial_update, emit_staff_update, record_activity, remove_student, get_shareable_attributes
 )
+from ..custom_attributes import validate_custom_value
 from ..enums import (
     TutorialState, AttributeType, VALID_GRADES, VALID_MEETING_MODE, SHAREABLE_ATTRIBUTES, DEFAULT_SHARED_ATTRIBUTES,
     MIN_STUDY_YEAR, MAX_STUDY_YEAR, MIN_STUDY_SEMESTER, MAX_STUDY_SEMESTER, parse_availability, parse_communication
@@ -101,6 +102,7 @@ def register_student_events(socketio):
         tutorial = tutorials[code]
         student = tutorial["students"][user_id]
         available_attributes = set(tutorial["available_attributes"])
+        custom_attributes = {definition["id"]: definition for definition in tutorial["custom_attributes"]}
         attributes = student["attributes"]
         errors = []
 
@@ -108,7 +110,10 @@ def register_student_events(socketio):
             if attribute not in data:
                 continue
 
-            value, error = _validate_attribute(attribute, data[attribute])
+            if attribute in custom_attributes:
+                value, error = validate_custom_value(custom_attributes[attribute], data[attribute])
+            else:
+                value, error = _validate_attribute(attribute, data[attribute])
             if error:
                 errors.append(error)
             else:
@@ -117,7 +122,7 @@ def register_student_events(socketio):
         if "shared_attributes" in data:
             if isinstance(data["shared_attributes"], list):
                 shared_attributes = {attribute for attribute in data["shared_attributes"] if isinstance(attribute, str)}
-                student["shared_attributes"] = sorted(shared_attributes & SHAREABLE_ATTRIBUTES)
+                student["shared_attributes"] = sorted(shared_attributes & get_shareable_attributes(tutorial))
             else:
                 errors.append("Invalid shared details.")
 
@@ -178,7 +183,9 @@ def join_tutorial(user_id, code):
         tutorial["students"][user_id] = {
             "name": generate_unique_student_name(code),
             "attributes": dict(),
-            "shared_attributes": list(DEFAULT_SHARED_ATTRIBUTES),
+            "shared_attributes": sorted(set(DEFAULT_SHARED_ATTRIBUTES) | (
+                get_shareable_attributes(tutorial) - SHAREABLE_ATTRIBUTES
+            )),
             "attributes_complete": False,
             "group": None
         }

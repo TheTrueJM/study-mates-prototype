@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { useTutorial } from "../../contexts/TutorialContext";
-import { ATTRIBUTES } from "../../constants/attributes";
+import { useAttributeCatalog } from "../../hooks/useAttributeCatalog";
 
 import Card from "../../components/Card";
 import Button from "../../components/Button";
@@ -27,6 +27,7 @@ function Tutorial() {
     enterTutorial, updateDetails, confirmDetails, leaveTutorial, notify,
   } = useTutorial();
 
+  const catalog = useAttributeCatalog();
   const [joinAttempt, setJoinAttempt] = useState(0);
   const [joinError, setJoinError] = useState("");
   const [joinPending, setJoinPending] = useState(false);
@@ -72,10 +73,10 @@ function Tutorial() {
 
     const added = attributesKey.split(",").filter((a) => a && !previous.split(",").includes(a));
     if (added.length) {
-      const labels = added.map((a) => ATTRIBUTES[a]?.label.toLowerCase() ?? a).join(", ");
+      const labels = added.map((a) => catalog.meta[a]?.label ?? a).join(", ");
       notify(`Your Tutor has asked for More Details (${labels}). Use "Edit my Details" to add them.`, "info", 8000);
     }
-  }, [attributesKey, inSession, attributesComplete, notify]);
+  }, [attributesKey, inSession, attributesComplete, notify, catalog]);
 
   // Stop Editing Details when New Groups are formed, so that the Student sees their Group
   // (closing the form saves any Unsaved Change)

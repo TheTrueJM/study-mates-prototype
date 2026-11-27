@@ -1,6 +1,7 @@
 import { useState } from "react";
 
-import { ATTRIBUTES, ATTRIBUTE_ORDER, compareAttributes } from "../../constants/attributes";
+import { compareAttributes } from "../../constants/attributes";
+import { useAttributeCatalog } from "../../hooks/useAttributeCatalog";
 import AttributeValue from "../../components/AttributeValue";
 
 
@@ -12,11 +13,12 @@ const initials = (name = "") =>
 // highlighting what they have in Common with the Current Student
 export default function MemberCard({ member, isSelf, ownAttributes }) {
   const [expanded, setExpanded] = useState(false);
+  const catalog = useAttributeCatalog();
 
   const details = member.attributes || {};
-  const common = isSelf ? {} : compareAttributes(ownAttributes, details);
+  const common = isSelf ? {} : compareAttributes(ownAttributes, details, catalog);
   const commonCount = Object.keys(common).length;
-  const shown = ATTRIBUTE_ORDER.filter((attribute) => details[attribute] !== undefined);
+  const shown = catalog.order.filter((attribute) => details[attribute] !== undefined);
   const detailsId = `member-${member.name}-details`;
 
   return (
@@ -48,7 +50,7 @@ export default function MemberCard({ member, isSelf, ownAttributes }) {
               {shown.map((attribute) => (
                 <div key={attribute} className={`detail-row ${attribute === "availability" ? "detail-row-block" : ""}`}>
                   <dt>
-                    {ATTRIBUTES[attribute]?.label ?? attribute}
+                    {catalog.meta[attribute]?.label ?? attribute}
                     {common[attribute] && <span className="sr-only"> (in common with you)</span>}
                   </dt>
                   <dd><AttributeValue attribute={attribute} value={details[attribute]} common={common[attribute]} /></dd>

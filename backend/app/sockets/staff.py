@@ -6,12 +6,14 @@ import time, math
 
 from .utils import (
     tutorials, users, sessions, generate_unique_tutorial_code, emit_tutorial_update, emit_staff_update,
-    record_activity, remove_student as remove_tutorial_student, close_tutorial, begin_discussion
+    record_activity, remove_student as remove_tutorial_student, close_tutorial, begin_discussion,
+    apply_custom_attributes
 )
 from .timer import timer
 from .matching import form_groups
 from ..auth import verify_staff_token
-from ..enums import TutorialState, DEFAULT_AVAILABLE_ATTRIBUTES, parse_available_attributes
+from ..enums import TutorialState, DEFAULT_AVAILABLE_ATTRIBUTES, SELECTABLE_ATTRIBUTES, parse_available_attributes
+from ..custom_attributes import parse_custom_attributes
 from ..database import DiscussionQuestion
 
 
@@ -142,6 +144,7 @@ def register_staff_events(socketio):
             "group_size": settings["group_size"],
             "max_groups": settings["max_groups"],
             "available_attributes": settings["available_attributes"],
+            "custom_attributes": settings["custom_attributes"],
             "students": dict(),
             "groups": dict(),
             "previous_matches": dict(),
@@ -173,6 +176,7 @@ def register_staff_events(socketio):
         tutorial["group_size"] = settings["group_size"]
         tutorial["max_groups"] = settings["max_groups"]
         tutorial["available_attributes"] = settings["available_attributes"]
+        apply_custom_attributes(tutorial, settings["custom_attributes"])
 
         # A running Discussion is only reset when its Duration actually changes
         # (Introductions keep counting down, and roll into a Discussion of the new duration)
@@ -484,13 +488,26 @@ def _validate_settings(data, current=None):
         if available_attributes is None:
             return None, "Invalid student details selection."
     elif current:
-        available_attributes = current["available_attributes"]
+        available_attributes = [a for a in current["available_attributes"] if a in SELECTABLE_ATTRIBUTES]
     else:
         available_attributes = list(DEFAULT_AVAILABLE_ATTRIBUTES)
+
+    if "custom_attributes" in data and data["custom_attributes"] is not None:
+        custom_attributes, error = parse_custom_attributes(data["custom_attributes"])
+        if error:
+            return None, error
+    elif current:
+        custom_attributes = current["custom_attributes"]
+    else:
+        custom_attributes = list()
+
+    # Custom Details are always enabled, after the Selected Built-In Details
+    available_attributes += [definition["id"] for definition in custom_attributes]
 
     return {
         "group_size": group_size,
         "max_groups": max_groups,
         "discussion_time": discussion_time,
         "available_attributes": available_attributes,
+        "custom_attributes": custom_attributes,
     }, None

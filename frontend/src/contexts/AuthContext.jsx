@@ -84,17 +84,29 @@ export function AuthProvider({ children }) {
   const signIn = useCallback((username, password) => authenticate("/login", username, password), [authenticate]);
   const signUp = useCallback((username, password) => authenticate("/register", username, password), [authenticate]);
 
+  /** Sends a Signed In Request to the Staff API (e.g. for what is saved to their Account) */
+  const request = useCallback((path, { method = "GET", body } = {}) => staffRequest(path, {
+    method,
+    headers: {
+      Authorization: `Bearer ${auth.token}`,
+      ...(body !== undefined && { "Content-Type": "application/json" }),
+    },
+    body: body !== undefined ? JSON.stringify(body) : undefined,
+  }), [auth.token]);
+
 
   const value = useMemo(() => ({
     ...auth,
     isAuthenticated: !!auth.token,
     isGuest: auth.staffType === "guest",
+    isAccount: auth.staffType === "account",
     loading,
     continueAsGuest,
     signIn,
     signUp,
     logout,
-  }), [auth, loading, continueAsGuest, signIn, signUp, logout]);
+    request,
+  }), [auth, loading, continueAsGuest, signIn, signUp, logout, request]);
 
   return (
     <AuthContext.Provider value={value}>

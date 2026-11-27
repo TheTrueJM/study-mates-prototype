@@ -36,5 +36,18 @@ export default function AttributeValue({ attribute, value, common }) {
     );
   }
 
+  // Custom Details with Multiple Choices
+  if (Array.isArray(value)) {
+    return (
+      <span className="value-chips">
+        {value.map((choice) => (
+          <span key={choice} className={`value-chip ${Array.isArray(common) && common.includes(choice) ? "is-common" : ""}`}>
+            {choice}
+          </span>
+        ))}
+      </span>
+    );
+  }
+
   return <span className={common ? "value-common" : undefined}>{formatAttribute(attribute, value)}</span>;
 }

@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import os
 
 from .database import db
-from .routes import staff_bp
+from .routes import staff_bp, saved_bp
 from .sockets import register_staff_events, register_student_events, run_cleanup, timer
 from .populate import populate_all
 
@@ -54,6 +54,7 @@ def create_app():
     # Register blueprints
     api_bp = Blueprint("api", __name__)
     api_bp.register_blueprint(staff_bp)
+    api_bp.register_blueprint(saved_bp)
     app.register_blueprint(api_bp, url_prefix="/api")
     
     register_student_events(socketio)

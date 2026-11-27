@@ -2,11 +2,13 @@ import numpy as np
 import itertools, random, time
 
 from ..enums import AttributeType, GradeType, MeetingMode, VALID_GRADES, VALID_AVAILABILITY_CODES
+from ..custom_attributes import SIMILAR, MIXED, custom_similarity
 
 
 # NOTE All Weights are just Magic Numbers, relative to the Most Compatible pair of Students (which scores 1)
 AVAILABILITY_WEIGHT = 0.35
 REMATCH_WEIGHT = 0.9
+CUSTOM_WEIGHT = 3 # Of each Matching Custom Detail (relative to the weights in build_matrix)
 
 COMMON_TIMES = 2 # Best Meeting Times of a Group that are scored
 SWAP_TIME_LIMIT = 0.5 # Seconds
@@ -27,7 +29,8 @@ def form_groups(tutorial):
 
     available_attributes = tutorial["available_attributes"]
 
-    connections: np.ndarray = build_matrix(student_ids, student_details, available_attributes)
+    custom_attributes = tutorial.get("custom_attributes", [])
+    connections: np.ndarray = build_matrix(student_ids, student_details, available_attributes, custom_attributes)
     availability: np.ndarray = build_availability(student_ids, student_details, available_attributes)
     rematches: np.ndarray = build_rematches(student_ids, tutorial["previous_matches"], largest_group=group_sizes[0])
 
@@ -167,9 +170,15 @@ def build_rematches(ids, previous_matches, largest_group):
     return matrix
 
 
-def build_matrix(ids, students, available_attributes):
-    """Matrix of how compatible each pair of Students is (Availability is scored across the Entire Group instead)"""
+def build_matrix(ids, students, available_attributes, custom_attributes=()):
+    """
+    Matrix of how compatible each pair of Students is (Availability is scored across the Entire Group instead).
+    Matching Custom Details score Students with Similar answers (or Different answers when Mixed) as compatible.
+    """
     student_count = len(ids)
+    matching_custom = [
+        d for d in custom_attributes if d["matching"] in (SIMILAR, MIXED) and d["id"] in available_attributes
+    ]
 
     matrix = np.zeros((student_count, student_count))
     max_weight = 0
@@ -190,6 +199,7 @@ def build_matrix(ids, students, available_attributes):
             "goal_grade": grade_or_default(attributes.get(str(AttributeType.GOAL_GRADE)), default_goal_grade),
             "communication": set(attributes.get(str(AttributeType.COMMUNICATION)) or []),
             "meeting_mode": attributes.get(str(AttributeType.MEETING_MODE)),
+            "custom": {d["id"]: attributes.get(d["id"]) for d in matching_custom},
         })
 
     for i in range(student_count):
@@ -216,6 +226,12 @@ def build_matrix(ids, students, available_attributes):
                 m1, m2 = s1["meeting_mode"], s2["meeting_mode"]
                 if m1 and m2 and (m1 == m2 or str(MeetingMode.EITHER) in (m1, m2)):
                     weight += 2
+
+            # Students who haven't both answered are neither Similar nor Different
+            for definition in matching_custom:
+                similarity = custom_similarity(definition, s1["custom"][definition["id"]], s2["custom"][definition["id"]])
+                if similarity is not None:
+                    weight += CUSTOM_WEIGHT * (similarity if definition["matching"] == SIMILAR else 1 - similarity)
 
             matrix[i][j] = matrix[j][i] = weight
             max_weight = max(max_weight, weight)

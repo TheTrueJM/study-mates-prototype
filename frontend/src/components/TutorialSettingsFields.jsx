@@ -2,6 +2,7 @@ import NumberInput from "./NumberInput";
 import SliderInput from "./SliderInput";
 import Switch from "./Switch";
 import AttributeToggleList from "./AttributeToggleList";
+import CustomAttributeList from "./CustomAttributeList";
 import { MIN_GROUP_SIZE, MAX_GROUP_SIZE, MIN_DISCUSSION_MINUTES, MAX_DISCUSSION_MINUTES } from "../constants/settings";
 
 
@@ -59,7 +60,13 @@ export default function TutorialSettingsFields({ values, onChange, errors = {} }
         error={errors.discussionTime}
       />
 
-      <AttributeToggleList value={values.availableAttributes} onChange={set("availableAttributes")} />
+      <AttributeToggleList
+        value={values.availableAttributes}
+        onChange={set("availableAttributes")}
+        hasCustom={(values.customAttributes || []).length > 0}
+      />
+
+      <CustomAttributeList value={values.customAttributes || []} onChange={set("customAttributes")} />
     </>
   );
 }
