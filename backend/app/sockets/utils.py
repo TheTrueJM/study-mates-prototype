@@ -97,7 +97,7 @@ sort_availability = lambda codes: sorted(
 )
 
 
-def emit_staff_update(code):
+def emit_staff_update(code, index=None):
     if not (tutorial := tutorials.get(code)):
         return
 
@@ -111,7 +111,7 @@ def emit_staff_update(code):
         "available_attributes": tutorial.get("available_attributes", []),
         "custom_attributes": tutorial.get("custom_attributes", []),
         "shortlisting": tutorial.get("shortlisting", False),
-        "mutual_pairs": meetings.mutual_pairs(tutorial) if tutorial.get("state") == TutorialState.WRAP_UP else 0,
+        "mutual_pairs": meetings.mutual_pairs(tutorial, index) if tutorial.get("state") == TutorialState.WRAP_UP else 0,
         "students": {
             student_id: {
                 "name": student.get("name"),
@@ -136,7 +136,8 @@ def emit_tutorial_update(code):
             emit("error", {"message": "This tutorial session could not be found."}, room=code, namespace=ns)
         return
 
-    emit_staff_update(code)
+    index = meetings.public_index(tutorial)
+    emit_staff_update(code, index)
 
     students = tutorial.get("students", {})
     groups = tutorial.get("groups", {})
@@ -190,7 +191,7 @@ def emit_tutorial_update(code):
             "group_members": group_members,
             "public_id": student_data.get("public_id"),
             "shortlisting": shortlisting,
-            "history": meetings.get_history(tutorial, student_id),
+            "history": meetings.get_history(tutorial, student_id, index),
             "round": tutorial.get("round"),
             "formation": tutorial.get("formation"),
             "questions": questions,

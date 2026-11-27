@@ -76,16 +76,18 @@ def record_meetings(tutorial):
         record_group(tutorial, group_number)
 
 
-def find_student(tutorial, public_id):
+def public_index(tutorial) -> dict:
+    """The UUID of each Student, by their Public ID (built once per update, as large tutorials have many lookups)"""
+    return {student.get("public_id"): student_id for student_id, student in tutorial["students"].items()}
+
+
+def find_student(tutorial, public_id, index=None):
     """Returns the UUID of the Student with a Public ID (None if they aren't in the tutorial)"""
-    for student_id, student in tutorial["students"].items():
-        if student.get("public_id") == public_id:
-            return student_id
-    return None
+    return (index if index is not None else public_index(tutorial)).get(public_id)
 
 
-def is_mutual(tutorial, student_id, public_id) -> bool:
-    other_id = find_student(tutorial, public_id)
+def is_mutual(tutorial, student_id, public_id, index=None) -> bool:
+    other_id = find_student(tutorial, public_id, index)
     own_id = tutorial["students"].get(student_id, {}).get("public_id")
     return (
         other_id is not None
@@ -103,24 +105,25 @@ def can_shortlist(tutorial, student_id, public_id) -> bool:
     return any(tutorial["students"][member].get("public_id") == public_id for member in group if member != student_id)
 
 
-def mutual_pairs(tutorial) -> int:
+def mutual_pairs(tutorial, index=None) -> int:
     """How many Pairs of Students have Shortlisted each other"""
+    index = index if index is not None else public_index(tutorial)
     pairs = 0
     for student_id, shortlist in tutorial["shortlists"].items():
         own_id = tutorial["students"].get(student_id, {}).get("public_id")
         for public_id in shortlist:
-            other_id = find_student(tutorial, public_id)
+            other_id = index.get(public_id)
             if other_id and own_id in tutorial["shortlists"].get(other_id, ()):
                 pairs += 1
     return pairs // 2
 
 
-def get_history(tutorial, student_id):
+def get_history(tutorial, student_id, index=None):
     """The Classmates a Student has Met, most recently first (Mutual Shortlists are only revealed at the Wrap-Up)"""
     shortlisting = tutorial.get("shortlisting")
     revealed = shortlisting and tutorial["state"] == TutorialState.WRAP_UP
     shortlist = tutorial["shortlists"].get(student_id, set())
-    present = {student.get("public_id") for student in tutorial["students"].values()}
+    present = index if index is not None else public_index(tutorial)
 
     history = [
         {
@@ -132,7 +135,7 @@ def get_history(tutorial, student_id):
             "group": entry["group"],
             "left": public_id not in present,
             "shortlisted": bool(shortlisting) and public_id in shortlist,
-            "mutual": bool(revealed) and is_mutual(tutorial, student_id, public_id),
+            "mutual": bool(revealed) and is_mutual(tutorial, student_id, public_id, present),
         }
         for public_id, entry in tutorial["history"].get(student_id, {}).items()
     ]

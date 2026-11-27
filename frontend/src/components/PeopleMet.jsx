@@ -21,7 +21,7 @@ export function ShortlistButton({ person, onToggle, busy = false }) {
 const describeMeeting = (person) => [
   `Met ${person.times === 1 ? "Once" : `${person.times} Times`}`,
   person.round ? `Last in Round ${person.round}, Group ${person.group}` : null,
-  `${person.common} in Common`,
+  person.common > 0 ? `${person.common} in Common` : null,
   person.left ? "Has Left" : null,
 ].filter(Boolean).join(" · ");
 
