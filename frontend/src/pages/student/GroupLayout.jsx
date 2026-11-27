@@ -14,6 +14,8 @@ export default function GroupLayout({
   const remaining = useCountdown(timeRemaining, timeEndsAt);
 
   const canEdit = availableAttributes.length > 0;
+  const introduction = state === "introduction";
+  const timed = introduction || state === "discussion";
 
   if (groupNumber === null || groupNumber === undefined) {
     return (
@@ -38,14 +40,21 @@ export default function GroupLayout({
         <span className="group-hero-label">{round > 0 && `Round ${round} · `}Your Group</span>
         <span className="group-hero-number">{groupNumber}</span>
         <p className="group-hero-text">
-          {state === "discussion"
-            ? "Discussion Time! Get to know your Group Members."
-            : "Find your Group Members below and Sit Together."}
+          {introduction
+            ? "Introductions! Take turns sharing your Name, and which App Name below is yours."
+            : state === "discussion"
+              ? "Discussion Time! Get to know your Group Members."
+              : "Find your Group Members below and Sit Together."}
         </p>
       </div>
 
-      {state === "discussion" && (
-        <TimerDisplay remaining={remaining} running={timeRunning} size="md" />
+      {timed && (
+        <TimerDisplay
+          remaining={remaining}
+          running={timeRunning}
+          size="md"
+          label={introduction ? "Introductions" : undefined}
+        />
       )}
 
       {canEdit && !attributesComplete && (
@@ -53,6 +62,13 @@ export default function GroupLayout({
           <p>You haven't Finished adding your Details. Add them so your Group can get to Know You.</p>
           <Button size="sm" onClick={onEdit}>Add details</Button>
         </div>
+      )}
+
+      {introduction && (
+        <details className="disclosure">
+          <summary>Peek at the Discussion Prompts</summary>
+          <div className="disclosure-body"><QuestionList questions={questions} /></div>
+        </details>
       )}
 
       {state === "discussion" && (

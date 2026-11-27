@@ -34,7 +34,8 @@ tutorials = dict()
 #       round_discussed: bool,
 #       formation: int,
 #       questions: [question, ...],
-#       timer: { duration: int, remaining: float, ends_at: float | None },
+#       discussion_time: int (seconds),
+#       timer: { duration: int, remaining: float, ends_at: float | None }, (of the current Introduction or Discussion)
 #       last_activity: int
 #   },
 #   ...
@@ -112,6 +113,7 @@ def emit_staff_update(code):
         "groups": tutorial.get("groups", {}),
         "round": tutorial.get("round"),
         "questions": tutorial.get("questions", []),
+        "discussion_time": tutorial.get("discussion_time"),
         "timer": timer.get_state(tutorial["timer"]),
     }
     emit("tutorial_update", payload, room=code, namespace="/staff")
@@ -164,6 +166,7 @@ def emit_tutorial_update(code):
             "round": tutorial.get("round"),
             "formation": tutorial.get("formation"),
             "questions": questions,
+            "discussion_time": tutorial.get("discussion_time"),
             "timer": timer_state,
         }
         emit("student_update", payload, room=student_id, namespace="/")
@@ -207,6 +210,16 @@ def remove_student(user_id, code):
             del users[user_id]
 
     return True
+
+
+def begin_discussion(code):
+    """Moves a tutorial from its Introductions into the Discussion, starting the full Discussion time"""
+    if not (tutorial := tutorials.get(code)):
+        return
+
+    tutorial["state"] = TutorialState.DISCUSSION
+    timer.reset(code, tutorial["discussion_time"])
+    timer.start(code)
 
 
 def close_tutorial(code, reason="ended"):

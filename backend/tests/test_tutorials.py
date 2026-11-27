@@ -3,7 +3,7 @@ import gevent
 import pytest
 
 from app.sockets import utils
-from app.sockets.staff import TIMER_ADJUSTMENT_SECONDS
+from app.sockets.staff import TIMER_ADJUSTMENT_SECONDS, INTRODUCTION_SECONDS
 from app.sockets.timer import timer
 from app.sockets.utils import tutorials, users
 
@@ -11,10 +11,15 @@ from app.sockets.utils import tutorials, users
 def latest(client, event="tutorial_update"):
     return client.received(event)[-1]
 
-def start_discussion(staff, connect_student, students=2):
+def start_introductions(staff, connect_student, students=2):
     clients = [connect_student(staff.code) for _ in range(students)]
     assert staff.emit("start_grouping")["ok"]
     assert staff.emit("start_discussion")["ok"]
+    return clients
+
+def start_discussion(staff, connect_student, students=2):
+    clients = start_introductions(staff, connect_student, students)
+    assert staff.emit("skip_introduction")["ok"]
     return clients
 
 
@@ -106,7 +111,7 @@ def test_malformed_details_are_answered(staff, connect_student, details):
 
 def test_steps_are_in_order(staff, connect_student):
     assert not staff.emit("start_discussion")["ok"]
-    for event in ("start_timer", "stop_timer", "reset_timer", "adjust_timer"):
+    for event in ("start_timer", "stop_timer", "reset_timer", "adjust_timer", "skip_introduction"):
         assert not staff.emit(event)["ok"]
     assert tutorials[staff.code]["state"].value == "lobby"
 
@@ -140,6 +145,57 @@ def test_round_counter(staff, connect_student):
     assert latest(staff)["round"] == 2
     update = latest(students[0], "student_update")
     assert (update["round"], update["formation"]) == (2, 4)
+
+
+# ===== Introductions ===== #
+
+def test_discussion_begins_with_introductions(staff, connect_student):
+    student = start_introductions(staff, connect_student)[0]
+    tutorial = tutorials[staff.code]
+    assert tutorial["state"].value == "introduction" and len(tutorial["questions"]) == 3
+
+    update = latest(student, "student_update")
+    assert update["state"] == "introduction" and update["questions"] == tutorial["questions"]
+    assert update["timer"]["duration"] == INTRODUCTION_SECONDS and update["timer"]["running"]
+    assert update["discussion_time"] == 300
+
+def test_introductions_roll_into_the_full_discussion(staff, connect_student):
+    student = start_introductions(staff, connect_student)[0]
+    questions = list(tutorials[staff.code]["questions"])
+    staff.emit("stop_timer")
+    tutorials[staff.code]["timer"]["remaining"] = 0.1
+    staff.emit("start_timer")
+    gevent.sleep(0.3)
+
+    update = latest(student, "student_update")
+    assert update["state"] == "discussion" and update["questions"] == questions
+    assert update["timer"]["running"] and update["timer"]["duration"] == 300 and update["timer"]["remaining"] > 299
+    assert "Discuss" in latest(student, "timer_notification")["message"]
+
+def test_skipping_introductions(staff, connect_student):
+    start_introductions(staff, connect_student)
+    assert staff.emit("skip_introduction")["ok"]
+    state = tutorials[staff.code]["timer"]
+    assert tutorials[staff.code]["state"].value == "discussion"
+    assert timer.is_running(state) and 299 < timer.get_remaining(state) <= 300
+    assert not staff.emit("skip_introduction")["ok"]
+
+def test_changing_the_discussion_time_during_introductions(staff, connect_student):
+    start_introductions(staff, connect_student)
+    assert staff.emit("update_settings", {"discussion_time": 2})["ok"]
+    state = tutorials[staff.code]["timer"]
+    assert timer.is_running(state) and timer.get_remaining(state) <= INTRODUCTION_SECONDS
+
+    staff.emit("skip_introduction")
+    assert 119 < timer.get_remaining(state) <= 120
+    assert not staff.emit("reset_timer", {"time": 90})["ok"] # Too long
+    assert staff.emit("reset_timer", {"time": 3})["ok"]
+    assert latest(staff)["discussion_time"] == state["duration"] == 180
+
+def test_the_next_round_returns_to_the_discussion_time(staff, connect_student):
+    start_introductions(staff, connect_student)
+    staff.emit("start_grouping")
+    assert tutorials[staff.code]["timer"]["duration"] == 300 and not timer.is_running(tutorials[staff.code]["timer"])
 
 
 # ===== Timer ===== #

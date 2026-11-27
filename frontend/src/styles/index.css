@@ -1143,6 +1143,14 @@ ul {
     font-size: clamp(4rem, 12vw, 8rem);
 }
 
+.timer-display .timer-label {
+    font-size: 0.8125rem;
+    font-weight: bold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-secondary-hover);
+}
+
 .timer-display .timer-status {
     font-size: 0.8125rem;
     font-weight: 600;
@@ -1532,6 +1540,23 @@ ul {
 
 .disclosure-body {
     padding: 0 var(--spacing-sm) var(--spacing-sm);
+}
+
+/* Banner explaining the Current Stage of a Session (e.g. Introductions) */
+.phase-banner {
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    background-color: var(--color-primary-soft);
+    text-align: center;
+}
+
+.phase-title {
+    font-size: 1.5rem;
+    color: var(--color-primary);
+}
+
+.phase-text {
+    color: var(--color-muted);
 }
 
 /* Attribute Toggles */

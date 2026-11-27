@@ -19,9 +19,11 @@ const formatAdjustment = (seconds) => {
 };
 
 
+// The Introductions (a short countdown which rolls into the Discussion) and the Discussion itself
 export default function DiscussionLayout({
-  questions = [], timeRemaining = 0, timeDuration = 0, timeRunning = false, timeEndsAt = null, students = {}, groups = {},
-  onGrouping, onStartTimer, onStopTimer, onResetTimer, onAdjustTimer, onRemoveStudent, busy = "",
+  introduction = false, questions = [], timeRemaining = 0, timeDuration = 0, timeRunning = false, timeEndsAt = null,
+  students = {}, groups = {},
+  onGrouping, onStartTimer, onStopTimer, onResetTimer, onAdjustTimer, onSkipIntroduction, onRemoveStudent, busy = "",
 }) {
   const remaining = useCountdown(timeRemaining, timeEndsAt);
 
@@ -43,11 +45,22 @@ export default function DiscussionLayout({
   const finished = remaining <= 0;
   const untouched = !timeRunning && remaining === timeDuration;
 
+  const prompts = <QuestionList questions={questions} />;
+
   return (
     <div className="stack">
+      {introduction && (
+        <div className="phase-banner">
+          <h2 className="phase-title">Introductions</h2>
+          <p className="phase-text">
+            Take turns sharing your Name, and which App Name is yours. The Discussion starts automatically afterwards.
+          </p>
+        </div>
+      )}
+
       <div className="discussion-timer">
         <div className="discussion-timer-display">
-          <TimerDisplay remaining={remaining} running={timeRunning} size="xl" />
+          <TimerDisplay remaining={remaining} running={timeRunning} size="xl" label={introduction ? "Introductions" : undefined} />
           <span className="timer-adjusted" aria-live="polite">
             {adjusted && (
               <span key={adjusted.id} className={adjusted.seconds < 0 ? "is-removed" : ""}>
@@ -72,14 +85,27 @@ export default function DiscussionLayout({
               +30 Sec
             </Button>
           </div>
-          <Button variant="outline" onClick={onResetTimer} disabled={untouched}>Reset Timer</Button>
+          {introduction ? (
+            <Button variant="outline" onClick={onSkipIntroduction} disabled={!!busy}>
+              {busy === "skip" ? "Starting…" : "Start Discussion"}
+            </Button>
+          ) : (
+            <Button variant="outline" onClick={onResetTimer} disabled={untouched}>Reset Timer</Button>
+          )}
         </div>
       </div>
 
-      <section>
-        <h2 className="section-title">Discussion Prompts</h2>
-        <QuestionList questions={questions} />
-      </section>
+      {introduction ? (
+        <details className="disclosure">
+          <summary>Preview the Discussion Prompts</summary>
+          <div className="disclosure-body">{prompts}</div>
+        </details>
+      ) : (
+        <section>
+          <h2 className="section-title">Discussion Prompts</h2>
+          {prompts}
+        </section>
+      )}
 
       <details className="disclosure">
         <summary>Show Groups ({Object.keys(groups).length})</summary>

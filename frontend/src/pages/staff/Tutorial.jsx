@@ -21,8 +21,8 @@ function Tutorial() {
 
   const {
     sessionReady, tutorialCode, tutorialName, tutorialState, locked, groupSize, maxGroups, availableAttributes,
-    students, groups, round, questions, timeDuration, timeRemaining, timeRunning, timeEndsAt,
-    updateTutorial, lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion, endTutorial,
+    students, groups, round, questions, discussionTime, timeDuration, timeRemaining, timeRunning, timeEndsAt,
+    updateTutorial, lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction, endTutorial,
     startTimer, stopTimer, resetTimer, adjustTimer, notify,
   } = useTutorial();
 
@@ -66,7 +66,7 @@ function Tutorial() {
       groupSize: groupSize ?? 5,
       limitGroups: !!maxGroups,
       maxGroups: maxGroups ?? "",
-      discussionTime: timeDuration ? Math.round((timeDuration / 60) * 100) / 100 : 5,
+      discussionTime: discussionTime ? Math.round((discussionTime / 60) * 100) / 100 : 5,
       availableAttributes: [...availableAttributes],
     });
   };
@@ -156,7 +156,7 @@ function Tutorial() {
             busy={busy === "grouping"}
           />
         )}
-        {(tutorialState === "grouping" || tutorialState === "introduction") && (
+        {tutorialState === "grouping" && (
           <GroupsLayout
             students={students}
             groups={groups}
@@ -166,8 +166,9 @@ function Tutorial() {
             busy={busy}
           />
         )}
-        {tutorialState === "discussion" && (
+        {(tutorialState === "introduction" || tutorialState === "discussion") && (
           <DiscussionLayout
+            introduction={tutorialState === "introduction"}
             questions={questions}
             timeRemaining={timeRemaining}
             timeDuration={timeDuration}
@@ -180,6 +181,7 @@ function Tutorial() {
             onStopTimer={stopTimer}
             onResetTimer={() => resetTimer()}
             onAdjustTimer={adjustTimer}
+            onSkipIntroduction={run("skip", skipIntroduction)}
             onRemoveStudent={setRemoving}
             busy={busy}
           />

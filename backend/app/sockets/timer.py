@@ -4,7 +4,7 @@ import gevent
 
 class AsyncTimer:
     """
-    Runs the Discussion Timer of each Tutorial. A running Timer only stores when it ends, so clients
+    Runs the Introduction and Discussion Timer of each Tutorial. A running Timer only stores when it ends, so clients
     count down by themselves and are only updated when the Timer changes (rather than every second).
     """
 
@@ -87,6 +87,7 @@ class AsyncTimer:
 
     def _finish(self, code):
         from . import utils
+        from ..enums import TutorialState
 
         self.greenlets.pop(code, None)
         if not (timer := self._get_timer(code)):
@@ -97,8 +98,14 @@ class AsyncTimer:
         utils.record_activity(code)
 
         with self.app_ctx.app_context():
+            # Introductions roll straight into the Discussion
+            if utils.tutorials[code]["state"] == TutorialState.INTRODUCTION:
+                utils.begin_discussion(code)
+                message = {"message": "Introductions are over. Time to Discuss!"}
+            else:
+                message = {"message": "Time's up! Discussion time has finished."}
+
             utils.emit_tutorial_update(code)
-            message = {"message": "Time's up! Discussion time has finished."}
             for namespace in ["/", "/staff"]:
                 self.socketio.emit("timer_notification", message, room=code, namespace=namespace)
 

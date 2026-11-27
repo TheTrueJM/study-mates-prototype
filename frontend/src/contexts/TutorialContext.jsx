@@ -14,6 +14,7 @@ const INITIAL_TUTORIAL = {
   tutorialState: "",
   availableAttributes: [],
   questions: [],
+  discussionTime: 0,
   timeDuration: 0,
   timeRemaining: 0,
   timeRunning: false,
@@ -52,6 +53,7 @@ const mapStudentUpdate = (data) => ({
   tutorialState: data.state || "",
   availableAttributes: data.available_attributes || [],
   questions: data.questions || [],
+  discussionTime: data.discussion_time ?? 0,
   ...mapTimer(data.timer),
   round: data.round ?? 0,
   studentName: data.username || "",
@@ -70,6 +72,7 @@ const mapStaffUpdate = (data) => ({
   tutorialState: data.state || "",
   availableAttributes: data.available_attributes || [],
   questions: data.questions || [],
+  discussionTime: data.discussion_time ?? 0,
   ...mapTimer(data.timer),
   round: data.round ?? 0,
   locked: !!data.locked,
@@ -282,6 +285,7 @@ export function TutorialProvider({ children }) {
   const backToLobby = useCallback(() => emitWithAck(STAFF_NAMESPACE, "return_lobby"), []);
   const startGrouping = useCallback(() => emitWithAck(STAFF_NAMESPACE, "start_grouping"), []);
   const startDiscussion = useCallback(() => emitWithAck(STAFF_NAMESPACE, "start_discussion"), []);
+  const skipIntroduction = useCallback(() => emitWithAck(STAFF_NAMESPACE, "skip_introduction"), []);
   const startTimer = useCallback(() => emitWithAck(STAFF_NAMESPACE, "start_timer"), []);
   const stopTimer = useCallback(() => emitWithAck(STAFF_NAMESPACE, "stop_timer"), []);
   const resetTimer = useCallback(
@@ -298,11 +302,11 @@ export function TutorialProvider({ children }) {
     toasts, notify, dismissToast,
     enterTutorial, updateDetails, confirmDetails, leaveTutorial,
     createTutorial, updateTutorial, lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion,
-    startTimer, stopTimer, resetTimer, adjustTimer, endTutorial,
+    skipIntroduction, startTimer, stopTimer, resetTimer, adjustTimer, endTutorial,
   }), [
     tutorial, namespace, connected, connectionLost, sessionReady, toasts, notify, dismissToast,
     enterTutorial, updateDetails, confirmDetails, leaveTutorial, createTutorial, updateTutorial,
-    lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion,
+    lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction,
     startTimer, stopTimer, resetTimer, adjustTimer, endTutorial,
   ]);
 

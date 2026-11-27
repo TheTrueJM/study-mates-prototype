@@ -6,7 +6,7 @@ import time, math
 
 from .utils import (
     tutorials, users, sessions, generate_unique_tutorial_code, emit_tutorial_update, emit_staff_update,
-    record_activity, remove_student as remove_tutorial_student, close_tutorial
+    record_activity, remove_student as remove_tutorial_student, close_tutorial, begin_discussion
 )
 from .timer import timer
 from .matching import form_groups
@@ -18,6 +18,7 @@ from ..database import DiscussionQuestion
 MIN_GROUP_SIZE, MAX_GROUP_SIZE = 2, 10
 MIN_DISCUSSION_MINUTES, MAX_DISCUSSION_MINUTES = 1, 60
 DEFAULT_DISCUSSION_MINUTES = 5
+INTRODUCTION_SECONDS = 30
 TIMER_ADJUSTMENT_SECONDS = 30
 MAX_TUTORIAL_NAME_LENGTH = 60
 
@@ -59,7 +60,16 @@ def with_state(state, message):
         return wrapper
     return decorator
 
-with_discussion = with_state(TutorialState.DISCUSSION, "The Timer can only be used during a Discussion.")
+def with_timer(f):
+    """Only allows an event while the tutorial's Timer is in use (used after with_tutorial_auth)"""
+    @wraps(f)
+    def wrapper(user_id, code, *args, **kwargs):
+        if tutorials[code]["state"] not in TIMED_STATES:
+            return _error("The Timer can only be used during Introductions or a Discussion.")
+        return f(user_id, code, *args, **kwargs)
+    return wrapper
+
+TIMED_STATES = {TutorialState.INTRODUCTION, TutorialState.DISCUSSION}
 
 
 def register_staff_events(socketio):
@@ -137,6 +147,7 @@ def register_staff_events(socketio):
             "round_discussed": False,
             "formation": 0,
             "questions": list(),
+            "discussion_time": discussion_time,
             "timer": timer.create(discussion_time),
             "last_activity": int(time.time())
         }
@@ -161,8 +172,11 @@ def register_staff_events(socketio):
         tutorial["max_groups"] = settings["max_groups"]
         tutorial["available_attributes"] = settings["available_attributes"]
 
-        # Only reset the Timer when its Duration actually changes
-        if settings["discussion_time"] != tutorial["timer"]["duration"]:
+        # A running Discussion is only reset when its Duration actually changes
+        # (Introductions keep counting down, and roll into a Discussion of the new duration)
+        changed = settings["discussion_time"] != tutorial["discussion_time"]
+        tutorial["discussion_time"] = settings["discussion_time"]
+        if changed and tutorial["state"] == TutorialState.DISCUSSION:
             timer.reset(code, settings["discussion_time"])
 
         emit_tutorial_update(code)
@@ -199,7 +213,7 @@ def register_staff_events(socketio):
         tutorial["state"] = TutorialState.LOBBY
         tutorial["groups"].clear()
         tutorial["questions"].clear()
-        timer.reset(code)
+        timer.reset(code, tutorial["discussion_time"])
 
         for student in tutorial["students"].values():
             student["group"] = None
@@ -221,7 +235,7 @@ def register_staff_events(socketio):
             return _error(f"Groups could not be formed: {e}")
 
         tutorial["questions"].clear()
-        timer.reset(code)
+        timer.reset(code, tutorial["discussion_time"])
 
         tutorial["groups"].clear()
         tutorial["state"] = TutorialState.GROUPING
@@ -255,7 +269,8 @@ def register_staff_events(socketio):
         if not tutorial["groups"]:
             return _error("Groups need to be Formed before a Discussion can begin.")
 
-        tutorial["state"] = TutorialState.DISCUSSION
+        # Students first Introduce themselves, then the Discussion begins automatically (with its full time)
+        tutorial["state"] = TutorialState.INTRODUCTION
         tutorial["round_discussed"] = True
 
         questions = []
@@ -265,16 +280,24 @@ def register_staff_events(socketio):
                 questions.append(question.question)
         tutorial["questions"] = questions
 
-        timer.reset(code)
+        timer.reset(code, INTRODUCTION_SECONDS)
         timer.start(code)
 
+        emit_tutorial_update(code)
+        return {"ok": True}
+
+    @socketio.on("skip_introduction", namespace="/staff")
+    @with_tutorial_auth
+    @with_state(TutorialState.INTRODUCTION, "Introductions have already finished.")
+    def skip_introduction(user_id, code, data=None):
+        begin_discussion(code)
         emit_tutorial_update(code)
         return {"ok": True}
 
 
     @socketio.on("start_timer", namespace="/staff")
     @with_tutorial_auth
-    @with_discussion
+    @with_timer
     def start_timer(user_id, code, data=None):
         if timer.get_remaining(tutorials[code]["timer"]) <= 0:
             timer.reset(code)
@@ -285,7 +308,7 @@ def register_staff_events(socketio):
 
     @socketio.on("stop_timer", namespace="/staff")
     @with_tutorial_auth
-    @with_discussion
+    @with_timer
     def stop_timer(user_id, code, data=None):
         timer.stop(code)
         emit_tutorial_update(code)
@@ -293,15 +316,19 @@ def register_staff_events(socketio):
 
     @socketio.on("reset_timer", namespace="/staff")
     @with_tutorial_auth
-    @with_discussion
+    @with_timer
     def reset_timer(user_id, code, data=None):
-        # Resets to the current duration, unless a new valid duration (in minutes) is given
+        # Resets to the current duration, unless a new valid Discussion duration (in minutes) is given
+        tutorial = tutorials[code]
         new_time = None
         minutes = data.get("time") if isinstance(data, dict) else None
         if minutes is not None:
+            if tutorial["state"] != TutorialState.DISCUSSION:
+                return _error("The Discussion time can only be changed during a Discussion.")
             new_time, error = _validate_discussion_time(minutes)
             if error:
                 return _error(error)
+            tutorial["discussion_time"] = new_time
 
         timer.reset(code, new_time)
         emit_tutorial_update(code)
@@ -309,7 +336,7 @@ def register_staff_events(socketio):
 
     @socketio.on("adjust_timer", namespace="/staff")
     @with_tutorial_auth
-    @with_discussion
+    @with_timer
     def adjust_timer(user_id, code, data=None):
         # Only the current Discussion is adjusted (the next one returns to the tutorial's duration)
         seconds = data.get("seconds") if isinstance(data, dict) else None
@@ -383,7 +410,7 @@ def _validate_settings(data, current=None):
         if error:
             return None, error
     elif current:
-        discussion_time = current["timer"]["duration"]
+        discussion_time = current["discussion_time"]
     else:
         discussion_time = DEFAULT_DISCUSSION_MINUTES * 60
 
