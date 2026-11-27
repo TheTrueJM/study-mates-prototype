@@ -86,9 +86,9 @@ function Navbar() {
           </p>
           <p>
             Since then, we've kept developing it into a tool that tutors can run in any class. Students join anonymously
-            with a code, with no accounts or personal details needed, and can share details like the grade they're
-            aiming for, when they're available, and how they like to meet and communicate. <strong>Study Mates</strong>
-            then matches everyone into balanced groups over several rounds, starting each round with quick introductions
+            with a code, with no accounts or personal details needed, and can share details like the grade they're aiming
+            for, when they're available, and how they like to meet and communicate. <strong>Study Mates</strong> then
+            matches everyone into balanced groups over several rounds, starting each round with quick introductions
             and discussion prompts, while avoiding rematches so you meet as many classmates as possible.
           </p>
           <p>
