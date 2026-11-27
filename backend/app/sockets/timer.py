@@ -108,7 +108,7 @@ class AsyncTimer:
             # The Wrap-Up countdown is only a guide for the Staff Member
             elif state == TutorialState.WRAP_UP:
                 namespaces = ["/staff"]
-                message = {"message": "Wrap-Up time is over. Close the Session once everyone is Ready."}
+                message = {"message": "Wrap-Up Time is Over. Close the Session once everyone is Ready."}
             else:
                 message = {"message": "Time's up! Discussion time has finished."}
 

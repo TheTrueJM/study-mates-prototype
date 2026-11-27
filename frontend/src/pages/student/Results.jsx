@@ -34,7 +34,7 @@ function Results() {
     <div className="container container-md page">
       <Card
         title="Your Past Sessions"
-        subtitle="Who you Met, Saved on this Device Only."
+        subtitle="Who You Met, Saved on this Device Only."
         actions={results.length > 0 && (
           <Button variant="danger" size="sm" onClick={() => setConfirmClear(true)}>Clear All</Button>
         )}
@@ -68,7 +68,7 @@ function Results() {
                     mutuals.length > 0 ? (
                       <div className="mutual-panel mb-sm">
                         <h3 className="result-heading">Mutual Shortlists ({mutuals.length})</h3>
-                        <p className="text-muted mb-xs">You both wanted to Team Up. Find them to swap Details!</p>
+                        <p className="text-muted mb-xs">You both wanted to Team Up. Find them to Swap Details!</p>
                         <PeopleMet people={mutuals} shortlisting />
                       </div>
                     ) : (
@@ -76,7 +76,7 @@ function Results() {
                     )
                   )}
 
-                  <h3 className="result-heading">People you Met ({others.length})</h3>
+                  <h3 className="result-heading">People You Met ({others.length})</h3>
                   <PeopleMet people={others} shortlisting={session.shortlisting} empty="Everyone you Met is in your Mutual Shortlists." />
                 </section>
               );

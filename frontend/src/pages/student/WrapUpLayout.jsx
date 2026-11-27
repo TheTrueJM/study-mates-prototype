@@ -40,13 +40,13 @@ export default function WrapUpLayout({
       <div className="callout">
         <p>
           {shortlisting
-            ? "Before you go, Shortlist anyone else you'd like to Team Up with. If they Shortlist you too, you'll both be told straight away."
+            ? "Before you go, Shortlist anyone else you'd like to Team Up with. If they Shortlist you too, you'll both be notified straight away."
             : "Before you go, think about who you Met today. If you'd like to Team Up or keep Talking with anyone, now's a great time to go and swap Details."}
         </p>
       </div>
 
       <section>
-        <h2 className="section-title">People you Met ({history.length})</h2>
+        <h2 className="section-title">People You Met ({history.length})</h2>
         <PeopleMet people={history} shortlisting={shortlisting} onToggle={onShortlist} />
         {history.length > 0 && (
           <p className="section-hint mt-xs">

@@ -76,7 +76,7 @@ export default function TutorialSettingsFields({ values, onChange, errors = {} }
           />
         </div>
         <p className="input-hint">
-          Students can Shortlist Classmates they'd like to Team Up with. Students who Shortlist each other are told at the Wrap-Up.
+          Students can Shortlist Classmates they'd like to Team Up with. Students who Shortlist each other are notified at the Wrap-Up.
         </p>
       </div>
 

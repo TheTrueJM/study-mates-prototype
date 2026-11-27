@@ -162,7 +162,7 @@ export default function PresetBar({ values, onChange }) {
           <input
             className="input"
             value={name}
-            placeholder="Preset Name, e.g. COMP1000 Tutorials"
+            placeholder="Preset Name, e.g. CS101 Tutorial"
             onChange={(event) => {
               setName(event.target.value);
               setReplaceId(null);

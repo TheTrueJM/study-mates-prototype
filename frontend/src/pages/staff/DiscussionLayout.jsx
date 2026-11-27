@@ -18,7 +18,7 @@ export default function DiscussionLayout({
         <div className="phase-banner">
           <h2 className="phase-title">Introductions</h2>
           <p className="phase-text">
-            Take turns sharing your Name, and which App Name is yours. The Discussion starts automatically afterwards.
+            Take Turns to Introduce Yourself and Share Names. The Discussion will begin immediately afterwards.
           </p>
         </div>
       )}

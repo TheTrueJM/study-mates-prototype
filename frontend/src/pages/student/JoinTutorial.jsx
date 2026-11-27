@@ -87,7 +87,7 @@ function JoinTutorial() {
 
         {pastSessions > 0 && (
           <p className="text-center mt-sm">
-            <Link to="/results">See your Past Sessions ({pastSessions})</Link>
+            <Link to="/results">See Your Past Sessions ({pastSessions})</Link>
           </p>
         )}
       </Card>

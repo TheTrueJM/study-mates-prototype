@@ -46,9 +46,9 @@ def _clean_text(value, name, max_length, required=True):
     if required and not value:
         return None, f"Enter a {name}."
     if len(value) > max_length:
-        return None, f"The {name} can be at most {max_length} characters."
+        return None, f"The {name} can be at most {max_length} Characters."
     if not value.isprintable():
-        return None, f"The {name} has characters which can't be used."
+        return None, f"The {name} has Characters which can't be used."
     return value, None
 
 
@@ -91,7 +91,7 @@ def parse_custom_attribute(raw, used_ids=()) -> tuple[dict | None, str | None]:
     if matching not in MATCHING_MODES:
         return None, f"{label}: Invalid matching type."
 
-    # Keep the Detail's ID (so Students' Answers are kept when it is edited) unless it is invalid or repeated
+    # Keep the Detail's ID (so students' answers are kept when it is edited) unless it is invalid or repeated
     attribute_id = raw.get("id")
     if not isinstance(attribute_id, str) or not ID_PATTERN.match(attribute_id) or attribute_id in used_ids:
         attribute_id = generate_custom_id()

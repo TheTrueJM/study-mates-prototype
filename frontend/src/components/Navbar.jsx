@@ -78,25 +78,23 @@ function Navbar() {
       <Modal title="About Study Mates" isOpen={showAboutModal} onClose={() => setShowAboutModal(false)}>
         <div className="about-text mb-sm">
           <p>
-            <strong>Study Mates</strong> began as our team's prototype at a Hackathon in 2025, built to tackle a problem
-            almost every university student runs into: group work. Too often, your group is decided by whoever sits at
-            your table or the friends you've made in previous classes, rather than people whose goals, schedules, and
-            ways of working match your own. That leads to mismatched expectations, clashing timetables, and uneven
-            workloads. We believe forming a group should be intentional, and a chance to meet more of your class, not
-            down to luck.
+            <strong>Study Mates</strong> began as a team Hackathon prototype in 2025, built to tackle a problem almost
+            every university student runs into: group work. Too often, your group is decided by whoever sits at your
+            table or the friends you've made in previous classes, rather than people whose goals, schedules, and ways
+            of working match your own. That leads to mismatched expectations, clashing timetables, and uneven workloads.
+            We believe forming a group should be intentional, and a chance to meet more of your class, not down to luck.
           </p>
           <p>
-            Since then, we've kept developing it into a tool that tutors can run in any class. Students join
-            anonymously with a code, with no accounts or personal details needed, and can share details like the grade
-            they're aiming for, when they're available, and how they like to meet and communicate (along with any
-            questions their tutor adds). <strong>Study Mates</strong> then matches everyone into balanced groups over
-            several rounds, starting each round with quick introductions and discussion prompts, and avoiding rematches
-            so you meet as many classmates as possible.
+            Since then, we've kept developing it into a tool that tutors can run in any class. Students join anonymously
+            with a code, with no accounts or personal details needed, and can share details like the grade they're
+            aiming for, when they're available, and how they like to meet and communicate. <strong>Study Mates</strong>
+            then matches everyone into balanced groups over several rounds, starting each round with quick introductions
+            and discussion prompts, while avoiding rematches so you meet as many classmates as possible.
           </p>
           <p>
-            By the end of the session, you'll have met a large range of students in your class. You can look back on who
-            you met, and (when your tutor turns it on) shortlist the people you'd like to team up with, so finding great
-            teammates for your next group assessment is easy.
+            By the end of the session, you'll have met a diverse range of students in your class. You can look back on
+            who you met, and (when possible) shortlist the people you'd like to team up with, so finding great teammates
+            for your next group assessment is easy.
           </p>
         </div>
         {/* TODO: Update Forms, Links, and QR */}

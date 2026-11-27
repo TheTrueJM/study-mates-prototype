@@ -24,9 +24,9 @@ def account_required(f):
     def wrapper(*args, **kwargs):
         identity = get_staff_identity(get_jwt())
         if not identity:
-            return jsonify({"message": "Your sign in is no longer valid"}), 401
+            return jsonify({"message": "Your Sign In is No Longer Valid"}), 401
         if identity["type"] != ACCOUNT:
-            return jsonify({"message": "Sign in with a Staff Account to save to your Account"}), 403
+            return jsonify({"message": "Sign In as a Staff to Save Custom Settings to your Account"}), 403
 
         return f(int(identity["id"].split(":", 1)[1]), *args, **kwargs)
     return wrapper
@@ -57,12 +57,12 @@ def create_attribute(staff_id):
         return error
 
     if SavedAttribute.query.filter_by(staff_id=staff_id).count() >= MAX_SAVED_ATTRIBUTES:
-        return jsonify({"message": f"You can save at most {MAX_SAVED_ATTRIBUTES} custom details"}), 400
+        return jsonify({"message": f"You can Save at most {MAX_SAVED_ATTRIBUTES} Custom Details"}), 400
 
     attribute = SavedAttribute(staff_id=staff_id, definition=definition)
     db.session.add(attribute)
     db.session.commit()
-    return jsonify({"attribute": attribute.to_dict(), "message": "Custom detail saved"}), 201
+    return jsonify({"attribute": attribute.to_dict(), "message": "Custom Detail Saved"}), 201
 
 
 @saved_bp.route("/attributes/<int:attribute_id>", methods=["PUT"])
@@ -70,7 +70,7 @@ def create_attribute(staff_id):
 def update_attribute(staff_id, attribute_id):
     attribute = SavedAttribute.query.filter_by(id=attribute_id, staff_id=staff_id).first()
     if not attribute:
-        return jsonify({"message": "This custom detail no longer exists"}), 404
+        return jsonify({"message": "This Custom Detail No Longer Exists"}), 404
 
     definition, error = _saved_definition(request.get_json(silent=True))
     if error:
@@ -78,7 +78,7 @@ def update_attribute(staff_id, attribute_id):
 
     attribute.definition = definition
     db.session.commit()
-    return jsonify({"attribute": attribute.to_dict(), "message": "Custom detail updated"}), 200
+    return jsonify({"attribute": attribute.to_dict(), "message": "Custom Detail Updated"}), 200
 
 
 @saved_bp.route("/attributes/<int:attribute_id>", methods=["DELETE"])
@@ -86,11 +86,11 @@ def update_attribute(staff_id, attribute_id):
 def delete_attribute(staff_id, attribute_id):
     attribute = SavedAttribute.query.filter_by(id=attribute_id, staff_id=staff_id).first()
     if not attribute:
-        return jsonify({"message": "This custom detail no longer exists"}), 404
+        return jsonify({"message": "This Custom Detail No Longer Exists"}), 404
 
     db.session.delete(attribute)
     db.session.commit()
-    return jsonify({"message": "Custom detail deleted"}), 200
+    return jsonify({"message": "Custom Detail Deleted"}), 200
 
 
 # ===== Tutorial Setting Presets ===== #
@@ -98,7 +98,7 @@ def delete_attribute(staff_id, attribute_id):
 def _preset_settings(data):
     """Returns a tuple of a Preset's Settings to save (in the form a Tutorial is created with) and an error response"""
     if not isinstance(data, dict):
-        return None, (jsonify({"message": "Invalid settings"}), 400)
+        return None, (jsonify({"message": "Invalid Settings"}), 400)
 
     settings, error = validate_settings(data)
     if error:
@@ -122,11 +122,11 @@ def _preset_name(data, staff_id, preset_id=None):
     if not name:
         return None, (jsonify({"message": "Enter a name for the preset"}), 400)
     if len(name) > MAX_PRESET_NAME_LENGTH or not name.isprintable():
-        return None, (jsonify({"message": f"The name can be at most {MAX_PRESET_NAME_LENGTH} characters"}), 400)
+        return None, (jsonify({"message": f"The name can be at most {MAX_PRESET_NAME_LENGTH} Characters"}), 400)
 
     for preset in TutorialPreset.query.filter_by(staff_id=staff_id):
         if preset.id != preset_id and preset.name.lower() == name.lower():
-            return None, (jsonify({"message": "You already have a preset with this name", "preset_id": preset.id}), 409)
+            return None, (jsonify({"message": "You already have a Preset with this Name", "preset_id": preset.id}), 409)
     return name, None
 
 
@@ -156,7 +156,7 @@ def create_preset(staff_id):
     preset = TutorialPreset(staff_id=staff_id, name=name, settings=settings)
     db.session.add(preset)
     db.session.commit()
-    return jsonify({"preset": preset.to_dict(), "message": "Preset saved"}), 201
+    return jsonify({"preset": preset.to_dict(), "message": "Preset Saved"}), 201
 
 
 @saved_bp.route("/presets/<int:preset_id>", methods=["PUT"])
@@ -165,11 +165,11 @@ def update_preset(staff_id, preset_id):
     """Overrides a Preset's Settings (and Name, if given)"""
     preset = TutorialPreset.query.filter_by(id=preset_id, staff_id=staff_id).first()
     if not preset:
-        return jsonify({"message": "This preset no longer exists"}), 404
+        return jsonify({"message": "This Preset No Longer Exists"}), 404
 
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
-        return jsonify({"message": "Invalid preset"}), 400
+        return jsonify({"message": "Invalid Preset"}), 400
 
     if "name" in data:
         name, error = _preset_name(data, staff_id, preset_id)
@@ -184,7 +184,7 @@ def update_preset(staff_id, preset_id):
         preset.settings = settings
 
     db.session.commit()
-    return jsonify({"preset": preset.to_dict(), "message": "Preset updated"}), 200
+    return jsonify({"preset": preset.to_dict(), "message": "Preset Updated"}), 200
 
 
 @saved_bp.route("/presets/<int:preset_id>", methods=["DELETE"])
@@ -192,8 +192,8 @@ def update_preset(staff_id, preset_id):
 def delete_preset(staff_id, preset_id):
     preset = TutorialPreset.query.filter_by(id=preset_id, staff_id=staff_id).first()
     if not preset:
-        return jsonify({"message": "This preset no longer exists"}), 404
+        return jsonify({"message": "This Preset No Longer Exists"}), 404
 
     db.session.delete(preset)
     db.session.commit()
-    return jsonify({"message": "Preset deleted"}), 200
+    return jsonify({"message": "Preset Deleted"}), 200

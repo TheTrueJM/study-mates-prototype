@@ -43,7 +43,7 @@ export default function GroupLayout({
         <span className="group-hero-number">{groupNumber}</span>
         <p className="group-hero-text">
           {introduction
-            ? "Introductions! Take turns sharing your Name, and which App Name below is yours."
+            ? "Introductions! Take Turns to Share Your Name and a little About Yourself."
             : state === "discussion"
               ? "Discussion Time! Get to know your Group Members."
               : "Find your Group Members below and Sit Together."}
@@ -68,7 +68,7 @@ export default function GroupLayout({
 
       {introduction && (
         <details className="disclosure">
-          <summary>Peek at the Discussion Prompts</summary>
+          <summary>Preview the Discussion Prompts</summary>
           <div className="disclosure-body"><QuestionList questions={questions} /></div>
         </details>
       )}
@@ -99,7 +99,7 @@ export default function GroupLayout({
         </div>
         {shortlisting && (
           <p className="section-hint mt-xs">
-            Shortlist anyone you'd like to Team Up with. If they Shortlist you too, you'll both be told at the End of the Session.
+            Shortlist anyone you'd like to Team Up with. If they Shortlist you too, you'll both be notified at the End of the Session.
           </p>
         )}
       </section>
@@ -122,7 +122,7 @@ export function PreviousPeople({ history = [], groupMembers = [], shortlisting =
 
   return (
     <details className="disclosure">
-      <summary>People you've Met ({previous.length})</summary>
+      <summary>People You've Met ({previous.length})</summary>
       <div className="disclosure-body">
         <PeopleMet people={previous} shortlisting={shortlisting} onToggle={onShortlist} />
       </div>

@@ -12,6 +12,7 @@ export default function WrapUpLayout({
         <h2 className="phase-title">That's a Wrap!</h2>
         <p className="phase-text">
           Thanks for Taking Part! Head back to your Original Seats and get your things Ready.
+          <br/>
           Before you go, think about who you Met, and swap Details with anyone you'd like to Team Up with.
         </p>
       </div>

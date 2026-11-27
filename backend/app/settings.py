@@ -19,10 +19,10 @@ def validate_discussion_time(minutes):
     try:
         minutes = float(minutes)
     except (TypeError, ValueError):
-        return None, "Invalid discussion time."
+        return None, "Invalid Discussion Time."
 
     if math.isnan(minutes) or not MIN_DISCUSSION_MINUTES <= minutes <= MAX_DISCUSSION_MINUTES:
-        return None, f"Discussion time must be between {MIN_DISCUSSION_MINUTES} and {MAX_DISCUSSION_MINUTES} minutes."
+        return None, f"Discussion Time must be between {MIN_DISCUSSION_MINUTES} and {MAX_DISCUSSION_MINUTES} Minutes."
     return math.ceil(minutes * 60), None
 
 
@@ -33,11 +33,11 @@ def validate_settings(data, current=None):
     """
     group_size = data.get("group_size", current["group_size"] if current else None)
     if not is_int(group_size) or not MIN_GROUP_SIZE <= group_size <= MAX_GROUP_SIZE:
-        return None, f"Group size must be between {MIN_GROUP_SIZE} and {MAX_GROUP_SIZE} students."
+        return None, f"Group Size must be between {MIN_GROUP_SIZE} and {MAX_GROUP_SIZE} Students."
 
     max_groups = data.get("max_groups", current["max_groups"] if current else None)
     if max_groups is not None and (not is_int(max_groups) or max_groups < 2):
-        return None, "Maximum groups must be at least 2."
+        return None, "Maximum Groups must be at Least 2."
 
     if "discussion_time" in data or "time" in data:
         discussion_time, error = validate_discussion_time(data.get("discussion_time", data.get("time")))
@@ -51,7 +51,7 @@ def validate_settings(data, current=None):
     if "available_attributes" in data and data["available_attributes"] is not None:
         available_attributes = parse_available_attributes(data["available_attributes"])
         if available_attributes is None:
-            return None, "Invalid student details selection."
+            return None, "Invalid Student Details Selection."
     elif current:
         available_attributes = [a for a in current["available_attributes"] if a in SELECTABLE_ATTRIBUTES]
     else:
@@ -68,7 +68,7 @@ def validate_settings(data, current=None):
 
     shortlisting = data.get("shortlisting", current["shortlisting"] if current else False)
     if not isinstance(shortlisting, bool):
-        return None, "Invalid shortlist setting."
+        return None, "Invalid Shortlist Setting."
 
     # Custom Details are always enabled, after the Selected Built-In Details
     available_attributes += [definition["id"] for definition in custom_attributes]

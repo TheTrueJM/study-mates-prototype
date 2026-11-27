@@ -153,12 +153,12 @@ def register_student_events(socketio):
         """Adds (or Removes) a Classmate the Student has Met to their Shortlist of potential Teammates"""
         tutorial = tutorials[code]
         if not tutorial.get("shortlisting"):
-            return _error("Shortlisting isn't turned on for this Session.")
+            return _error("Shortlisting isn't enabled for this Session.")
 
         data = data if isinstance(data, dict) else {}
         public_id, shortlisted = data.get("id"), data.get("shortlisted")
         if not isinstance(public_id, str) or not isinstance(shortlisted, bool):
-            return _error("Invalid shortlist change.")
+            return _error("Invalid Shortlist Change.")
         if not meetings.can_shortlist(tutorial, user_id, public_id):
             return _error("You can only Shortlist Classmates you've Met.")
 
@@ -168,9 +168,9 @@ def register_student_events(socketio):
         if shortlisted:
             shortlist.add(public_id)
         else:
-            # Once revealed, a Mutual Shortlist stays (the other Student has already been told)
+            # Once revealed, a Mutual Shortlist stays
             if wrapping_up and meetings.is_mutual(tutorial, user_id, public_id):
-                return _error("You've both Shortlisted each other, so they've already been told.")
+                return _error("You've both Shortlisted each other, so they've already been notified.")
             shortlist.discard(public_id)
 
         # Students who Shortlist each other during the Wrap-Up are both told straight away

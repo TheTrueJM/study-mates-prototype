@@ -81,7 +81,7 @@ export default function CustomAttributeList({ value = [], onChange }) {
 
   return (
     <div className="form-group">
-      <span className="input-label" id="custom-details-label">Custom Details</span>
+      <span className="input-label" id="custom-details-label">Custom Details (optional)</span>
       <p className="input-hint mb-xs">
         Ask Students your own Questions, with Options for them to choose from.
       </p>

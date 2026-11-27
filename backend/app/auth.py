@@ -55,13 +55,13 @@ def verify_staff_login(username: str, password: str) -> Staff | None:
 def validate_staff_account(username: str, password: str) -> str | None:
     """Returns an error message if a new staff account can't use the username or password"""
     if not MIN_USERNAME_LENGTH <= len(username) <= MAX_USERNAME_LENGTH:
-        return f"Your username must be between {MIN_USERNAME_LENGTH} and {MAX_USERNAME_LENGTH} characters"
+        return f"Your username must be between {MIN_USERNAME_LENGTH} and {MAX_USERNAME_LENGTH} Characters"
     if not username.isprintable():
-        return "Your username has characters which can't be used"
+        return "Your Username has Characters which can't be used"
     if len(password) < MIN_PASSWORD_LENGTH:
-        return f"Your password must be at least {MIN_PASSWORD_LENGTH} characters"
+        return f"Your Password must be at least {MIN_PASSWORD_LENGTH} Characters"
     if "\x00" in password or not is_possible_login(username, password):
-        return "Your password is too long or has characters which can't be used"
+        return "Your Password is Too Long or has Characters which can't be used"
 
     return None
 
