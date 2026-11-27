@@ -1680,6 +1680,33 @@ ul {
     color: var(--color-muted);
 }
 
+/* Settings Presets */
+.preset-bar {
+    padding: 0.75rem;
+    border-radius: 10px;
+    background-color: var(--color-gray);
+}
+
+.preset-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.preset-row .input {
+    flex: 1 1 14rem;
+    width: auto;
+}
+
+.preset-hint {
+    margin-bottom: var(--spacing-sm);
+}
+
+.preset-replace {
+    margin-left: 0.5rem;
+}
+
 /* Custom Details */
 .custom-list {
     display: flex;

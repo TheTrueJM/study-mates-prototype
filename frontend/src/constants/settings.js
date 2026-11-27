@@ -39,3 +39,27 @@ export function validateSettings(values) {
     },
   };
 }
+
+
+/** Converts Saved Settings (as a Tutorial is created with) into Settings Form Values */
+export function settingsToValues(settings) {
+  return {
+    groupSize: settings.group_size,
+    limitGroups: !!settings.max_groups,
+    maxGroups: settings.max_groups ?? "",
+    discussionTime: Math.round(settings.discussion_time * 100) / 100,
+    availableAttributes: [...(settings.available_attributes || [])],
+    customAttributes: (settings.custom_attributes || []).map((detail) => ({ ...detail, options: [...detail.options] })),
+  };
+}
+
+/** Whether Settings Form Values match some Saved Settings */
+export function matchesSettings(values, settings) {
+  const normalise = ({ group_size, max_groups, discussion_time, available_attributes = [], custom_attributes = [] }) =>
+    JSON.stringify([
+      group_size, max_groups ?? null, Number(discussion_time), [...available_attributes].sort(),
+      custom_attributes.map(({ label, hint, options, multiple, matching }) => [label, hint || "", options, multiple, matching]),
+    ]);
+
+  return normalise(validateSettings(values).settings) === normalise(settings);
+}

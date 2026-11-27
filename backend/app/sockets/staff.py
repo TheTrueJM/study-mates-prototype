@@ -2,7 +2,7 @@ from flask import request
 from flask_socketio import emit, join_room, ConnectionRefusedError
 from sqlalchemy import func
 from functools import wraps
-import time, math
+import time
 
 from .utils import (
     tutorials, users, sessions, generate_unique_tutorial_code, emit_tutorial_update, emit_staff_update,
@@ -12,14 +12,11 @@ from .utils import (
 from .timer import timer
 from .matching import form_groups
 from ..auth import verify_staff_token
-from ..enums import TutorialState, DEFAULT_AVAILABLE_ATTRIBUTES, SELECTABLE_ATTRIBUTES, parse_available_attributes
-from ..custom_attributes import parse_custom_attributes
+from ..enums import TutorialState
+from ..settings import MAX_DISCUSSION_MINUTES, is_int, validate_discussion_time, validate_settings
 from ..database import DiscussionQuestion
 
 
-MIN_GROUP_SIZE, MAX_GROUP_SIZE = 2, 10
-MIN_DISCUSSION_MINUTES, MAX_DISCUSSION_MINUTES = 1, 60
-DEFAULT_DISCUSSION_MINUTES = 5
 INTRODUCTION_SECONDS = 30
 WRAP_UP_SECONDS = 2 * 60
 TIMER_ADJUSTMENT_SECONDS = 30
@@ -128,7 +125,7 @@ def register_staff_events(socketio):
         if not isinstance(data, dict):
             return _error("Invalid tutorial settings.")
 
-        settings, error = _validate_settings(data)
+        settings, error = validate_settings(data)
         if error:
             return _error(error)
 
@@ -169,7 +166,7 @@ def register_staff_events(socketio):
             return _error("Invalid tutorial settings.")
 
         tutorial = tutorials[code]
-        settings, error = _validate_settings(data, current=tutorial)
+        settings, error = validate_settings(data, current=tutorial)
         if error:
             return _error(error)
 
@@ -235,7 +232,7 @@ def register_staff_events(socketio):
                 return _error(f"The Limit of {tutorial['max_groups']} Groups has been Reached.")
             target = max(groups) + 1
             groups[target] = []
-        elif not _is_int(target) or target not in groups:
+        elif not is_int(target) or target not in groups:
             return _error("This Group no longer exists.")
         elif target == current:
             return _error("This Student is already in that Group.")
@@ -375,7 +372,7 @@ def register_staff_events(socketio):
         if minutes is not None:
             if tutorial["state"] != TutorialState.DISCUSSION:
                 return _error("The Discussion time can only be changed during a Discussion.")
-            new_time, error = _validate_discussion_time(minutes)
+            new_time, error = validate_discussion_time(minutes)
             if error:
                 return _error(error)
             tutorial["discussion_time"] = new_time
@@ -443,71 +440,3 @@ def join_tutorial(user_id, code):
 
     emit_tutorial_update(code)
     return {"ok": True, "tutorial_code": code}
-
-
-def _is_int(value):
-    return isinstance(value, int) and not isinstance(value, bool)
-
-
-def _validate_discussion_time(minutes):
-    """Returns a tuple of the discussion time in seconds and an error message"""
-    try:
-        minutes = float(minutes)
-    except (TypeError, ValueError):
-        return None, "Invalid discussion time."
-
-    if math.isnan(minutes) or not MIN_DISCUSSION_MINUTES <= minutes <= MAX_DISCUSSION_MINUTES:
-        return None, f"Discussion time must be between {MIN_DISCUSSION_MINUTES} and {MAX_DISCUSSION_MINUTES} minutes."
-    return math.ceil(minutes * 60), None
-
-
-def _validate_settings(data, current=None):
-    """
-    Validates tutorial settings, returning a tuple of the cleaned settings and an error message.
-    Settings omitted from an update keep their current value; on creation they use their defaults.
-    """
-    group_size = data.get("group_size", current["group_size"] if current else None)
-    if not _is_int(group_size) or not MIN_GROUP_SIZE <= group_size <= MAX_GROUP_SIZE:
-        return None, f"Group size must be between {MIN_GROUP_SIZE} and {MAX_GROUP_SIZE} students."
-
-    max_groups = data.get("max_groups", current["max_groups"] if current else None)
-    if max_groups is not None and (not _is_int(max_groups) or max_groups < 2):
-        return None, "Maximum groups must be at least 2."
-
-    if "discussion_time" in data or "time" in data:
-        discussion_time, error = _validate_discussion_time(data.get("discussion_time", data.get("time")))
-        if error:
-            return None, error
-    elif current:
-        discussion_time = current["discussion_time"]
-    else:
-        discussion_time = DEFAULT_DISCUSSION_MINUTES * 60
-
-    if "available_attributes" in data and data["available_attributes"] is not None:
-        available_attributes = parse_available_attributes(data["available_attributes"])
-        if available_attributes is None:
-            return None, "Invalid student details selection."
-    elif current:
-        available_attributes = [a for a in current["available_attributes"] if a in SELECTABLE_ATTRIBUTES]
-    else:
-        available_attributes = list(DEFAULT_AVAILABLE_ATTRIBUTES)
-
-    if "custom_attributes" in data and data["custom_attributes"] is not None:
-        custom_attributes, error = parse_custom_attributes(data["custom_attributes"])
-        if error:
-            return None, error
-    elif current:
-        custom_attributes = current["custom_attributes"]
-    else:
-        custom_attributes = list()
-
-    # Custom Details are always enabled, after the Selected Built-In Details
-    available_attributes += [definition["id"] for definition in custom_attributes]
-
-    return {
-        "group_size": group_size,
-        "max_groups": max_groups,
-        "discussion_time": discussion_time,
-        "available_attributes": available_attributes,
-        "custom_attributes": custom_attributes,
-    }, None

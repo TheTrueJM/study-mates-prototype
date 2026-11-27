@@ -3,6 +3,7 @@ import SliderInput from "./SliderInput";
 import Switch from "./Switch";
 import AttributeToggleList from "./AttributeToggleList";
 import CustomAttributeList from "./CustomAttributeList";
+import PresetBar from "./PresetBar";
 import { MIN_GROUP_SIZE, MAX_GROUP_SIZE, MIN_DISCUSSION_MINUTES, MAX_DISCUSSION_MINUTES } from "../constants/settings";
 
 
@@ -12,6 +13,8 @@ export default function TutorialSettingsFields({ values, onChange, errors = {} }
 
   return (
     <>
+      <PresetBar values={values} onChange={onChange} />
+
       <SliderInput
         name="group-size"
         label="Students per Group"

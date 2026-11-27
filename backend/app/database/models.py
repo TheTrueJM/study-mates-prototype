@@ -33,6 +33,20 @@ class SavedAttribute(db.Model):
         return {"id": self.id, **self.definition}
 
 
+class TutorialPreset(db.Model):
+    """Tutorial Settings saved to a Staff Account, to quickly set up their Tutorials"""
+    __tablename__ = "tutorial_presets"
+
+    id = db.Column(db.Integer, primary_key=True)
+    staff_id = db.Column(db.Integer, db.ForeignKey("staff.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = db.Column(db.String(50), nullable=False)
+    settings = db.Column(db.JSON, nullable=False) # As accepted when creating a Tutorial
+    updated_at = db.Column(db.DateTime, default=_now, onupdate=_now)
+
+    def to_dict(self):
+        return {"id": self.id, "name": self.name, "settings": self.settings}
+
+
 class DiscussionCategory(db.Model):
     __tablename__ = "discussion_categories"
 
