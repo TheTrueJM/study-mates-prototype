@@ -3,6 +3,7 @@ import itertools, random, time
 
 from ..enums import AttributeType, GradeType, MeetingMode, VALID_GRADES, VALID_AVAILABILITY_CODES
 from ..custom_attributes import SIMILAR, MIXED, WEIGHTS, NORMAL, custom_similarity
+from .seating import get_table
 
 
 # NOTE All Weights are just Magic Numbers, relative to the Most Compatible pair of Students (which scores 1)
@@ -14,6 +15,11 @@ SWAP_TIME_LIMIT = 0.5 # Seconds
 
 
 def form_groups(tutorial):
+    """
+    Forms Groups of the most Compatible Students, numbered by the Table each Group meets at.
+    Students staying at their Table (see seating.py) start the Group at their Table, which is then filled
+    and improved exactly like every other Group, except that they're never Swapped away from it.
+    """
     group_size = tutorial["group_size"]
     max_groups = tutorial["max_groups"]
 
@@ -24,7 +30,17 @@ def form_groups(tutorial):
     if not total_students:
         return dict()
 
+    # Students are referred to by their Index (in student_ids) while matching
+    seated = dict() # { Table: [Student, ...] }
+    for student, student_id in enumerate(student_ids):
+        table = get_table(tutorial, student_details[student_id])
+        if table is not None:
+            seated.setdefault(table, []).append(student)
+
     group_sizes = get_group_sizes(total_students, group_size, max_groups)
+    if len(seated) > len(group_sizes):
+        # Every Table with a Seated Student needs its own Group (even beyond the Group Limit)
+        group_sizes = get_balanced_sizes(total_students, len(seated))
 
     available_attributes = tutorial["available_attributes"]
 
@@ -36,15 +52,29 @@ def form_groups(tutorial):
     def score(group):
         return score_group(group, connections, availability, rematches)
 
-    # Students are referred to by their Index (in student_ids) while matching
-    groups = []
-    unmatched = set(range(total_students))
+    # Each Seated Table takes one of the Groups, which are then Filled in a Random Order
+    # (so Seated Students aren't always given the First Choice of Classmates, or the Largest or Smallest Group)
+    if seated:
+        random.shuffle(group_sizes)
+    plan = [(size, table) for size, table in itertools.zip_longest(group_sizes, seated) if size is not None]
+    if seated:
+        random.shuffle(plan)
 
-    for target_size in group_sizes:
-        # Pick a Random Starting Student
-        first_student = random.choice(tuple(unmatched))
-        unmatched.remove(first_student)
-        group = [first_student]
+    fixed = {student for students in seated.values() for student in students}
+    unmatched = set(range(total_students)) - fixed
+    groups, tables = [], []
+
+    for target_size, table in plan:
+        if table is not None:
+            # Start with the Seated Students at the Table
+            group = list(seated[table])
+        elif unmatched:
+            # Pick a Random Starting Student
+            first_student = random.choice(tuple(unmatched))
+            unmatched.remove(first_student)
+            group = [first_student]
+        else:
+            continue # Larger Seated Tables took the Students this Group would have had
 
         # Fill group with most Compatible Students
         while len(group) < target_size and unmatched:
@@ -56,11 +86,25 @@ def form_groups(tutorial):
 
         # Save group
         groups.append(group)
+        tables.append(table)
 
     # The Last Groups are left with whoever remains, so improve all Groups afterwards
-    improve_groups(groups, score)
+    improve_groups(groups, score, fixed)
 
-    return {group_id: [student_ids[student] for student in group] for group_id, group in enumerate(groups, start=1)}
+    return {
+        number: [student_ids[student] for student in group]
+        for number, group in sorted(zip(number_groups(tables), groups), key=lambda numbered: numbered[0])
+    }
+
+
+def number_groups(tables):
+    """
+    The Number of each Group: the Table of its Seated Students, or otherwise the Lowest Number not taken by a Table
+    (e.g. 3 Groups with Seated Students at Table 5 are numbered 1, 2, and 5)
+    """
+    taken = {table for table in tables if table is not None}
+    free = (number for number in itertools.count(1) if number not in taken)
+    return [table if table is not None else next(free) for table in tables]
 
 
 def get_group_sizes(total_students, group_size, max_groups=None):
@@ -79,14 +123,22 @@ def get_group_sizes(total_students, group_size, max_groups=None):
 
     # Balance Larger Groups if restricted to a Maximum Total of Groups
     if max_groups and len(group_sizes) > max_groups:
-        base_size, extra = divmod(total_students, max_groups)
-        group_sizes = [base_size + 1] * extra + [base_size] * (max_groups - extra)
+        group_sizes = get_balanced_sizes(total_students, max_groups)
 
     return group_sizes
 
 
-def improve_groups(groups, score):
-    """Swaps Students between Groups for as long as it improves their Combined Score (modifies the groups)"""
+def get_balanced_sizes(total_students, total_groups):
+    """Sizes of an exact number of Groups, as Equal as possible (e.g. 11 students in 3 groups becomes [4, 4, 3])"""
+    base_size, extra = divmod(total_students, total_groups)
+    return [base_size + 1] * extra + [base_size] * (total_groups - extra)
+
+
+def improve_groups(groups, score, fixed=frozenset()):
+    """
+    Swaps Students between Groups for as long as it improves their Combined Score (modifies the groups).
+    Fixed Students (those staying at their Table) are never Swapped, but anyone can be Swapped into their Group.
+    """
     deadline = time.monotonic() + SWAP_TIME_LIMIT
     scores = [score(group) for group in groups]
 
@@ -100,6 +152,9 @@ def improve_groups(groups, score):
                 return
 
             for i, j in itertools.product(range(len(groups[a])), range(len(groups[b]))):
+                if groups[a][i] in fixed or groups[b][j] in fixed:
+                    continue
+
                 group_a, group_b = groups[a].copy(), groups[b].copy()
                 group_a[i], group_b[j] = group_b[j], group_a[i]
                 score_a, score_b = score(group_a), score(group_b)

@@ -6,6 +6,7 @@ import { useAttributeCatalog } from "../hooks/useAttributeCatalog";
 import Button from "./Button";
 import ChipGroup from "./ChipGroup";
 import Switch from "./Switch";
+import SeatingField from "./SeatingField";
 import CommunicationIcon from "./CommunicationIcon";
 import { AvailabilityGrid } from "./AvailabilityGrid";
 
@@ -18,9 +19,10 @@ const emptyValue = (meta) => (meta?.type === "single" ? null : []);
 /**
  * Lets a Student provide (or skip) each Detail enabled for the Tutorial, and choose which
  * are visible to their Group. Changes are saved automatically shortly after each edit.
+ * With `seating` ({ staySeated, table, onUpdate }), Students can first ask to stay at their Table.
  */
 export default function StudentDetailsForm({
-  availableAttributes = [], initialAttributes, initialShared, onSave, onDone, doneLabel = "Done",
+  availableAttributes = [], initialAttributes, initialShared, onSave, onDone, doneLabel = "Done", seating = null,
 }) {
   const catalog = useAttributeCatalog();
   const [values, setValues] = useState(() => initialAttributes || {});
@@ -109,6 +111,8 @@ export default function StudentDetailsForm({
 
   return (
     <div className="details-form">
+      {seating && <SeatingField {...seating} />}
+
       {attributes.map((attribute) => {
         const meta = catalog.meta[attribute];
         if (!meta) return null;

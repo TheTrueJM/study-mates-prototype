@@ -12,10 +12,12 @@ import MemberCard from "./MemberCard";
 export default function GroupLayout({
   state, username, round = 0, groupNumber, groupMembers = [], attributes, availableAttributes = [], attributesComplete,
   questions = [], timeRemaining, timeRunning, timeEndsAt, onEdit, history = [], shortlisting = false, onShortlist,
+  seating = null, tableNumbering = false,
 }) {
   const remaining = useCountdown(timeRemaining, timeEndsAt);
 
-  const canEdit = availableAttributes.length > 0;
+  const hasDetails = availableAttributes.length > 0;
+  const canEdit = hasDetails || !!seating;
   const introduction = state === "introduction";
   const timed = introduction || state === "discussion";
 
@@ -36,6 +38,17 @@ export default function GroupLayout({
   // Show the Student First, then the rest of the Group Members
   const members = [...groupMembers].sort((a, b) => (b.name === username) - (a.name === username));
 
+  // Students staying at their Table are Grouped there, so their Classmates come to them
+  const seatedTable = seating?.staySeated ? seating.table : null;
+  const seatedHere = seatedTable !== null && seatedTable === groupNumber;
+  const seatedElsewhere = seatedTable !== null && seatedTable !== groupNumber;
+
+  const findingText = seatedHere
+    ? `Stay where you are at Table ${seatedTable}. Your Group will come to you.`
+    : tableNumbering
+      ? `Head to Table ${groupNumber} and Sit Together with your Group.`
+      : "Find your Group Members below and Sit Together.";
+
   return (
     <div className="stack">
       <div className="group-hero">
@@ -46,9 +59,18 @@ export default function GroupLayout({
             ? "Introductions! Take Turns to Share Your Name and a little About Yourself."
             : state === "discussion"
               ? "Discussion Time! Get to know your Group Members."
-              : "Find your Group Members below and Sit Together."}
+              : findingText}
         </p>
       </div>
+
+      {seatedElsewhere && (
+        <div className="callout callout-info" role="status">
+          <p>
+            You're staying at Table {seatedTable}. Your Tutor can see this and may Move Classmates to you.
+            Otherwise, your Group will be Formed at your Table from the Next Round.
+          </p>
+        </div>
+      )}
 
       {timed && (
         <TimerDisplay
@@ -59,7 +81,7 @@ export default function GroupLayout({
         />
       )}
 
-      {canEdit && !attributesComplete && (
+      {hasDetails && !attributesComplete && (
         <div className="callout">
           <p>You haven't Finished adding your Details. Add them so your Group can get to Know You.</p>
           <Button size="sm" onClick={onEdit}>Add details</Button>
@@ -107,7 +129,7 @@ export default function GroupLayout({
       <PreviousPeople history={history} groupMembers={members} shortlisting={shortlisting} onShortlist={onShortlist} />
 
       {canEdit && (
-        <Button variant="outline" fullWidth onClick={onEdit}>Edit my Details</Button>
+        <Button variant="outline" fullWidth onClick={onEdit}>{hasDetails ? "Edit my Details" : "Seating Needs"}</Button>
       )}
     </div>
   );

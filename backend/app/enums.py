@@ -68,7 +68,6 @@ class AttributeType(Enum):
     MEETING_MODE = "meeting_mode"
     YEAR = "year"
     SEMESTER = "semester"
-    ACCESSIBILITY = "accessibility"
 
     def __str__(self):
         return self.value
@@ -85,7 +84,7 @@ MIN_STUDY_YEAR, MAX_STUDY_YEAR = 1, 10
 MIN_STUDY_SEMESTER, MAX_STUDY_SEMESTER = 1, 2
 
 # Attributes a Staff Member can enable for a Tutorial, in display order
-# NOTE Accessibility is not yet implemented into the Student Form or Matching
+# (Students who need to stay at their Table are handled separately, see sockets/seating.py)
 SELECTABLE_ATTRIBUTES = [
     str(AttributeType.GOAL_GRADE),
     str(AttributeType.CURRENT_GPA),

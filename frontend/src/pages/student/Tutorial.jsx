@@ -24,7 +24,8 @@ function Tutorial() {
     sessionReady, studentName, attributes, sharedAttributes, attributesComplete, studentCount,
     tutorialCode, tutorialName, tutorialState, availableAttributes,
     round, formation, groupNumber, groupMembers, questions, timeRemaining, timeRunning, timeEndsAt, history, shortlisting,
-    enterTutorial, updateDetails, confirmDetails, leaveTutorial, shortlistStudent, notify,
+    seating, staySeated, table, tableNumbering,
+    enterTutorial, updateDetails, confirmDetails, leaveTutorial, shortlistStudent, updateSeating, notify,
   } = useTutorial();
 
   const catalog = useAttributeCatalog();
@@ -157,6 +158,7 @@ function Tutorial() {
   }
 
   const inLobby = tutorialState === "lobby";
+  const seatingProps = seating ? { staySeated, table, onUpdate: updateSeating } : null;
 
   return (
     <div className="container container-md page">
@@ -180,6 +182,7 @@ function Tutorial() {
             history={history}
             shortlisting={shortlisting}
             onShortlist={shortlistStudent}
+            seating={seatingProps}
           />
         ) : tutorialState === "wrap_up" ? (
           <WrapUpLayout
@@ -208,15 +211,23 @@ function Tutorial() {
             history={history}
             shortlisting={shortlisting}
             onShortlist={shortlistStudent}
+            seating={seatingProps}
+            tableNumbering={seating && tableNumbering}
           />
         )}
       </Card>
 
       {/* Editing details during group rounds */}
-      <Modal title="Your Details" isOpen={editing && !inLobby} onClose={() => setEditing(false)}>
-        <p className="text-muted mb-md">
-          Changes save automatically and your Group sees them straight away. Everything is Optional.
-        </p>
+      <Modal
+        title={availableAttributes.length ? "Your Details" : "Seating Needs"}
+        isOpen={editing && !inLobby}
+        onClose={() => setEditing(false)}
+      >
+        {availableAttributes.length > 0 && (
+          <p className="text-muted mb-md">
+            Changes save automatically and your Group sees them straight away. Everything is Optional.
+          </p>
+        )}
         <StudentDetailsForm
           availableAttributes={availableAttributes}
           initialAttributes={attributes}
@@ -224,6 +235,7 @@ function Tutorial() {
           onSave={updateDetails}
           onDone={handleDone}
           doneLabel="Done"
+          seating={seatingProps}
         />
       </Modal>
 

@@ -4,7 +4,7 @@ import GroupGrid from "./GroupGrid";
 
 
 export default function GroupsLayout({
-  students = {}, groups = {}, maxGroups = null, onGrouping, onDiscussion, onRemoveStudent, onMoveStudent, busy = "",
+  students = {}, groups = {}, maxGroups = null, tableNumbering = false, onGrouping, onDiscussion, onRemoveStudent, onMoveStudent, busy = "",
 }) {
   const groupCount = Object.keys(groups).length;
   const studentCount = Object.values(groups).reduce((total, members) => total + members.length, 0);
@@ -15,7 +15,12 @@ export default function GroupsLayout({
         <h2 className="section-title">Group Formation Results</h2>
         <span className="text-muted">{groupCount} Groups · {studentCount} Students</span>
       </div>
-      <p className="text-muted mb-md">Direct each Group to a Table. Once everyone is Seated, begin the Discussion.</p>
+      <p className="text-muted mb-md">
+        {tableNumbering
+          ? "Each Group meets at the Table with its Number (Students have been told theirs)."
+          : "Direct each Group to a Table."}{" "}
+        Once everyone is Seated, begin the Discussion.
+      </p>
 
       {groupCount === 0 ? (
         <div className="empty-state mb-lg">No Groups Formed Yet. Select "Reform groups" to create them.</div>

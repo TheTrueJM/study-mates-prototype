@@ -70,6 +70,11 @@ def validate_settings(data, current=None):
     if not isinstance(shortlisting, bool):
         return None, "Invalid Connections Setting."
 
+    # Students can ask to stay at their Table unless turned off (e.g. for an Online Tutorial)
+    seating = data.get("seating", current.get("seating", True) if current else True)
+    if not isinstance(seating, bool):
+        return None, "Invalid Seating Needs Setting."
+
     # Custom Details are always enabled, after the Selected Built-In Details
     available_attributes += [definition["id"] for definition in custom_attributes]
 
@@ -80,4 +85,5 @@ def validate_settings(data, current=None):
         "available_attributes": available_attributes,
         "custom_attributes": custom_attributes,
         "shortlisting": shortlisting,
+        "seating": seating,
     }, None
