@@ -41,7 +41,16 @@ python main.py
 
 ## Staff Accounts
 
-Staff can use the application as a guest, or sign up for an account at `/staff/register` on the frontend. Both currently have the same access.
+Staff can use the application as a guest, or sign up for an account at `/staff/register` on the frontend. Both can run tutorials, but only accounts can save custom details and settings presets.
+
+| Route | Description |
+|---|---|
+| `POST /api/staff/register`, `POST /api/staff/login`, `POST /api/staff/guest` | Sign up, sign in, or continue as a guest (returns an access token) |
+| `GET /api/staff/me` | The signed in staff member |
+| `GET, POST /api/staff/attributes`, `PUT, DELETE /api/staff/attributes/<id>` | Custom details saved to the account |
+| `GET, POST /api/staff/presets`, `PUT, DELETE /api/staff/presets/<id>` | Settings presets saved to the account (names are unique per account) |
+
+New database tables are created on startup, and new discussion questions are added to existing databases.
 
 ## Tests
 
