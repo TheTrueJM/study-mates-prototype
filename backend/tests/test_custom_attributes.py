@@ -222,3 +222,42 @@ def test_saved_detail_limit(api, account_token, monkeypatch):
     monkeypatch.setattr("app.routes.saved.MAX_SAVED_ATTRIBUTES", 1)
     assert api.post("/api/staff/attributes", json=detail(), headers=auth(account_token)).status_code == 201
     assert api.post("/api/staff/attributes", json=detail(), headers=auth(account_token)).status_code == 400
+
+
+# ===== Matching Weights ===== #
+
+def test_weights_default_to_normal():
+    definition, _ = parse_custom_attribute(detail(matching="similar"))
+    assert definition["weight"] == "normal"
+    high, _ = parse_custom_attribute(detail(matching="similar", weight="high"))
+    assert high["weight"] == "high"
+    assert parse_custom_attribute(detail(weight="extreme"))[1]
+
+def test_weights_are_scaled_around_the_built_in_details():
+    from app.custom_attributes import WEIGHTS
+    assert WEIGHTS["low"] < WEIGHTS["normal"] < WEIGHTS["high"] < 5 # An exact grade match
+    assert 2 <= WEIGHTS["low"] and WEIGHTS["high"] / WEIGHTS["low"] < 2 # Not too drastic
+
+def test_higher_weighted_details_count_more():
+    definitions, _ = parse_custom_attributes([
+        detail(label="Role", matching="similar", weight="high"),
+        detail(label="Campus", options=["North", "South"], matching="similar", weight="low"),
+    ])
+    role, campus = (d["id"] for d in definitions)
+    # Grouping by Role pairs (s0, s1) and (s2, s3), but by Campus pairs (s0, s2) and (s1, s3)
+    answers = [("Frontend", "North"), ("Frontend", "South"), ("Backend", "North"), ("Backend", "South")]
+    tutorial = {
+        "group_size": 2, "max_groups": None, "available_attributes": [role, campus], "custom_attributes": definitions,
+        "previous_matches": {},
+        "students": {f"s{i}": {"attributes": {role: r, campus: c}} for i, (r, c) in enumerate(answers)},
+    }
+    for _ in range(5):
+        assert sorted(sorted(g) for g in form_groups(tutorial).values()) == [["s0", "s1"], ["s2", "s3"]]
+
+    definitions[0]["weight"], definitions[1]["weight"] = "low", "high"
+    for _ in range(5):
+        assert sorted(sorted(g) for g in form_groups(tutorial).values()) == [["s0", "s2"], ["s1", "s3"]]
+
+def test_saved_details_keep_their_weight(api, account_token):
+    saved = api.post("/api/staff/attributes", json=detail(matching="mixed", weight="low"), headers=auth(account_token))
+    assert saved.get_json()["attribute"]["weight"] == "low"

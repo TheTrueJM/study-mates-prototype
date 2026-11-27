@@ -65,10 +65,10 @@ export default function TutorialSettingsFields({ values, onChange, errors = {} }
 
       <div className="form-group">
         <div className="input-label-row">
-          <label className="input-label" htmlFor="shortlisting">Teammate Shortlist</label>
+          <label className="input-label" htmlFor="shortlisting">Classmate Connections</label>
           <Switch
             id="shortlisting"
-            label="Teammate Shortlist"
+            label="Classmate Connections"
             onLabel="On"
             offLabel="Off"
             checked={!!values.shortlisting}
@@ -76,7 +76,7 @@ export default function TutorialSettingsFields({ values, onChange, errors = {} }
           />
         </div>
         <p className="input-hint">
-          Students can Shortlist Classmates they'd like to Team Up with. Students who Shortlist each other are notified at the Wrap-Up.
+          Students can Connect with Classmates they'd like to Team Up with. Students who Connect with each other are notified at the Wrap-Up.
         </p>
       </div>
 

@@ -15,7 +15,7 @@ A real-time tutorial session management tool for university tutorials. Staff (tu
 - **Custom Details**: Staff can ask students their own questions (single or multiple choice), which are display only, or used to group similar answers together, or mix different answers across groups
 - **Accounts**: Staff with an account can save custom details and presets of their tutorial settings to reuse in later sessions
 - **Students**: Join sessions anonymously via code, input GPA and availability, get assigned to a compatible group, introduce themselves, and participate in guided discussions
-- **Match History and Shortlists**: Students see who they've met in each round, and can shortlist classmates they'd like to team up with. Mutual shortlists are revealed at the wrap-up, and each student's results are saved to their own device
+- **Match History and Connections**: Students see who they've met in each round, and (when turned on by the tutor) can connect with classmates they'd like to team up with. Students who connect with each other are told at the wrap-up, and each student's results are saved to their own device
 - **Smart Grouping**: Groups are formed using a compatibility matrix scored on GPA similarity, goal alignment, and preferences, along with the times that the entire group is available — with rematch penalties to avoid repeated pairings across rounds, and swaps between groups to improve them all
 - **Real-time Updates**: All session state (lobby, groups, discussion) is pushed live to all connected clients via WebSocket
 - **Reconnection Handling**: Students and staff keep their place in a session across page refreshes and dropped connections (students stay in the session until they leave, are removed, or it ends). Sessions end automatically after being idle for an hour
@@ -85,7 +85,7 @@ Staff creates tutorial → students join via 6-letter code
     [Groups]     — the next round, with different group members
        ⋮
     [Wrap-Up]    — staff ends the tutorial; everyone returns to their seats (and
-                   mutual shortlists are revealed), until staff close the session
+                   connections are revealed), until staff close the session
 ```
 
 ## Environment Variables
@@ -95,7 +95,7 @@ Staff creates tutorial → students join via 6-letter code
 | `FLASK_SECRET_KEY` | | Flask session secret |
 | `JWT_SECRET_KEY` | | Staff access token secret — **the server won't start without it** (`FLASK_SECRET_KEY` is used if only it is set) |
 | `JWT_EXPIRATION_HOURS` | `24` | Hours until a staff sign in expires |
-| `SQLALCHEMY_DATABASE_URI` | `sqlite:///study_mates.sqlite` | Database connection string |
+| `SQLALCHEMY_DATABASE_URI` | `sqlite:///study_mates.sqlite` | Database connection string: SQLite (a local file), or a Postgres URL (`postgresql://...`) — **use Postgres when deployed**, as hosts like Render clear local files on every deploy and restart |
 | `FRONTEND_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Comma-separated CORS allowed origins — **must include the deployed frontend** |
 | `VITE_BACKEND_URL` | `http://localhost:5000` (development only) | Backend URL used by the frontend |
 | `PORT` | `5000` | Port the backend listens on |

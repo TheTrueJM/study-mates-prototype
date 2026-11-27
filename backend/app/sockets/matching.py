@@ -2,13 +2,12 @@ import numpy as np
 import itertools, random, time
 
 from ..enums import AttributeType, GradeType, MeetingMode, VALID_GRADES, VALID_AVAILABILITY_CODES
-from ..custom_attributes import SIMILAR, MIXED, custom_similarity
+from ..custom_attributes import SIMILAR, MIXED, WEIGHTS, NORMAL, custom_similarity
 
 
 # NOTE All Weights are just Magic Numbers, relative to the Most Compatible pair of Students (which scores 1)
 AVAILABILITY_WEIGHT = 0.35
 REMATCH_WEIGHT = 0.9
-CUSTOM_WEIGHT = 3 # Of each Matching Custom Detail (relative to the weights in build_matrix)
 
 COMMON_TIMES = 2 # Best Meeting Times of a Group that are scored
 SWAP_TIME_LIMIT = 0.5 # Seconds
@@ -231,7 +230,8 @@ def build_matrix(ids, students, available_attributes, custom_attributes=()):
             for definition in matching_custom:
                 similarity = custom_similarity(definition, s1["custom"][definition["id"]], s2["custom"][definition["id"]])
                 if similarity is not None:
-                    weight += CUSTOM_WEIGHT * (similarity if definition["matching"] == SIMILAR else 1 - similarity)
+                    detail_weight = WEIGHTS[definition.get("weight", NORMAL)] # See WEIGHTS in custom_attributes.py
+                    weight += detail_weight * (similarity if definition["matching"] == SIMILAR else 1 - similarity)
 
             matrix[i][j] = matrix[j][i] = weight
             max_weight = max(max_weight, weight)

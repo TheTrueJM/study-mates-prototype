@@ -15,6 +15,13 @@ MIN_OPTIONS, MAX_OPTIONS = 2, 12
 DISPLAY, SIMILAR, MIXED = "display", "similar", "mixed"
 MATCHING_MODES = (DISPLAY, SIMILAR, MIXED)
 
+# How much a Matching Detail counts towards a pair of Students' compatibility. Normal is about the
+# average of the Built-In Details (worth up to 5 for an exact grade match, 1-3 for shared communication
+# methods, and 2 for compatible meeting modes), with Low and High slightly less and more than it
+# (High stays below an exact grade match, so a Custom Detail never outweighs the strongest Built-In ones)
+LOW, NORMAL, HIGH = "low", "normal", "high"
+WEIGHTS = {LOW: 2.5, NORMAL: 3.5, HIGH: 4.5}
+
 ID_PREFIX = "custom_"
 ID_PATTERN = re.compile(r"^custom_[a-z0-9]{1,24}$")
 
@@ -91,6 +98,10 @@ def parse_custom_attribute(raw, used_ids=()) -> tuple[dict | None, str | None]:
     if matching not in MATCHING_MODES:
         return None, f"{label}: Invalid matching type."
 
+    weight = raw.get("weight") or NORMAL # Details saved before Weights existed are Normal
+    if weight not in WEIGHTS:
+        return None, f"{label}: Invalid Matching Weight."
+
     # Keep the Detail's ID (so students' answers are kept when it is edited) unless it is invalid or repeated
     attribute_id = raw.get("id")
     if not isinstance(attribute_id, str) or not ID_PATTERN.match(attribute_id) or attribute_id in used_ids:
@@ -110,6 +121,7 @@ def parse_custom_attribute(raw, used_ids=()) -> tuple[dict | None, str | None]:
         "options": options,
         "multiple": multiple,
         "matching": matching,
+        "weight": weight,
         "saved_id": saved_id,
     }, None
 

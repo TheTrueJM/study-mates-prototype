@@ -7,7 +7,9 @@ import Button from "./Button";
 import CustomAttributeEditor from "./CustomAttributeEditor";
 
 
-const definitionOf = ({ label, hint, options, multiple, matching }) => ({ label, hint, options, multiple, matching });
+const definitionOf = ({ label, hint, options, multiple, matching, weight }) => (
+  { label, hint, options, multiple, matching, weight: weight || "normal" }
+);
 
 
 /**

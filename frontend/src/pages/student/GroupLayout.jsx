@@ -99,7 +99,7 @@ export default function GroupLayout({
         </div>
         {shortlisting && (
           <p className="section-hint mt-xs">
-            Shortlist anyone you'd like to Team Up with. If they Shortlist you too, you'll both be notified at the End of the Session.
+            Connect with anyone you'd like to Team Up with. If they Connect with you too, you'll both be notified at the End of the Session.
           </p>
         )}
       </section>

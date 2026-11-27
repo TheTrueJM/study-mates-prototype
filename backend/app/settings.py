@@ -68,7 +68,7 @@ def validate_settings(data, current=None):
 
     shortlisting = data.get("shortlisting", current["shortlisting"] if current else False)
     if not isinstance(shortlisting, bool):
-        return None, "Invalid Shortlist Setting."
+        return None, "Invalid Connections Setting."
 
     # Custom Details are always enabled, after the Selected Built-In Details
     available_attributes += [definition["id"] for definition in custom_attributes]

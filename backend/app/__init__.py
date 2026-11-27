@@ -16,7 +16,19 @@ load_dotenv()
 LOGGER = os.getenv("SOCKETIO_LOGGER", "false").lower() in {"true", "t", "1"}
 
 FLASK_KEY = os.getenv("FLASK_SECRET_KEY")
-DB_URI = os.getenv("SQLALCHEMY_DATABASE_URI") or "sqlite:///study_mates.sqlite"
+def get_database_uri(uri):
+    """
+    The database to use: SQLite by default, or Postgres (e.g. a Render Postgres database's URL).
+    Postgres URLs are given as postgres:// or postgresql://, so are pointed at the installed driver (psycopg 3).
+    """
+    if not uri:
+        return "sqlite:///study_mates.sqlite"
+    for scheme in ("postgres://", "postgresql://"):
+        if uri.startswith(scheme):
+            return "postgresql+psycopg://" + uri[len(scheme):]
+    return uri
+
+DB_URI = get_database_uri(os.getenv("SQLALCHEMY_DATABASE_URI"))
 
 JWT_KEY = os.getenv("JWT_SECRET_KEY")
 JWT_EXPIRY = int(os.getenv("JWT_EXPIRATION_HOURS")) if os.getenv("JWT_EXPIRATION_HOURS", "").isdigit() else 24
@@ -42,6 +54,8 @@ def create_app():
     app = Flask(__name__)
     app.config["SECRET_KEY"] = FLASK_KEY
     app.config["SQLALCHEMY_DATABASE_URI"] = DB_URI
+    # Hosted databases close idle connections, so check each one before it's used (and replace them regularly)
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 300}
     app.config["JWT_SECRET_KEY"] = JWT_KEY
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=JWT_EXPIRY)
     

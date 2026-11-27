@@ -28,7 +28,7 @@ export default function WrapUpLayout({
 
       <p className="text-muted text-center">
         {round} Round{round === 1 ? "" : "s"} · {studentCount} Student{studentCount === 1 ? "" : "s"}
-        {shortlisting && ` · ${mutualPairs} Mutual Shortlist${mutualPairs === 1 ? "" : "s"}`}.
+        {shortlisting && ` · ${mutualPairs} Connection${mutualPairs === 1 ? "" : "s"} Made`}.
         The Countdown is only a Guide, so the Session stays Open until you Close it.
       </p>
 

@@ -2,7 +2,8 @@ import os, tempfile
 
 # Set before the App is imported, so that Tests never use the Local Database or Keys
 database = tempfile.TemporaryDirectory()
-os.environ["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{database.name}/tests.sqlite"
+# TEST_DATABASE_URI runs the Tests against another database (e.g. a disposable Postgres database), which is CLEARED
+os.environ["SQLALCHEMY_DATABASE_URI"] = os.environ.get("TEST_DATABASE_URI") or f"sqlite:///{database.name}/tests.sqlite"
 os.environ["FLASK_SECRET_KEY"] = "test-flask-secret-key-0000000000000"
 os.environ["JWT_SECRET_KEY"] = "test-jwt-secret-key-000000000000000"
 os.environ["SOCKETIO_LOGGER"] = "false"

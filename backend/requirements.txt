@@ -24,6 +24,8 @@ numpy==2.5.0
 packaging==26.2
 parso==0.8.7
 pluggy==1.6.0
+psycopg==3.3.9
+psycopg-binary==3.3.9
 pudb==2025.1.5
 Pygments==2.20.0
 PyJWT==2.13.0

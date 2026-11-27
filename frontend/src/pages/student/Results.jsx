@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 
-import { clearResults, loadResults, removeResults } from "../../results";
+import { clearResults, connectedFirst, loadResults, removeResults } from "../../results";
 
 import Card from "../../components/Card";
 import Button from "../../components/Button";
 import ConfirmDialog from "../../components/ConfirmDialog";
-import PeopleMet from "../../components/PeopleMet";
+import PeopleMet, { ConnectedBanner } from "../../components/PeopleMet";
 
 
 const formatDate = (time) => new Date(time).toLocaleString(undefined, {
@@ -14,7 +14,7 @@ const formatDate = (time) => new Date(time).toLocaleString(undefined, {
 });
 
 
-// A Student's Past Sessions, kept on their Device, so they can find the Classmates they Met (and any Mutual Shortlists)
+// A Student's Past Sessions, kept on their Device, so they can find the Classmates they Met (and were Connected with)
 function Results() {
   const [results, setResults] = useState(loadResults);
   const [confirmClear, setConfirmClear] = useState(false);
@@ -47,8 +47,7 @@ function Results() {
         ) : (
           <div className="stack">
             {results.map((session) => {
-              const mutuals = session.people.filter((person) => person.mutual);
-              const others = session.people.filter((person) => !person.mutual);
+              const connections = session.people.filter((person) => person.mutual).length;
 
               return (
                 <section key={session.key} className="result-session">
@@ -64,20 +63,9 @@ function Results() {
                     </Button>
                   </div>
 
-                  {session.shortlisting && (
-                    mutuals.length > 0 ? (
-                      <div className="mutual-panel mb-sm">
-                        <h3 className="result-heading">Mutual Shortlists ({mutuals.length})</h3>
-                        <p className="text-muted mb-xs">You both wanted to Team Up. Find them to Swap Details!</p>
-                        <PeopleMet people={mutuals} shortlisting />
-                      </div>
-                    ) : (
-                      <p className="text-muted mb-sm">No Mutual Shortlists this time.</p>
-                    )
-                  )}
-
-                  <h3 className="result-heading">People You Met ({others.length})</h3>
-                  <PeopleMet people={others} shortlisting={session.shortlisting} empty="Everyone you Met is in your Mutual Shortlists." />
+                  <h3 className="result-heading">People You Met ({session.people.length})</h3>
+                  {session.shortlisting && <ConnectedBanner count={connections} past />}
+                  <PeopleMet people={connectedFirst(session.people)} shortlisting={session.shortlisting} />
                 </section>
               );
             })}

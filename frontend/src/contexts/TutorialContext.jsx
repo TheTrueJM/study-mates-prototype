@@ -246,10 +246,10 @@ export function TutorialProvider({ children }) {
       socket.on("mutual_shortlist", (data) => {
         if (!isActive()) return;
         if (data?.name) {
-          notify(`It's a Match! You and ${data.name} both Shortlisted each other.`, "success", 8000);
+          notify(`You're now Connected with ${data.name}!`, "success", 8000);
         } else if (data?.count) {
           const others = data.count === 1 ? "1 Classmate" : `${data.count} Classmates`;
-          notify(`You and ${others} Shortlisted each other! See who below.`, "success", 8000);
+          notify(`You're Connected with ${others}! See who below.`, "success", 8000);
         }
       });
 

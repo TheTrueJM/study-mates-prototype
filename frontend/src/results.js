@@ -64,3 +64,6 @@ export function removeResults(key) {
 export function clearResults() {
   storeResults([]);
 }
+
+/** Connected Classmates first, then everyone else (keeping their order) */
+export const connectedFirst = (people = []) => [...people].sort((a, b) => !!b.mutual - !!a.mutual);

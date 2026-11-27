@@ -1011,7 +1011,7 @@ ul {
     min-width: 0;
 }
 
-.member-card-top .shortlist-button {
+.member-card-top .connect-button {
     margin-right: 0.75rem;
 }
 
@@ -1705,8 +1705,8 @@ ul {
     margin-top: var(--spacing-sm);
 }
 
-/* Shortlists and the Classmates each Student has Met */
-.shortlist-button {
+/* Connections and the Classmates each Student has Met */
+.connect-button {
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
@@ -1721,33 +1721,38 @@ ul {
     cursor: pointer;
 }
 
-.shortlist-button > span[aria-hidden] {
+.connect-button > span[aria-hidden] {
     font-size: 1rem;
     line-height: 1;
 }
 
-.shortlist-button.is-on {
+.connect-button.is-on {
     background-color: var(--color-secondary);
     color: white;
 }
 
-.shortlist-button:disabled {
+.connect-button.is-connected {
+    border-color: var(--color-match);
+    background-color: var(--color-match);
+    color: white;
+}
+
+.connect-button:disabled {
     cursor: default;
-    opacity: 0.85;
 }
 
 @media (hover: hover) {
-    .shortlist-button:not(:disabled):hover {
+    .connect-button:not(:disabled):hover {
         background-color: var(--color-warning-soft);
     }
 
-    .shortlist-button.is-on:not(:disabled):hover {
+    .connect-button.is-on:not(:disabled):hover {
         background-color: var(--color-secondary-hover);
     }
 }
 
 @media (max-width: 340px) {
-    .shortlist-button-text {
+    .connect-button-text {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -1799,11 +1804,17 @@ ul {
     color: var(--color-muted);
 }
 
-.mutual-panel {
-    padding: var(--spacing-sm);
+.connected-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-xs);
+    padding: 0.625rem 0.75rem;
     border: var(--border-width) solid var(--color-match);
-    border-radius: var(--border-radius);
+    border-radius: 10px;
     background-color: var(--color-match-soft);
+    color: var(--color-match);
+    font-size: 0.9375rem;
 }
 
 .result-session + .result-session {

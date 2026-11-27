@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { CUSTOM_LIMITS, MATCHING_MODES } from "../constants/attributes";
+import { CUSTOM_LIMITS, MATCHING_MODES, MATCHING_WEIGHTS } from "../constants/attributes";
 
 import Button from "./Button";
 import ChipGroup from "./ChipGroup";
@@ -13,7 +13,7 @@ const CHOICE_OPTIONS = [
   { value: "multiple", label: "Multiple Options" },
 ];
 
-const BLANK = { label: "", hint: "", options: ["", ""], multiple: false, matching: "display" };
+const BLANK = { label: "", hint: "", options: ["", ""], multiple: false, matching: "display", weight: "normal" };
 
 
 /** Validates a Custom Detail's Form Values (mirrors backend/app/custom_attributes.py), returning any errors */
@@ -156,6 +156,21 @@ export default function CustomAttributeEditor({ initial, otherLabels = [], canSa
           {mode?.hint} {values.matching !== "display" && "Students can choose to Hide their Answer from their Group."}
         </div>
       </div>
+
+      {values.matching !== "display" && (
+        <div className="form-group">
+          <span className="input-label" id="custom-weight-label">Matching Weight</span>
+          <ChipGroup
+            options={MATCHING_WEIGHTS}
+            value={values.weight || "normal"}
+            onChange={(value) => value && set("weight")(value)}
+            ariaLabelledBy="custom-weight-label"
+          />
+          <div className="input-hint">
+            How much this Detail counts towards the Matching Algorithm when Forming Groups.
+          </div>
+        </div>
+      )}
 
       {canSave && (
         <CheckboxInput

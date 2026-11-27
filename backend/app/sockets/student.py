@@ -150,17 +150,20 @@ def register_student_events(socketio):
     @socketio.on("shortlist", namespace="/")
     @with_tutorial_auth
     def shortlist(user_id, code, data=None):
-        """Adds (or Removes) a Classmate the Student has Met to their Shortlist of potential Teammates"""
+        """
+        Asks to Connect with (or Cancels a Request to) a Classmate the Student has Met, as potential Teammates.
+        Students who Connect with each other are Connected (shown to the Students as Connections, stored as Shortlists).
+        """
         tutorial = tutorials[code]
         if not tutorial.get("shortlisting"):
-            return _error("Shortlisting isn't enabled for this Session.")
+            return _error("Connections aren't enabled for this Session.")
 
         data = data if isinstance(data, dict) else {}
         public_id, shortlisted = data.get("id"), data.get("shortlisted")
         if not isinstance(public_id, str) or not isinstance(shortlisted, bool):
-            return _error("Invalid Shortlist Change.")
+            return _error("Invalid Connection Request.")
         if not meetings.can_shortlist(tutorial, user_id, public_id):
-            return _error("You can only Shortlist Classmates you've Met.")
+            return _error("You can only Connect with Classmates you've Met.")
 
         wrapping_up = tutorial["state"] == TutorialState.WRAP_UP
         shortlist = tutorial["shortlists"].setdefault(user_id, set())
@@ -170,7 +173,7 @@ def register_student_events(socketio):
         else:
             # Once revealed, a Mutual Shortlist stays
             if wrapping_up and meetings.is_mutual(tutorial, user_id, public_id):
-                return _error("You've both Shortlisted each other, so they've already been notified.")
+                return _error("You're already Connected, so they've already been notified.")
             shortlist.discard(public_id)
 
         # Students who Shortlist each other during the Wrap-Up are both told straight away

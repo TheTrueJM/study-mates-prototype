@@ -61,7 +61,7 @@ function TutorialSetup() {
 
 
   return (
-    <div className="container container-md page">
+    <div className="container container-lg page">
       {tutorialCode && (
         <div className="callout mb-md">
           <p>You have a Session in Progress: <strong>{tutorialName || tutorialCode}</strong>.</p>

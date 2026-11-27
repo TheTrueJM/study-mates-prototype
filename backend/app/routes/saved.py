@@ -38,7 +38,7 @@ def _saved_definition(data):
     if error:
         return None, (jsonify({"message": error}), 400)
 
-    return {field: definition[field] for field in ("label", "hint", "options", "multiple", "matching")}, None
+    return {field: definition[field] for field in ("label", "hint", "options", "multiple", "matching", "weight")}, None
 
 
 @saved_bp.route("/attributes", methods=["GET"])

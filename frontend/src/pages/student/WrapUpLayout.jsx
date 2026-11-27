@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { useCountdown } from "../../hooks/useCountdown";
 
 import TimerDisplay from "../../components/TimerDisplay";
-import PeopleMet from "../../components/PeopleMet";
+import PeopleMet, { ConnectedBanner } from "../../components/PeopleMet";
+import { connectedFirst } from "../../results";
 
 
 // Shown once the Tutorial has Ended, until the Tutor Closes the Session
@@ -11,7 +12,7 @@ export default function WrapUpLayout({
   timeRemaining, timeRunning, timeEndsAt, history = [], shortlisting = false, onShortlist,
 }) {
   const remaining = useCountdown(timeRemaining, timeEndsAt);
-  const mutuals = history.filter((person) => person.mutual);
+  const connections = history.filter((person) => person.mutual).length;
 
   return (
     <div className="stack">
@@ -29,25 +30,26 @@ export default function WrapUpLayout({
         finishedText="Your Tutor will Close the Session Soon"
       />
 
-      {shortlisting && mutuals.length > 0 && (
-        <section className="mutual-panel">
-          <h2 className="section-title">Mutual Shortlists</h2>
-          <p className="text-muted mb-xs">You both want to Team Up! Go and find them to swap Details.</p>
-          <PeopleMet people={mutuals} shortlisting />
-        </section>
+      {!shortlisting && (
+        <div className="callout">
+          <p>
+            Before you go, think about who you Met today. If you'd like to Team Up or keep Talking with anyone,
+            now's a great time to go and swap Details.
+          </p>
+        </div>
       )}
-
-      <div className="callout">
-        <p>
-          {shortlisting
-            ? "Before you go, Shortlist anyone else you'd like to Team Up with. If they Shortlist you too, you'll both be notified straight away."
-            : "Before you go, think about who you Met today. If you'd like to Team Up or keep Talking with anyone, now's a great time to go and swap Details."}
-        </p>
-      </div>
 
       <section>
         <h2 className="section-title">People You Met ({history.length})</h2>
-        <PeopleMet people={history} shortlisting={shortlisting} onToggle={onShortlist} />
+        {shortlisting && (
+          <>
+            <ConnectedBanner count={connections} />
+            <p className="section-hint mb-xs">
+              Connect with anyone else you'd like to Team Up with. If they Connect with you too, you'll both be notified straight away.
+            </p>
+          </>
+        )}
+        <PeopleMet people={connectedFirst(history)} shortlisting={shortlisting} onToggle={onShortlist} />
         {history.length > 0 && (
           <p className="section-hint mt-xs">
             This is Saved to this Device, so you can still see it once the Session Closes (in <Link to="/results">Past Sessions</Link>).

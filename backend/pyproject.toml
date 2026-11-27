@@ -23,6 +23,7 @@ dependencies = [
     "flask-socketio>=5.6.0",
     "flask-sqlalchemy>=3.1.1",
     "numpy>=2.4.2",
+    "psycopg[binary]>=3.3.9",
     "pudb>=2025.1.5",
     "pytest>=9.0.2",
     "python-dotenv>=1.2.1",

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { compareAttributes } from "../../constants/attributes";
 import { useAttributeCatalog } from "../../hooks/useAttributeCatalog";
 import AttributeValue from "../../components/AttributeValue";
-import { ShortlistButton } from "../../components/PeopleMet";
+import { ConnectButton } from "../../components/PeopleMet";
 
 
 const initials = (name = "") =>
@@ -48,7 +48,7 @@ export default function MemberCard({ member, isSelf, ownAttributes, shortlisting
           <span className={`chevron ${expanded ? "is-open" : ""}`} aria-hidden="true" />
         </button>
         {shortlisting && !isSelf && member.id && onShortlist && (
-          <ShortlistButton person={member} onToggle={onShortlist} />
+          <ConnectButton person={member} onToggle={onShortlist} />
         )}
       </div>
 

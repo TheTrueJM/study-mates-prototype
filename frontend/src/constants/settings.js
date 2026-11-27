@@ -34,8 +34,8 @@ export function validateSettings(values) {
       discussion_time: discussionTime,
       available_attributes: values.availableAttributes,
       shortlisting: !!values.shortlisting,
-      custom_attributes: (values.customAttributes || []).map(({ id, label, hint, options, multiple, matching, saved_id }) => (
-        { id, label, hint, options, multiple, matching, saved_id: saved_id ?? null }
+      custom_attributes: (values.customAttributes || []).map(({ id, label, hint, options, multiple, matching, weight, saved_id }) => (
+        { id, label, hint, options, multiple, matching, weight: weight || "normal", saved_id: saved_id ?? null }
       )),
     },
   };
@@ -60,7 +60,9 @@ export function matchesSettings(values, settings) {
   const normalise = ({ group_size, max_groups, discussion_time, available_attributes = [], custom_attributes = [], shortlisting }) =>
     JSON.stringify([
       group_size, max_groups ?? null, Number(discussion_time), [...available_attributes].sort(), !!shortlisting,
-      custom_attributes.map(({ label, hint, options, multiple, matching }) => [label, hint || "", options, multiple, matching]),
+      custom_attributes.map(({ label, hint, options, multiple, matching, weight }) => (
+        [label, hint || "", options, multiple, matching, weight || "normal"]
+      )),
     ]);
 
   return normalise(validateSettings(values).settings) === normalise(settings);

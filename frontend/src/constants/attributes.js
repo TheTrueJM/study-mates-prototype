@@ -149,9 +149,18 @@ export const MATCHING_MODES = [
   { value: "mixed", label: "Mix Different", hint: "Different Answers are Spread Across the Groups." },
 ];
 
+// How much a Matching Custom Detail counts (see WEIGHTS in backend/app/custom_attributes.py)
+export const MATCHING_WEIGHTS = [
+  { value: "low", label: "Low" },
+  { value: "normal", label: "Normal" },
+  { value: "high", label: "High" },
+];
+
 export const isCustomAttribute = (attribute) => typeof attribute === "string" && attribute.startsWith("custom_");
 
 export const generateCustomId = () => `custom_${Math.random().toString(36).slice(2, 10) || "detail"}`;
+
+const weightLabel = (weight) => (MATCHING_WEIGHTS.find((w) => w.value === weight) ?? MATCHING_WEIGHTS[1]).label;
 
 /** Describes a Custom Detail in the same way as the Built-In Details (see ATTRIBUTES) */
 export function customAttributeMeta(definition) {
@@ -159,7 +168,11 @@ export function customAttributeMeta(definition) {
   return {
     label: definition.label,
     question: definition.hint || (definition.multiple ? "Pick as many as you like." : "Pick one."),
-    staffHint: `${definition.options.length} Options · ${definition.multiple ? "Multiple Choice" : "Single Choice"} · ${mode.label}`,
+    staffHint: [
+      `${definition.options.length} Options`,
+      definition.multiple ? "Multiple Choice" : "Single Choice",
+      definition.matching === "display" ? mode.label : `${mode.label} (${weightLabel(definition.weight)} Weight)`,
+    ].join(" · "),
     type: definition.multiple ? "multiple" : "single",
     options: definition.options.map((option) => ({ value: option, label: option })),
     shareable: definition.matching !== "display",
