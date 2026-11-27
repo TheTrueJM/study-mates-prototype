@@ -75,14 +75,30 @@ function Navbar() {
         </div>
       </div>
 
-      {/* TODO: Improve Handling of Modals */}
-      <Modal title="Study Mates - About Us [OLD]" isOpen={showAboutModal} onClose={() => setShowAboutModal(false)}>
-        {/* TODO: Include Link/URL of Application */}
-        <p className="mb-sm">
-          <strong>Study Mates</strong> began as a Hackathon prototype last year, created to reduce problems many students face in situations and assessments involving group work. Too often, your group is decided by the first table you sit at or the friends you've made in previous classes, but you rarely get an opportunity to make more meaningful connections. This can lead to mismatched expectations, clashing schedules, and uneven workloads. We believe group formation should be intentional and your own choice, not down to luck. <strong>Study Mates</strong> was built to create fairer, more balanced teams while helping students connect with more people in their class.
-          <br/><br/>
-          Our platform groups students based on expected assessment GPA, current academic performance, shared availability, and how they prefer to meet and communicate, increasing compatibility and accountability from the start. <strong>Study Mates</strong> runs three unique rounds of grouping so you can meet with a large range of students in the classroom. This approach encourages broader networking, diverse perspectives, and stronger academic balance by combining smart matching with structured rotation.
-        </p>
+      <Modal title="About Study Mates" isOpen={showAboutModal} onClose={() => setShowAboutModal(false)}>
+        <div className="about-text mb-sm">
+          <p>
+            <strong>Study Mates</strong> began as our team's prototype at a Hackathon in 2025, built to tackle a problem
+            almost every university student runs into: group work. Too often, your group is decided by whoever sits at
+            your table or the friends you've made in previous classes, rather than people whose goals, schedules, and
+            ways of working match your own. That leads to mismatched expectations, clashing timetables, and uneven
+            workloads. We believe forming a group should be intentional, and a chance to meet more of your class, not
+            down to luck.
+          </p>
+          <p>
+            Since then, we've kept developing it into a tool that tutors can run in any class. Students join
+            anonymously with a code, with no accounts or personal details needed, and can share details like the grade
+            they're aiming for, when they're available, and how they like to meet and communicate (along with any
+            questions their tutor adds). <strong>Study Mates</strong> then matches everyone into balanced groups over
+            several rounds, starting each round with quick introductions and discussion prompts, and avoiding rematches
+            so you meet as many classmates as possible.
+          </p>
+          <p>
+            By the end of the session, you'll have met a large range of students in your class. You can look back on who
+            you met, and (when your tutor turns it on) shortlist the people you'd like to team up with, so finding great
+            teammates for your next group assessment is easy.
+          </p>
+        </div>
         {/* TODO: Update Forms, Links, and QR */}
         <div className="divider flex gap-md justify-center items-center flex-wrap">
           <div className="qr-code-container">

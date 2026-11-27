@@ -1701,6 +1701,10 @@ ul {
     color: var(--color-muted);
 }
 
+.about-text p + p {
+    margin-top: var(--spacing-sm);
+}
+
 /* Shortlists and the Classmates each Student has Met */
 .shortlist-button {
     display: inline-flex;
