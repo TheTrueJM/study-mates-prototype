@@ -6,6 +6,7 @@ class TutorialState(Enum):
     GROUPING = "grouping"
     INTRODUCTION = "introduction"
     DISCUSSION = "discussion"
+    WRAP_UP = "wrap_up"
     ENDED = "ended"
 
     def __str__(self):

@@ -293,6 +293,7 @@ export function TutorialProvider({ children }) {
     []
   );
   const adjustTimer = useCallback((seconds) => emitWithAck(STAFF_NAMESPACE, "adjust_timer", { seconds }), []);
+  const wrapUp = useCallback(() => emitWithAck(STAFF_NAMESPACE, "wrap_up"), []);
   const endTutorial = useCallback(() => emitWithAck(STAFF_NAMESPACE, "end_tutorial"), []);
 
 
@@ -302,12 +303,12 @@ export function TutorialProvider({ children }) {
     toasts, notify, dismissToast,
     enterTutorial, updateDetails, confirmDetails, leaveTutorial,
     createTutorial, updateTutorial, lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion,
-    skipIntroduction, startTimer, stopTimer, resetTimer, adjustTimer, endTutorial,
+    skipIntroduction, startTimer, stopTimer, resetTimer, adjustTimer, wrapUp, endTutorial,
   }), [
     tutorial, namespace, connected, connectionLost, sessionReady, toasts, notify, dismissToast,
     enterTutorial, updateDetails, confirmDetails, leaveTutorial, createTutorial, updateTutorial,
     lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction,
-    startTimer, stopTimer, resetTimer, adjustTimer, endTutorial,
+    startTimer, stopTimer, resetTimer, adjustTimer, wrapUp, endTutorial,
   ]);
 
   return (

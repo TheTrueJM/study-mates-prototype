@@ -12,6 +12,7 @@ import StudentDetailsForm from "../../components/StudentDetailsForm";
 
 import LobbyLayout from "./LobbyLayout";
 import GroupLayout from "./GroupLayout";
+import WrapUpLayout from "./WrapUpLayout";
 
 
 function Tutorial() {
@@ -176,6 +177,8 @@ function Tutorial() {
             onSave={updateDetails}
             onDone={handleDone}
           />
+        ) : tutorialState === "wrap_up" ? (
+          <WrapUpLayout timeRemaining={timeRemaining} timeRunning={timeRunning} timeEndsAt={timeEndsAt} />
         ) : (
           <GroupLayout
             state={tutorialState}

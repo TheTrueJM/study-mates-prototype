@@ -160,6 +160,8 @@ def join_tutorial(user_id, code):
     if user_id not in tutorial["students"]:
         if tutorial["locked"]:
             return {"ok": False, "message": "This Session is Locked, so no one else can Join. Ask your Tutor to Unlock it."}
+        if tutorial["state"] == TutorialState.WRAP_UP:
+            return {"ok": False, "message": "This Session is Finishing Up, so no one else can Join."}
         if len(tutorial["students"]) >= MAX_STUDENTS:
             return {"ok": False, "message": "This Session is Full."}
 

@@ -289,6 +289,44 @@ def test_invalid_adjustments(staff, connect_student, data):
 
 # ===== Closing ===== #
 
+def test_wrapping_up(staff, connect_student):
+    student = start_discussion(staff, connect_student)[0]
+    assert staff.emit("wrap_up")["ok"]
+    tutorial = tutorials[staff.code]
+
+    update = latest(student, "student_update")
+    assert update["state"] == "wrap_up" and not update["questions"]
+    assert update["timer"]["running"] and update["timer"]["duration"] == 120
+    assert not staff.emit("wrap_up")["ok"]
+    assert staff.emit("adjust_timer", {"seconds": 30})["ok"] and staff.emit("stop_timer")["ok"]
+
+    # Only the Staff Member is told the Countdown has finished, and the Session stays open
+    tutorial["timer"]["remaining"] = 0.1
+    staff.emit("start_timer")
+    student.received("timer_notification")
+    gevent.sleep(0.3)
+    assert staff.code in tutorials and tutorial["state"].value == "wrap_up"
+    assert len(staff.received("timer_notification")) == 1 and not student.received("timer_notification")
+
+def test_no_one_new_joins_while_wrapping_up(staff, connect_student):
+    student = start_discussion(staff, connect_student)[0]
+    staff.emit("wrap_up")
+    late = connect_student(staff.code)
+    assert not late.joined["ok"] and "Finishing" in late.joined["message"]
+    assert student.emit("enter_tutorial", {"code": staff.code})["ok"] # Already in the Tutorial
+
+def test_wrapping_up_can_be_undone(staff, connect_student):
+    start_discussion(staff, connect_student)
+    staff.emit("wrap_up")
+    assert staff.emit("return_lobby")["ok"]
+    assert tutorials[staff.code]["state"].value == "lobby" and not timer.is_running(tutorials[staff.code]["timer"])
+
+def test_closing_after_wrapping_up(staff, connect_student):
+    student = start_discussion(staff, connect_student)[0]
+    staff.emit("wrap_up")
+    assert staff.emit("end_tutorial")["ok"]
+    assert latest(student, "tutorial_ended")["reason"] == "ended" and not tutorials
+
 def test_ending_deletes_everything(staff, connect_student):
     online, offline = connect_student(staff.code), connect_student(staff.code)
     offline.disconnect()

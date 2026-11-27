@@ -13,6 +13,7 @@ import { validateSettings } from "../../constants/settings";
 import LobbyLayout from "./LobbyLayout";
 import GroupsLayout from "./GroupsLayout";
 import DiscussionLayout from "./DiscussionLayout";
+import WrapUpLayout from "./WrapUpLayout";
 
 
 function Tutorial() {
@@ -22,14 +23,15 @@ function Tutorial() {
   const {
     sessionReady, tutorialCode, tutorialName, tutorialState, locked, groupSize, maxGroups, availableAttributes,
     students, groups, round, questions, discussionTime, timeDuration, timeRemaining, timeRunning, timeEndsAt,
-    updateTutorial, lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction, endTutorial,
+    updateTutorial, lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction, wrapUp, endTutorial,
     startTimer, stopTimer, resetTimer, adjustTimer, notify,
   } = useTutorial();
 
   const [settingsValues, setSettingsValues] = useState(null);
   const [settingsErrors, setSettingsErrors] = useState({});
   const [savingSettings, setSavingSettings] = useState(false);
-  const [confirmEnd, setConfirmEnd] = useState(false);
+  const [confirmEnd, setConfirmEnd] = useState(false); // Ending the Tutorial (Wrapping Up)
+  const [confirmClose, setConfirmClose] = useState(false); // Closing the Session
   const [ending, setEnding] = useState(false);
   const [removing, setRemoving] = useState(null); // Student ID
   const [removeBusy, setRemoveBusy] = useState(false);
@@ -88,9 +90,16 @@ function Tutorial() {
 
   const handleEnd = async () => {
     setEnding(true);
-    await endTutorial();
+    await wrapUp();
     setEnding(false);
     setConfirmEnd(false);
+  };
+
+  const handleClose = async () => {
+    setEnding(true);
+    await endTutorial();
+    setEnding(false);
+    setConfirmClose(false);
   };
 
   const handleRemove = async () => {
@@ -118,6 +127,11 @@ function Tutorial() {
 
   const studentCount = Object.keys(students).length;
   const inLobby = tutorialState === "lobby";
+  const wrappingUp = tutorialState === "wrap_up";
+  const timer = { timeRemaining, timeDuration, timeRunning, timeEndsAt, onStart: startTimer, onStop: stopTimer, onAdjust: adjustTimer };
+
+  // Before any Groups have Met there is nothing to Wrap Up, so the Session just Closes
+  const endSession = () => (round > 0 && !wrappingUp ? setConfirmEnd(true) : setConfirmClose(true));
 
   return (
     <div className="container container-lg page">
@@ -141,7 +155,7 @@ function Tutorial() {
               {locked ? "Unlock Joining" : "Lock Joining"}
             </Button>
             <Button variant="outline" size="sm" onClick={openSettings}>Settings</Button>
-            <Button variant="danger" size="sm" onClick={() => setConfirmEnd(true)}>End Session</Button>
+            <Button variant="danger" size="sm" onClick={endSession}>{wrappingUp ? "Close Session" : "End Session"}</Button>
           </>
         }
       >
@@ -170,20 +184,23 @@ function Tutorial() {
           <DiscussionLayout
             introduction={tutorialState === "introduction"}
             questions={questions}
-            timeRemaining={timeRemaining}
-            timeDuration={timeDuration}
-            timeRunning={timeRunning}
-            timeEndsAt={timeEndsAt}
+            timer={timer}
             students={students}
             groups={groups}
             onGrouping={run("grouping", startGrouping)}
-            onStartTimer={startTimer}
-            onStopTimer={stopTimer}
             onResetTimer={() => resetTimer()}
-            onAdjustTimer={adjustTimer}
             onSkipIntroduction={run("skip", skipIntroduction)}
             onRemoveStudent={setRemoving}
             busy={busy}
+          />
+        )}
+        {wrappingUp && (
+          <WrapUpLayout
+            timer={timer}
+            round={round}
+            studentCount={studentCount}
+            onResetTimer={() => resetTimer()}
+            onClose={() => setConfirmClose(true)}
           />
         )}
       </Card>
@@ -221,13 +238,23 @@ function Tutorial() {
 
       <ConfirmDialog
         isOpen={confirmEnd}
-        title="End this Session?"
-        message="All Students will be Removed and their Details Deleted. This can't be Undone."
-        confirmLabel="End Session"
-        danger
+        title="End the Tutorial?"
+        message="Everyone will see a Wrap-Up Screen with time to Return to their Seats. You can Close the Session afterwards."
+        confirmLabel="End Tutorial"
         busy={ending}
         onConfirm={handleEnd}
         onCancel={() => setConfirmEnd(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={confirmClose}
+        title="Close this Session?"
+        message="All Students will be Removed and their Details Deleted. This can't be Undone."
+        confirmLabel="Close Session"
+        danger
+        busy={ending}
+        onConfirm={handleClose}
+        onCancel={() => setConfirmClose(false)}
       />
 
       <ConfirmDialog

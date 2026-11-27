@@ -933,6 +933,14 @@ ul {
     line-height: 1.1;
 }
 
+.group-hero-title {
+    display: block;
+    margin: 0.25rem 0;
+    font-size: 2rem;
+    font-weight: bold;
+    line-height: 1.2;
+}
+
 .group-hero-text {
     font-size: 0.9375rem;
     opacity: 0.95;

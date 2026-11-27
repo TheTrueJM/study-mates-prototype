@@ -4,9 +4,9 @@ const formatTime = (seconds = 0) => {
   return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 };
 
-export default function TimerDisplay({ remaining = 0, running = false, size = "lg", label }) {
+export default function TimerDisplay({ remaining = 0, running = false, size = "lg", label, finishedText = "Time's Up!" }) {
   const finished = remaining <= 0;
-  const status = finished ? "Time's Up!" : running ? "Time Remaining" : "Timer Paused";
+  const status = finished ? finishedText : running ? "Time Remaining" : "Timer Paused";
 
   return (
     <div

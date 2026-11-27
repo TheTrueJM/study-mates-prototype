@@ -19,6 +19,7 @@ MIN_GROUP_SIZE, MAX_GROUP_SIZE = 2, 10
 MIN_DISCUSSION_MINUTES, MAX_DISCUSSION_MINUTES = 1, 60
 DEFAULT_DISCUSSION_MINUTES = 5
 INTRODUCTION_SECONDS = 30
+WRAP_UP_SECONDS = 2 * 60
 TIMER_ADJUSTMENT_SECONDS = 30
 MAX_TUTORIAL_NAME_LENGTH = 60
 
@@ -65,11 +66,11 @@ def with_timer(f):
     @wraps(f)
     def wrapper(user_id, code, *args, **kwargs):
         if tutorials[code]["state"] not in TIMED_STATES:
-            return _error("The Timer can only be used during Introductions or a Discussion.")
+            return _error("The Timer can only be used during Introductions, a Discussion, or the Wrap-Up.")
         return f(user_id, code, *args, **kwargs)
     return wrapper
 
-TIMED_STATES = {TutorialState.INTRODUCTION, TutorialState.DISCUSSION}
+TIMED_STATES = {TutorialState.INTRODUCTION, TutorialState.DISCUSSION, TutorialState.WRAP_UP}
 
 
 def register_staff_events(socketio):
@@ -353,6 +354,25 @@ def register_staff_events(socketio):
         emit_tutorial_update(code)
         return {"ok": True}
 
+
+    @socketio.on("wrap_up", namespace="/staff")
+    @with_tutorial_auth
+    def wrap_up(user_id, code, data=None):
+        """
+        Ends the tutorial's activities, giving everyone time to return to their seats and swap details.
+        The countdown is only a guide, as the Session stays open until the Staff Member closes it.
+        """
+        tutorial = tutorials[code]
+        if tutorial["state"] == TutorialState.WRAP_UP:
+            return _error("The Session is already Wrapping Up.")
+
+        tutorial["state"] = TutorialState.WRAP_UP
+        tutorial["questions"].clear()
+        timer.reset(code, WRAP_UP_SECONDS)
+        timer.start(code)
+
+        emit_tutorial_update(code)
+        return {"ok": True}
 
     @socketio.on("end_tutorial", namespace="/staff")
     @with_tutorial_auth
