@@ -1,10 +1,13 @@
 from flask import request
-from flask_socketio import emit, join_room, close_room, ConnectionRefusedError
+from flask_socketio import emit, join_room, ConnectionRefusedError
 from sqlalchemy import func
 from functools import wraps
 import time, math
 
-from .utils import tutorials, users, sessions, generate_unique_tutorial_code, emit_tutorial_update
+from .utils import (
+    tutorials, users, sessions, generate_unique_tutorial_code, emit_tutorial_update, emit_staff_update,
+    record_activity, remove_student as remove_tutorial_student, close_tutorial
+)
 from .timer import timer
 from .matching import form_groups
 from ..auth import verify_staff_token
@@ -15,6 +18,7 @@ from ..database import DiscussionQuestion
 MIN_GROUP_SIZE, MAX_GROUP_SIZE = 2, 10
 MIN_DISCUSSION_MINUTES, MAX_DISCUSSION_MINUTES = 1, 60
 DEFAULT_DISCUSSION_MINUTES = 5
+TIMER_ADJUSTMENT_SECONDS = 30
 MAX_TUTORIAL_NAME_LENGTH = 60
 
 
@@ -39,9 +43,23 @@ def with_tutorial_auth(f):
         if tutorial.get("staff") != user_id:
             return _error("This tutorial session is managed by another staff member.")
 
-        tutorial["last_activity"] = int(time.time())
+        record_activity(code)
         return f(user_id, code, *args, **kwargs)
     return wrapper
+
+
+def with_state(state, message):
+    """Only allows an event while the tutorial is in the given state (used after with_tutorial_auth)"""
+    def decorator(f):
+        @wraps(f)
+        def wrapper(user_id, code, *args, **kwargs):
+            if tutorials[code]["state"] != state:
+                return _error(message)
+            return f(user_id, code, *args, **kwargs)
+        return wrapper
+    return decorator
+
+with_discussion = with_state(TutorialState.DISCUSSION, "The Timer can only be used during a Discussion.")
 
 
 def register_staff_events(socketio):
@@ -108,18 +126,18 @@ def register_staff_events(socketio):
             "staff": user_id,
             "name": name or f"Tutorial {code}",
             "state": TutorialState.LOBBY,
+            "locked": False,
             "group_size": settings["group_size"],
             "max_groups": settings["max_groups"],
             "available_attributes": settings["available_attributes"],
             "students": dict(),
             "groups": dict(),
             "previous_matches": dict(),
+            "round": 0,
+            "round_discussed": False,
+            "formation": 0,
             "questions": list(),
-            "timer": {
-                "duration": discussion_time,
-                "remaining": discussion_time,
-                "running": False
-            },
+            "timer": timer.create(discussion_time),
             "last_activity": int(time.time())
         }
 
@@ -145,11 +163,31 @@ def register_staff_events(socketio):
 
         # Only reset the Timer when its Duration actually changes
         if settings["discussion_time"] != tutorial["timer"]["duration"]:
-            tutorial["timer"]["duration"] = settings["discussion_time"]
-            tutorial["timer"]["remaining"] = settings["discussion_time"]
-            tutorial["timer"]["running"] = False
-            timer.stop(code)
+            timer.reset(code, settings["discussion_time"])
 
+        emit_tutorial_update(code)
+        return {"ok": True}
+
+
+    @socketio.on("lock_tutorial", namespace="/staff")
+    @with_tutorial_auth
+    def lock_tutorial(user_id, code, data=None):
+        locked = data.get("locked") if isinstance(data, dict) else None
+        if not isinstance(locked, bool):
+            return _error("Invalid lock setting.")
+
+        tutorials[code]["locked"] = locked
+        emit_staff_update(code)
+        return {"ok": True}
+
+    @socketio.on("remove_student", namespace="/staff")
+    @with_tutorial_auth
+    def remove_student(user_id, code, data=None):
+        student_id = data.get("student_id") if isinstance(data, dict) else None
+        if not isinstance(student_id, str) or not remove_tutorial_student(student_id, code):
+            return _error("This Student is no longer in the Session.")
+
+        emit("left_tutorial", {"tutorial_code": code, "removed": True}, room=student_id, namespace="/")
         emit_tutorial_update(code)
         return {"ok": True}
 
@@ -161,7 +199,7 @@ def register_staff_events(socketio):
         tutorial["state"] = TutorialState.LOBBY
         tutorial["groups"].clear()
         tutorial["questions"].clear()
-        _reset_timer(code)
+        timer.reset(code)
 
         for student in tutorial["students"].values():
             student["group"] = None
@@ -183,10 +221,16 @@ def register_staff_events(socketio):
             return _error(f"Groups could not be formed: {e}")
 
         tutorial["questions"].clear()
-        _reset_timer(code)
+        timer.reset(code)
 
         tutorial["groups"].clear()
         tutorial["state"] = TutorialState.GROUPING
+
+        # Reforming Groups before their Discussion doesn't count as another Round
+        if not tutorial["round"] or tutorial["round_discussed"]:
+            tutorial["round"] += 1
+            tutorial["round_discussed"] = False
+        tutorial["formation"] += 1
 
         for student in tutorial["students"].values():
             student["group"] = None
@@ -205,9 +249,14 @@ def register_staff_events(socketio):
 
     @socketio.on("start_discussion", namespace="/staff")
     @with_tutorial_auth
+    @with_state(TutorialState.GROUPING, "Groups need to be Formed before a Discussion can begin.")
     def start_discussion(user_id, code, data=None):
         tutorial = tutorials[code]
+        if not tutorial["groups"]:
+            return _error("Groups need to be Formed before a Discussion can begin.")
+
         tutorial["state"] = TutorialState.DISCUSSION
+        tutorial["round_discussed"] = True
 
         questions = []
         for category in ["academic", "casual", "study"]:
@@ -216,8 +265,7 @@ def register_staff_events(socketio):
                 questions.append(question.question)
         tutorial["questions"] = questions
 
-        tutorial["timer"]["remaining"] = tutorial["timer"]["duration"]
-        tutorial["timer"]["running"] = True
+        timer.reset(code)
         timer.start(code)
 
         emit_tutorial_update(code)
@@ -226,36 +274,55 @@ def register_staff_events(socketio):
 
     @socketio.on("start_timer", namespace="/staff")
     @with_tutorial_auth
+    @with_discussion
     def start_timer(user_id, code, data=None):
-        tutorial_timer = tutorials[code]["timer"]
-        if tutorial_timer["remaining"] <= 0:
-            tutorial_timer["remaining"] = tutorial_timer["duration"]
+        if timer.get_remaining(tutorials[code]["timer"]) <= 0:
+            timer.reset(code)
 
-        tutorial_timer["running"] = True
         timer.start(code)
         emit_tutorial_update(code)
         return {"ok": True}
 
     @socketio.on("stop_timer", namespace="/staff")
     @with_tutorial_auth
+    @with_discussion
     def stop_timer(user_id, code, data=None):
-        tutorials[code]["timer"]["running"] = False
         timer.stop(code)
         emit_tutorial_update(code)
         return {"ok": True}
 
     @socketio.on("reset_timer", namespace="/staff")
     @with_tutorial_auth
+    @with_discussion
     def reset_timer(user_id, code, data=None):
         # Resets to the current duration, unless a new valid duration (in minutes) is given
+        new_time = None
         minutes = data.get("time") if isinstance(data, dict) else None
         if minutes is not None:
             new_time, error = _validate_discussion_time(minutes)
             if error:
                 return _error(error)
-            tutorials[code]["timer"]["duration"] = new_time
 
-        _reset_timer(code)
+        timer.reset(code, new_time)
+        emit_tutorial_update(code)
+        return {"ok": True}
+
+    @socketio.on("adjust_timer", namespace="/staff")
+    @with_tutorial_auth
+    @with_discussion
+    def adjust_timer(user_id, code, data=None):
+        # Only the current Discussion is adjusted (the next one returns to the tutorial's duration)
+        seconds = data.get("seconds") if isinstance(data, dict) else None
+        if seconds not in (TIMER_ADJUSTMENT_SECONDS, -TIMER_ADJUSTMENT_SECONDS) or isinstance(seconds, bool):
+            return _error("Invalid timer adjustment.")
+
+        remaining = timer.get_remaining(tutorials[code]["timer"])
+        if seconds > 0 and remaining + seconds > MAX_DISCUSSION_MINUTES * 60:
+            return _error(f"Discussion time can't be more than {MAX_DISCUSSION_MINUTES} minutes.")
+        if seconds < 0 and remaining <= 0:
+            return _error("The Timer has already finished.")
+
+        timer.adjust(code, seconds)
         emit_tutorial_update(code)
         return {"ok": True}
 
@@ -263,23 +330,7 @@ def register_staff_events(socketio):
     @socketio.on("end_tutorial", namespace="/staff")
     @with_tutorial_auth
     def end_tutorial(user_id, code, data=None):
-        tutorial = tutorials[code]
-        tutorial["timer"]["running"] = False
-        timer.stop(code)
-        tutorial["state"] = TutorialState.ENDED
-
-        emit("tutorial_ended", {"tutorial_code": code}, room=code, namespace="/")
-        emit("tutorial_ended", {"tutorial_code": code}, room=code, namespace="/staff")
-
-        for student_id in tutorial.get("students", {}):
-            if users.get(student_id, {}).get("tutorial") == code:
-                users[student_id]["tutorial"] = None
-
-        users[user_id]["tutorial"] = None
-        del tutorials[code]
-
-        close_room(code, namespace="/")
-        close_room(code, namespace="/staff")
+        close_tutorial(code)
         return {"ok": True}
 
 
@@ -296,13 +347,6 @@ def join_tutorial(user_id, code):
 
     emit_tutorial_update(code)
     return {"ok": True, "tutorial_code": code}
-
-
-def _reset_timer(code):
-    tutorial_timer = tutorials[code]["timer"]
-    tutorial_timer["remaining"] = tutorial_timer["duration"]
-    tutorial_timer["running"] = False
-    timer.stop(code)
 
 
 def _is_int(value):

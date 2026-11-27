@@ -11,23 +11,22 @@ export const STAFF_NAMESPACE = "/staff";
 const ACK_TIMEOUT = 8000;
 
 
-// Identity is kept per Browser Tab (sessionStorage), so a Page Refresh or Reconnection resumes
-// the Same Session, while Closing the Tab forgets it
-const storageKey = (namespace, key) =>
-  `study-mates:${namespace === STAFF_NAMESPACE ? "staff" : "student"}:${key}`;
+// A Student's Anonymous ID is kept across Tabs and Browser Restarts, so that they return to the
+// Same Place in a Session (the server forgets the ID once they leave or the session ends)
+const STUDENT_ID_KEY = "study-mates:student:id";
 
-export function getStored(namespace, key) {
+export function getStudentId() {
   try {
-    return sessionStorage.getItem(storageKey(namespace, key));
+    return localStorage.getItem(STUDENT_ID_KEY);
   } catch {
     return null;
   }
 }
 
-export function setStored(namespace, key, value) {
+export function setStudentId(id) {
   try {
-    if (value) sessionStorage.setItem(storageKey(namespace, key), value);
-    else sessionStorage.removeItem(storageKey(namespace, key));
+    if (id) localStorage.setItem(STUDENT_ID_KEY, id);
+    else localStorage.removeItem(STUDENT_ID_KEY);
   } catch {
     // Storage Unavailable, the Session just won't Survive a Refresh
   }
@@ -68,7 +67,7 @@ export function getSocket(namespace) {
       //   Staff are identified by their Access Token
       //   Students are identified by the Anonymous ID the server gave them
       auth: (callback) => callback(
-        namespace === STAFF_NAMESPACE ? { token: getStaffToken() } : { uuid: getStored(namespace, "uuid") }
+        namespace === STAFF_NAMESPACE ? { token: getStaffToken() } : { uuid: getStudentId() }
       ),
       transports: ["websocket", "polling"],
       reconnection: true,

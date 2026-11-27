@@ -12,6 +12,7 @@ import StudentTutorial from "./pages/student/Tutorial";
 
 // Staff Pages
 import Login from "./pages/staff/Login";
+import Register from "./pages/staff/Register";
 import SetupTutorial from "./pages/staff/SetupTutorial";
 import StaffTutorial from "./pages/staff/Tutorial";
 
@@ -58,6 +59,7 @@ function App() {
 
           {/* Staff Routes */}
           <Route path="/staff/login" element={<Login />} />
+          <Route path="/staff/register" element={<Register />} />
           <Route path="/staff/"
             element={<ProtectedStaffRoute><SetupTutorial /></ProtectedStaffRoute>}
           />

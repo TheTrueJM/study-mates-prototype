@@ -148,7 +148,7 @@ export default function StudentDetailsForm({
                 value={values[attribute]}
                 onChange={(value) => setValue(attribute, value)}
                 multiple={meta.type === "multiple"}
-                noneLabel={meta.type === "single" ? (meta.noneLabel || "Prefer not to Say") : undefined}
+                noneLabel={meta.type === "single" ? (meta.noneLabel || "Skip") : undefined}
                 ariaLabelledBy={labelId}
                 renderIcon={attribute === "communication" ? (method) => <CommunicationIcon method={method} /> : undefined}
               />

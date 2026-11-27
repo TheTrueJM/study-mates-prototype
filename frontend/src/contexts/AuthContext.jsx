@@ -71,8 +71,8 @@ export function AuthProvider({ children }) {
     return response;
   }, [applyAuth]);
 
-  const signIn = useCallback(async (username, password) => {
-    const response = await staffRequest("/login", {
+  const authenticate = useCallback(async (path, username, password) => {
+    const response = await staffRequest(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
@@ -80,6 +80,9 @@ export function AuthProvider({ children }) {
     if (response.ok && response.data.token) applyAuth(response.data);
     return response;
   }, [applyAuth]);
+
+  const signIn = useCallback((username, password) => authenticate("/login", username, password), [authenticate]);
+  const signUp = useCallback((username, password) => authenticate("/register", username, password), [authenticate]);
 
 
   const value = useMemo(() => ({
@@ -89,8 +92,9 @@ export function AuthProvider({ children }) {
     loading,
     continueAsGuest,
     signIn,
+    signUp,
     logout,
-  }), [auth, loading, continueAsGuest, signIn, logout]);
+  }), [auth, loading, continueAsGuest, signIn, signUp, logout]);
 
   return (
     <AuthContext.Provider value={value}>

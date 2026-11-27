@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import Card from "../../components/Card";
 import Button from "../../components/Button";
@@ -8,7 +8,7 @@ import TextInput from "../../components/TextInput";
 import { useAuth } from "../../contexts/AuthContext";
 
 
-// Staff choose to continue as a Guest or Sign In to an Account, before landing on the Tutorial Setup Page
+// Staff choose to continue as a Guest or Sign In/Up to an Account, before landing on the Tutorial Setup Page
 export default function Login() {
   const navigate = useNavigate();
   const { isAuthenticated, continueAsGuest, signIn } = useAuth();
@@ -95,6 +95,10 @@ export default function Login() {
             {busy === "account" ? "Signing In…" : "Sign In"}
           </Button>
         </form>
+
+        <p className="access-switch">
+          Don't have an Account? <Link to="/staff/register">Sign Up</Link>
+        </p>
       </Card>
     </div>
   );

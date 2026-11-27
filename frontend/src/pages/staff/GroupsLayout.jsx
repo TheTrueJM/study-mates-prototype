@@ -3,7 +3,9 @@ import Button from "../../components/Button";
 import GroupGrid from "./GroupGrid";
 
 
-export default function GroupsLayout({ students = {}, groups = {}, onGrouping, onDiscussion, busy = "" }) {
+export default function GroupsLayout({
+  students = {}, groups = {}, onGrouping, onDiscussion, onRemoveStudent, busy = "",
+}) {
   const groupCount = Object.keys(groups).length;
   const studentCount = Object.values(groups).reduce((total, members) => total + members.length, 0);
 
@@ -19,7 +21,7 @@ export default function GroupsLayout({ students = {}, groups = {}, onGrouping, o
         <div className="empty-state mb-lg">No Groups Formed Yet. Select "Reform groups" to create them.</div>
       ) : (
         <div className="mb-lg">
-          <GroupGrid groups={groups} students={students} />
+          <GroupGrid groups={groups} students={students} onRemove={onRemoveStudent} />
         </div>
       )}
 

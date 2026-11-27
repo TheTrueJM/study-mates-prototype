@@ -1,5 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.sql import func
 
 
 db = SQLAlchemy()
@@ -12,18 +11,8 @@ class Staff(db.Model):
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
 
-    invites = db.relationship("AccountInvite", backref="staff")
-    
     def __repr__(self):
         return f"{self.id}: {self.username}"
-    
-class AccountInvite(db.Model):
-    __tablename__ = "account_invites"
-
-    code = db.Column(db.String(20), primary_key=True)
-    staff_id = db.Column(db.Integer, db.ForeignKey("staff.id"), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, server_default=func.now())
-    active = db.Column(db.Boolean, default=True)
 
 
 class DiscussionCategory(db.Model):

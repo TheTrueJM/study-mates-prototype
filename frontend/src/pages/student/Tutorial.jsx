@@ -22,7 +22,7 @@ function Tutorial() {
   const {
     sessionReady, studentName, attributes, sharedAttributes, attributesComplete, studentCount,
     tutorialCode, tutorialName, tutorialState, availableAttributes,
-    groupNumber, groupMembers, questions, timeRemaining, timeRunning,
+    round, formation, groupNumber, groupMembers, questions, timeRemaining, timeRunning, timeEndsAt,
     enterTutorial, updateDetails, confirmDetails, leaveTutorial, notify,
   } = useTutorial();
 
@@ -35,6 +35,7 @@ function Tutorial() {
 
   const attemptedJoin = useRef(null);
   const previousAttributes = useRef(null);
+  const previousFormation = useRef(null);
 
   const inSession = tutorialCode === code && !!tutorialState;
 
@@ -47,8 +48,11 @@ function Tutorial() {
   // Join the Tutorial in the URL once connected (re-joining a tutorial the student is already in just resumes it)
   useEffect(() => {
     const attemptKey = `${code}:${joinAttempt}`;
-    if (!sessionReady || tutorialCode === code || attemptedJoin.current === attemptKey) return;
+    if (!sessionReady || attemptedJoin.current === attemptKey) return;
     attemptedJoin.current = attemptKey;
+
+    // Already being in the Tutorial counts as an attempt, so that no longer being in it doesn't join it again
+    if (tutorialCode === code) return;
 
     setJoinPending(true);
     enterTutorial(code).then((response) => {
@@ -71,6 +75,18 @@ function Tutorial() {
       notify(`Your Tutor has asked for More Details (${labels}). Use "Edit my Details" to add them.`, "info", 8000);
     }
   }, [attributesKey, inSession, attributesComplete, notify]);
+
+  // Stop Editing Details when New Groups are formed, so that the Student sees their Group
+  // (closing the form saves any Unsaved Change)
+  useEffect(() => {
+    if (!inSession) return;
+    const previous = previousFormation.current;
+    previousFormation.current = formation;
+    if (previous === null || previous === formation || !editing) return;
+
+    setEditing(false);
+    notify("New Groups have been Formed. Any Changes to your Details were Saved.", "info", 8000);
+  }, [formation, inSession, editing, notify]);
 
 
   const handleDone = async () => {
@@ -164,6 +180,7 @@ function Tutorial() {
           <GroupLayout
             state={tutorialState}
             username={studentName}
+            round={round}
             groupNumber={groupNumber}
             groupMembers={groupMembers}
             attributes={attributes}
@@ -172,6 +189,7 @@ function Tutorial() {
             questions={questions}
             timeRemaining={timeRemaining}
             timeRunning={timeRunning}
+            timeEndsAt={timeEndsAt}
             onEdit={() => setEditing(true)}
           />
         )}

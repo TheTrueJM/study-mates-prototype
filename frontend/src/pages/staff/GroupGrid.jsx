@@ -1,4 +1,7 @@
-export default function GroupGrid({ groups = {}, students = {} }) {
+import StudentLabel from "./StudentLabel";
+
+
+export default function GroupGrid({ groups = {}, students = {}, onRemove }) {
   return (
     <div className="group-grid">
       {Object.entries(groups).map(([id, members]) => (
@@ -9,7 +12,9 @@ export default function GroupGrid({ groups = {}, students = {} }) {
           </div>
           <ul className="group-card-body">
             {members.map((member) => (
-              <li key={member} className="group-member">{students[member]?.name || "Unknown"}</li>
+              <li key={member} className={`group-member ${students[member]?.connected ? "" : "is-disconnected"}`}>
+                <StudentLabel id={member} student={students[member]} onRemove={onRemove} />
+              </li>
             ))}
           </ul>
         </div>

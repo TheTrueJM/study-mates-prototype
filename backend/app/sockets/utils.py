@@ -1,6 +1,7 @@
-from flask_socketio import emit, leave_room
+from flask_socketio import emit, leave_room, close_room
 import random, string, uuid, time
 
+from .timer import timer
 from ..enums import TutorialState, AttributeType, SHAREABLE_ATTRIBUTES, PUBLIC_ATTRIBUTES
 
 
@@ -13,6 +14,7 @@ tutorials = dict()
 #       staff: UUID,
 #       name: str,
 #       state: TutorialState,
+#       locked: bool,
 #       group_size: int,
 #       max_groups: int | None,
 #       available_attributes: [ ... ],
@@ -28,11 +30,21 @@ tutorials = dict()
 #       },
 #       groups: { number: [ UUID, ... ], ... },
 #       previous_matches: { UUID: ? },
+#       round: int,
+#       round_discussed: bool,
+#       formation: int,
 #       questions: [question, ...],
-#       timer: { duration: int, remaining: int, running: bool }
+#       timer: { duration: int, remaining: float, ends_at: float | None },
+#       last_activity: int
 #   },
 #   ...
 # }
+
+
+MAX_STUDENTS = 300 # Students in a Tutorial
+
+IDLE_LIMIT = 60 * 60 # Seconds without activity until a Tutorial is closed
+CLEANUP_INTERVAL = 60 # Seconds
 
 
 DAYS = {
@@ -77,12 +89,42 @@ sort_availability = lambda codes: sorted(
 )
 
 
+def emit_staff_update(code):
+    if not (tutorial := tutorials.get(code)):
+        return
+
+    payload = {
+        "tutorial_code": code,
+        "tutorial_name": tutorial.get("name"),
+        "state": str(tutorial.get("state")),
+        "locked": tutorial.get("locked"),
+        "group_size": tutorial.get("group_size"),
+        "max_groups": tutorial.get("max_groups"),
+        "available_attributes": tutorial.get("available_attributes", []),
+        "students": {
+            student_id: {
+                "name": student.get("name"),
+                "attributes_complete": student.get("attributes_complete"),
+                "connected": is_connected(student_id),
+            }
+            for student_id, student in tutorial.get("students", {}).items()
+        },
+        "groups": tutorial.get("groups", {}),
+        "round": tutorial.get("round"),
+        "questions": tutorial.get("questions", []),
+        "timer": timer.get_state(tutorial["timer"]),
+    }
+    emit("tutorial_update", payload, room=code, namespace="/staff")
+
+
 def emit_tutorial_update(code):
     tutorial = tutorials.get(code)
     if not tutorial:
         for ns in ["/", "/staff"]:
             emit("error", {"message": "This tutorial session could not be found."}, room=code, namespace=ns)
         return
+
+    emit_staff_update(code)
 
     students = tutorial.get("students", {})
     groups = tutorial.get("groups", {})
@@ -91,24 +133,7 @@ def emit_tutorial_update(code):
     state = str(tutorial.get("state"))
     available_attributes = tutorial.get("available_attributes", [])
     questions = tutorial.get("questions", [])
-    timer = tutorial.get("timer", {})
-
-    staff_payload = {
-        "tutorial_code": code,
-        "tutorial_name": tutorial_name,
-        "state": state,
-        "group_size": tutorial.get("group_size"),
-        "max_groups": tutorial.get("max_groups"),
-        "available_attributes": available_attributes,
-        "students": {
-            student_id: {"name": student.get("name"), "attributes_complete": student.get("attributes_complete")}
-            for student_id, student in students.items()
-        },
-        "groups": groups,
-        "questions": questions,
-        "timer": timer,
-    }
-    emit("tutorial_update", staff_payload, room=code, namespace="/staff")
+    timer_state = timer.get_state(tutorial["timer"])
 
     # Public Details of each Grouped Student, as seen by Other Students
     formatted_groups = dict()
@@ -136,10 +161,21 @@ def emit_tutorial_update(code):
             "student_count": len(students),
             "group_number": group_number,
             "group_members": formatted_groups.get(group_number),
+            "round": tutorial.get("round"),
+            "formation": tutorial.get("formation"),
             "questions": questions,
-            "timer": timer,
+            "timer": timer_state,
         }
         emit("student_update", payload, room=student_id, namespace="/")
+
+
+def is_connected(user_id):
+    return bool(users.get(user_id, {}).get("sessions"))
+
+
+def record_activity(code):
+    if tutorial := tutorials.get(code):
+        tutorial["last_activity"] = int(time.time())
 
 
 def remove_student(user_id, code):
@@ -167,23 +203,54 @@ def remove_student(user_id, code):
             user["tutorial"] = None
         for sid in user.get("sessions", set()):
             leave_room(code, sid=sid, namespace="/")
+        if not user.get("sessions") and not user.get("tutorial"):
+            del users[user_id]
 
     return True
 
 
-def cleanup_expired_tutorials(): # TODO Run this Periodically in Application
+def close_tutorial(code, reason="ended"):
+    """Ends a tutorial for everyone in it, deleting all of its data"""
+    if not (tutorial := tutorials.get(code)):
+        return
+
+    timer.stop(code)
+    tutorial["state"] = TutorialState.ENDED
+
+    for namespace in ["/", "/staff"]:
+        emit("tutorial_ended", {"tutorial_code": code, "reason": reason}, room=code, namespace=namespace)
+        close_room(code, namespace=namespace)
+
+    del tutorials[code]
+
+    for user_id in [tutorial["staff"], *tutorial["students"]]:
+        if not (user := users.get(user_id)):
+            continue
+        if user.get("tutorial") == code:
+            user["tutorial"] = None
+        if not user["sessions"] and not user.get("tutorial"):
+            del users[user_id]
+
+
+def cleanup_expired_tutorials():
+    """Closes tutorials which have been idle for too long (a running Discussion Timer is never idle)"""
     current_time = time.time()
 
-    # TODO Emit Closure to Users
     for code, tutorial in list(tutorials.items()):
-        if tutorial["state"] == TutorialState.ENDED:
-            del tutorials[code]
+        if timer.is_running(tutorial["timer"]):
             continue
+        if current_time - tutorial["last_activity"] > IDLE_LIMIT:
+            close_tutorial(code, reason="idle")
 
-        # Auto-expire if idle for 60 minutes
-        if current_time - tutorial.get("last_activity", 0) > 3600:
-            tutorial["state"] = TutorialState.ENDED
-            del tutorials[code]
+def run_cleanup(app, socketio):
+    """Periodically cleans up tutorials (never returns, so should be started as a Background Task)"""
+    while True:
+        socketio.sleep(CLEANUP_INTERVAL)
+        try:
+            with app.app_context():
+                cleanup_expired_tutorials()
+        except Exception:
+            app.logger.exception("Tutorials could not be cleaned up")
 
 
 def get_public_attributes(student, available_attributes):
@@ -229,6 +296,14 @@ def _generate_student_name():
 def generate_unique_student_name(tutorial_code):
     student_names = {student.get("name") for student in tutorials[tutorial_code].get("students", {}).values()}
     student_name = _generate_student_name()
+
+    # Number the Name if another can't be found (e.g. if most names are already taken)
+    attempts, number = 0, 2
     while student_name in student_names:
-        student_name = _generate_student_name()
+        attempts += 1
+        if attempts <= 50:
+            student_name = _generate_student_name()
+        else:
+            student_name = f"{_generate_student_name()}-{number}"
+            number += 1
     return student_name

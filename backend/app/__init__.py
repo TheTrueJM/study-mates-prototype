@@ -8,7 +8,7 @@ import os
 
 from .database import db
 from .routes import staff_bp
-from .sockets import register_staff_events, register_student_events, timer
+from .sockets import register_staff_events, register_student_events, run_cleanup, timer
 from .populate import populate_all
 
 
@@ -16,10 +16,9 @@ load_dotenv()
 LOGGER = os.getenv("SOCKETIO_LOGGER", "false").lower() in {"true", "t", "1"}
 
 FLASK_KEY = os.getenv("FLASK_SECRET_KEY")
-DB_URI = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///study_mates.sqlite")
+DB_URI = os.getenv("SQLALCHEMY_DATABASE_URI") or "sqlite:///study_mates.sqlite"
 
 JWT_KEY = os.getenv("JWT_SECRET_KEY")
-JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRY = int(os.getenv("JWT_EXPIRATION_HOURS")) if os.getenv("JWT_EXPIRATION_HOURS", "").isdigit() else 24
 
 ALL_ORIGINS = os.getenv("FRONTEND_ORIGINS")
@@ -33,6 +32,13 @@ socketio = SocketIO(logger=LOGGER, cors_allowed_origins=FRONTEND_ORIGINS, async_
 
 
 def create_app():
+    # Access Tokens can't be issued without a Key (the flask key is used if there is no JWT key)
+    if not JWT_KEY and not FLASK_KEY:
+        raise RuntimeError(
+            "JWT_SECRET_KEY must be set before the server can start (see backend/.env.example). "
+            "Generate one with: python -c \"import secrets; print(secrets.token_hex(32))\""
+        )
+
     app = Flask(__name__)
     app.config["SECRET_KEY"] = FLASK_KEY
     app.config["SQLALCHEMY_DATABASE_URI"] = DB_URI
@@ -59,5 +65,7 @@ def create_app():
     with app.app_context():
         db.create_all()
         populate_all()
+
+    socketio.start_background_task(run_cleanup, app, socketio)
     
     return app, socketio

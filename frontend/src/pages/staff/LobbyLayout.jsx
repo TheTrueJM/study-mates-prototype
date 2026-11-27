@@ -6,8 +6,12 @@ import { useTutorial } from "../../contexts/TutorialContext";
 import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 
+import StudentLabel from "./StudentLabel";
 
-export default function LobbyLayout({ code, students = {}, availableAttributes = [], onGrouping, busy = false }) {
+
+export default function LobbyLayout({
+  code, locked = false, students = {}, availableAttributes = [], onRemoveStudent, onGrouping, busy = false,
+}) {
   const { notify } = useTutorial();
   const [enlarged, setEnlarged] = useState(false);
 
@@ -27,6 +31,7 @@ export default function LobbyLayout({ code, students = {}, availableAttributes =
   const noDetailsRequired = availableAttributes.length === 0;
   const isReady = (student) => noDetailsRequired || !!student.attributes_complete;
   const readyCount = entries.filter(([, student]) => isReady(student)).length;
+  const offlineCount = entries.filter(([, student]) => !student.connected).length;
 
   return (
     <>
@@ -40,7 +45,11 @@ export default function LobbyLayout({ code, students = {}, availableAttributes =
           <p className="join-instructions">
             Go to <strong>{window.location.host}</strong> and enter this Code, or scan the QR Code.
           </p>
-          <p className="text-muted">No Accounts or Personal Details Needed.</p>
+          {locked ? (
+            <p className="join-locked">Joining is Locked. Students already in the Session can still Return.</p>
+          ) : (
+            <p className="text-muted">No Accounts or Personal Details Needed.</p>
+          )}
           <div className="join-actions">
             <Button variant="outline" size="sm" onClick={() => setEnlarged(true)}>Show Fullscreen</Button>
             <Button variant="outline" size="sm" onClick={copyLink}>Copy Join Link</Button>
@@ -74,7 +83,9 @@ export default function LobbyLayout({ code, students = {}, availableAttributes =
       <section className="mb-md">
         <div className="section-header">
           <h2 className="section-title">Students</h2>
-          <span className="text-muted">{entries.length} Joined · {readyCount} Ready</span>
+          <span className="text-muted">
+            {entries.length} Joined · {readyCount} Ready{offlineCount > 0 && ` · ${offlineCount} Offline`}
+          </span>
         </div>
 
         {entries.length === 0 ? (
@@ -84,10 +95,13 @@ export default function LobbyLayout({ code, students = {}, availableAttributes =
             {entries.map(([uuid, student]) => {
               const ready = isReady(student);
               return (
-                <div key={uuid} className={`student-chip ${ready ? "is-ready" : "is-pending"}`}>
+                <div
+                  key={uuid}
+                  className={`student-chip ${ready ? "is-ready" : "is-pending"} ${student.connected ? "" : "is-disconnected"}`}
+                >
                   {ready && <span className="student-chip-check" aria-hidden="true">✓</span>}
-                  {student.name || "Unknown"}
-                  <span className="sr-only">{ready ? " (ready)" : " (still adding details)"}</span>
+                  <span className="sr-only">{ready ? "Ready: " : "Still adding details: "}</span>
+                  <StudentLabel id={uuid} student={student} onRemove={onRemoveStudent} />
                 </div>
               );
             })}
@@ -96,6 +110,11 @@ export default function LobbyLayout({ code, students = {}, availableAttributes =
 
         {entries.length > readyCount && (
           <p className="input-hint mt-xs">Students with a dashed outline are still adding Details. You can start without them.</p>
+        )}
+        {offlineCount > 0 && (
+          <p className="input-hint mt-xs">
+            Offline Students may have just Locked their Phone, so are still Grouped. Remove anyone who has Left the Room.
+          </p>
         )}
       </section>
 

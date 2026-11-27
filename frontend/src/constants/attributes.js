@@ -89,7 +89,7 @@ export const ATTRIBUTES = {
     staffHint: "The Grade each Student's Current GPA is closest to.",
     type: "single",
     options: GRADE_OPTIONS,
-    noneLabel: "No GPA Yet / Prefer not to Say",
+    noneLabel: "Skip / No GPA Yet",
     shareable: true,
   },
   availability: {

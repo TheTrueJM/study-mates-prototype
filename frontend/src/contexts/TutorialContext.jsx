@@ -1,10 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, startTransition, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { getSocket, emitWithAck, setStored, STUDENT_NAMESPACE, STAFF_NAMESPACE } from "../socket";
+import { getSocket, emitWithAck, setStudentId, STUDENT_NAMESPACE, STAFF_NAMESPACE } from "../socket";
 import { useAuth } from "./AuthContext";
 
 const TutorialContext = createContext(null);
+
+const SESSION_LOST = "Your Session is no longer Running, as the Server was Restarted or it was Closed while you were away.";
 
 const INITIAL_TUTORIAL = {
   tutorialCode: "",
@@ -15,6 +17,8 @@ const INITIAL_TUTORIAL = {
   timeDuration: 0,
   timeRemaining: 0,
   timeRunning: false,
+  timeEndsAt: null,
+  round: 0,
 
   // Student
   studentName: "",
@@ -24,18 +28,22 @@ const INITIAL_TUTORIAL = {
   studentCount: 0,
   groupNumber: null,
   groupMembers: [],
+  formation: 0,
 
   // Staff
+  locked: false,
   students: {},
   groups: {},
   groupSize: null,
   maxGroups: null,
 };
 
+// The Remaining Time is from when the update is received, so is kept as an End Time while the Timer is running
 const mapTimer = (timer = {}) => ({
   timeDuration: timer.duration ?? 0,
   timeRemaining: timer.remaining ?? 0,
   timeRunning: !!timer.running,
+  timeEndsAt: timer.running ? Date.now() + (timer.remaining ?? 0) * 1000 : null,
 });
 
 const mapStudentUpdate = (data) => ({
@@ -45,6 +53,7 @@ const mapStudentUpdate = (data) => ({
   availableAttributes: data.available_attributes || [],
   questions: data.questions || [],
   ...mapTimer(data.timer),
+  round: data.round ?? 0,
   studentName: data.username || "",
   attributes: data.attributes || {},
   sharedAttributes: data.shared_attributes || [],
@@ -52,6 +61,7 @@ const mapStudentUpdate = (data) => ({
   studentCount: data.student_count || 0,
   groupNumber: data.group_number ?? null,
   groupMembers: data.group_members || [],
+  formation: data.formation ?? 0,
 });
 
 const mapStaffUpdate = (data) => ({
@@ -61,6 +71,8 @@ const mapStaffUpdate = (data) => ({
   availableAttributes: data.available_attributes || [],
   questions: data.questions || [],
   ...mapTimer(data.timer),
+  round: data.round ?? 0,
+  locked: !!data.locked,
   students: data.students || {},
   groups: data.groups || {},
   groupSize: data.group_size ?? null,
@@ -88,6 +100,7 @@ export function TutorialProvider({ children }) {
 
   const navigateRef = useRef(navigate);
   const logoutRef = useRef(logout);
+  const tutorialCodeRef = useRef("");
   const activeKey = useRef(undefined);
   const activeNamespace = useRef(null);
   const attachedNamespaces = useRef(new Set());
@@ -95,7 +108,8 @@ export function TutorialProvider({ children }) {
   useEffect(() => {
     navigateRef.current = navigate;
     logoutRef.current = logout;
-  }, [navigate, logout]);
+    tutorialCodeRef.current = tutorial.tutorialCode;
+  }, [navigate, logout, tutorial.tutorialCode]);
 
 
   // Notifications
@@ -103,10 +117,11 @@ export function TutorialProvider({ children }) {
     setToasts((current) => current.filter((toast) => toast.id !== id));
   }, []);
 
+  // A Duration of null stays until it is Dismissed
   const notify = useCallback((message, type = "info", duration = 4500) => {
     const id = `${Date.now()}-${Math.random()}`;
     setToasts((current) => [...current.slice(-2), { id, message, type }]);
-    setTimeout(() => dismissToast(id), duration);
+    if (duration !== null) setTimeout(() => dismissToast(id), duration);
   }, [dismissToast]);
 
 
@@ -118,6 +133,13 @@ export function TutorialProvider({ children }) {
 
     const isActive = () => activeNamespace.current === ns;
     const homePath = ns === STAFF_NAMESPACE ? "/staff/" : "/";
+
+    // Navigation is applied as a transition, so clearing the Tutorial is too, letting both happen together
+    // (otherwise the student's tutorial page would see it isn't in the session and join it again)
+    const exitTutorial = () => {
+      navigateRef.current(homePath);
+      startTransition(() => setTutorial(INITIAL_TUTORIAL));
+    };
 
     socket.on("connect", () => {
       if (!isActive()) return;
@@ -144,12 +166,14 @@ export function TutorialProvider({ children }) {
     });
 
     socket.on("session", (data) => {
-      if (ns === STUDENT_NAMESPACE) setStored(ns, "uuid", data?.uuid);
+      if (ns === STUDENT_NAMESPACE) setStudentId(data?.uuid);
       if (!isActive()) return;
 
       if (data?.code) {
         setTutorial((current) => ({ ...current, tutorialCode: data.code }));
       } else {
+        // Students are told by the Tutorial Page
+        if (ns === STAFF_NAMESPACE && tutorialCodeRef.current) notify(SESSION_LOST, "error", null);
         setTutorial(INITIAL_TUTORIAL);
       }
       setSessionReady(true);
@@ -169,16 +193,19 @@ export function TutorialProvider({ children }) {
       }
     });
 
-    socket.on("tutorial_ended", () => {
+    socket.on("tutorial_ended", (data) => {
       if (!isActive()) return;
-      setTutorial(INITIAL_TUTORIAL);
-      notify(
-        ns === STAFF_NAMESPACE
-          ? "The Tutorial Session has Ended."
-          : "Your Tutor has Ended the Session. Thanks for Taking Part!",
-        "info"
-      );
-      navigateRef.current(homePath);
+      if (data?.reason === "idle") {
+        notify("The Session was Closed as it hadn't been used for a while.", "info", null);
+      } else {
+        notify(
+          ns === STAFF_NAMESPACE
+            ? "The Tutorial Session has Ended."
+            : "Your Tutor has Ended the Session. Thanks for Taking Part!",
+          "info"
+        );
+      }
+      exitTutorial();
     });
 
     if (ns === STUDENT_NAMESPACE) {
@@ -186,10 +213,10 @@ export function TutorialProvider({ children }) {
         if (isActive()) setTutorial((current) => ({ ...current, tutorialCode: data?.tutorial_code || "" }));
       });
 
-      socket.on("left_tutorial", () => {
+      socket.on("left_tutorial", (data) => {
         if (!isActive()) return;
-        setTutorial(INITIAL_TUTORIAL);
-        navigateRef.current("/");
+        if (data?.removed) notify("Your Tutor Removed you from the Session.", "info", 8000);
+        exitTutorial();
       });
 
       socket.on("student_update", (data) => {
@@ -247,6 +274,11 @@ export function TutorialProvider({ children }) {
   }, []);
 
   const updateTutorial = useCallback((settings) => emitWithAck(STAFF_NAMESPACE, "update_settings", settings), []);
+  const lockTutorial = useCallback((locked) => emitWithAck(STAFF_NAMESPACE, "lock_tutorial", { locked }), []);
+  const removeStudent = useCallback(
+    (studentId) => emitWithAck(STAFF_NAMESPACE, "remove_student", { student_id: studentId }),
+    []
+  );
   const backToLobby = useCallback(() => emitWithAck(STAFF_NAMESPACE, "return_lobby"), []);
   const startGrouping = useCallback(() => emitWithAck(STAFF_NAMESPACE, "start_grouping"), []);
   const startDiscussion = useCallback(() => emitWithAck(STAFF_NAMESPACE, "start_discussion"), []);
@@ -256,6 +288,7 @@ export function TutorialProvider({ children }) {
     (time) => emitWithAck(STAFF_NAMESPACE, "reset_timer", time === undefined ? {} : { time }),
     []
   );
+  const adjustTimer = useCallback((seconds) => emitWithAck(STAFF_NAMESPACE, "adjust_timer", { seconds }), []);
   const endTutorial = useCallback(() => emitWithAck(STAFF_NAMESPACE, "end_tutorial"), []);
 
 
@@ -264,12 +297,13 @@ export function TutorialProvider({ children }) {
     namespace, connected, connectionLost, sessionReady,
     toasts, notify, dismissToast,
     enterTutorial, updateDetails, confirmDetails, leaveTutorial,
-    createTutorial, updateTutorial, backToLobby, startGrouping, startDiscussion,
-    startTimer, stopTimer, resetTimer, endTutorial,
+    createTutorial, updateTutorial, lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion,
+    startTimer, stopTimer, resetTimer, adjustTimer, endTutorial,
   }), [
     tutorial, namespace, connected, connectionLost, sessionReady, toasts, notify, dismissToast,
     enterTutorial, updateDetails, confirmDetails, leaveTutorial, createTutorial, updateTutorial,
-    backToLobby, startGrouping, startDiscussion, startTimer, stopTimer, resetTimer, endTutorial,
+    lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion,
+    startTimer, stopTimer, resetTimer, adjustTimer, endTutorial,
   ]);
 
   return (

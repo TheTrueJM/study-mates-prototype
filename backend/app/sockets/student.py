@@ -1,9 +1,11 @@
 from flask import request
 from flask_socketio import emit, join_room
 from functools import wraps
-import time
 
-from .utils import tutorials, users, sessions, generate_unique_user_uuid, generate_unique_student_name, emit_tutorial_update, remove_student
+from .utils import (
+    tutorials, users, sessions, MAX_STUDENTS, generate_unique_user_uuid, generate_unique_student_name,
+    emit_tutorial_update, emit_staff_update, record_activity, remove_student
+)
 from ..enums import (
     TutorialState, AttributeType, VALID_GRADES, VALID_MEETING_MODE, SHAREABLE_ATTRIBUTES, DEFAULT_SHARED_ATTRIBUTES,
     MIN_STUDY_YEAR, MAX_STUDY_YEAR, MIN_STUDY_SEMESTER, MAX_STUDY_SEMESTER, parse_availability, parse_communication
@@ -70,7 +72,9 @@ def register_student_events(socketio):
 
     @socketio.on("disconnect", namespace="/")
     def disconnect(reason=None):
-        _remove_session(request.sid)
+        user_id = _remove_session(request.sid)
+        if code := users.get(user_id, {}).get("tutorial"):
+            emit_staff_update(code)
 
 
     @socketio.on("enter_tutorial", namespace="/")
@@ -112,12 +116,12 @@ def register_student_events(socketio):
 
         if "shared_attributes" in data:
             if isinstance(data["shared_attributes"], list):
-                shared_attributes = set(data["shared_attributes"]) & SHAREABLE_ATTRIBUTES
-                student["shared_attributes"] = sorted(shared_attributes)
+                shared_attributes = {attribute for attribute in data["shared_attributes"] if isinstance(attribute, str)}
+                student["shared_attributes"] = sorted(shared_attributes & SHAREABLE_ATTRIBUTES)
             else:
                 errors.append("Invalid shared details.")
 
-        tutorial["last_activity"] = _now()
+        record_activity(code)
         emit_tutorial_update(code)
 
         if errors:
@@ -131,6 +135,7 @@ def register_student_events(socketio):
     @with_tutorial_auth
     def confirm_details(user_id, code, data=None):
         tutorials[code]["students"][user_id]["attributes_complete"] = True
+        record_activity(code)
         emit_tutorial_update(code)
         return {"ok": True}
 
@@ -150,6 +155,13 @@ def join_tutorial(user_id, code):
 
     if not (user := users.get(user_id)) or user.get("role") != "student":
         return {"ok": False, "message": "Your session could not be found. Please refresh the page."}
+
+    # Students already in the Tutorial can always return to it
+    if user_id not in tutorial["students"]:
+        if tutorial["locked"]:
+            return {"ok": False, "message": "This Session is Locked, so no one else can Join. Ask your Tutor to Unlock it."}
+        if len(tutorial["students"]) >= MAX_STUDENTS:
+            return {"ok": False, "message": "This Session is Full."}
 
     # Leave any Other Tutorial the Student was previously in
     previous_code = user.get("tutorial")
@@ -175,6 +187,7 @@ def join_tutorial(user_id, code):
     for sid in user.get("sessions", set()):
         join_room(code, sid=sid, namespace="/")
 
+    record_activity(code)
     emit("tutorial_joined", {"tutorial_code": code}, room=user_id, namespace="/")
     emit_tutorial_update(code)
 
@@ -217,7 +230,7 @@ def _validate_attribute(attribute, value):
         case AttributeType.MEETING_MODE.value:
             if value in (None, ""):
                 return None, None
-            if value not in VALID_MEETING_MODE:
+            if not isinstance(value, str) or value not in VALID_MEETING_MODE:
                 return None, "Invalid meeting mode."
             return value, None
 
@@ -252,14 +265,14 @@ def _to_int(value):
     return None
 
 
-def _now():
-    return int(time.time())
-
-
 def _remove_session(sid):
-    """Forgets a closed connection; the user (and their tutorial membership) remains so they can reconnect"""
+    """
+    Forgets a closed connection, returning the ID of its User.
+    The user (and their tutorial membership) remains so they can reconnect.
+    """
     user_id = sessions.pop(sid, None)
     if user := users.get(user_id):
         user["sessions"].discard(sid)
         if not user["sessions"] and not user.get("tutorial"):
             del users[user_id]
+    return user_id

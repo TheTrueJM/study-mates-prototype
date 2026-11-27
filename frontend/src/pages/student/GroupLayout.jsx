@@ -1,3 +1,5 @@
+import { useCountdown } from "../../hooks/useCountdown";
+
 import Button from "../../components/Button";
 import TimerDisplay from "../../components/TimerDisplay";
 import QuestionList from "../../components/QuestionList";
@@ -6,9 +8,11 @@ import MemberCard from "./MemberCard";
 
 
 export default function GroupLayout({
-  state, username, groupNumber, groupMembers = [], attributes, availableAttributes = [], attributesComplete,
-  questions = [], timeRemaining, timeRunning, onEdit,
+  state, username, round = 0, groupNumber, groupMembers = [], attributes, availableAttributes = [], attributesComplete,
+  questions = [], timeRemaining, timeRunning, timeEndsAt, onEdit,
 }) {
+  const remaining = useCountdown(timeRemaining, timeEndsAt);
+
   const canEdit = availableAttributes.length > 0;
 
   if (groupNumber === null || groupNumber === undefined) {
@@ -31,7 +35,7 @@ export default function GroupLayout({
   return (
     <div className="stack">
       <div className="group-hero">
-        <span className="group-hero-label">Your Group</span>
+        <span className="group-hero-label">{round > 0 && `Round ${round} · `}Your Group</span>
         <span className="group-hero-number">{groupNumber}</span>
         <p className="group-hero-text">
           {state === "discussion"
@@ -41,7 +45,7 @@ export default function GroupLayout({
       </div>
 
       {state === "discussion" && (
-        <TimerDisplay remaining={timeRemaining} running={timeRunning} size="md" />
+        <TimerDisplay remaining={remaining} running={timeRunning} size="md" />
       )}
 
       {canEdit && !attributesComplete && (

@@ -1,7 +1,15 @@
 import numpy as np
-import random, math
+import itertools, random, time
 
-from ..enums import AttributeType, GradeType, MeetingMode, VALID_GRADES
+from ..enums import AttributeType, GradeType, MeetingMode, VALID_GRADES, VALID_AVAILABILITY_CODES
+
+
+# NOTE All Weights are just Magic Numbers, relative to the Most Compatible pair of Students (which scores 1)
+AVAILABILITY_WEIGHT = 0.35
+REMATCH_WEIGHT = 0.9
+
+COMMON_TIMES = 2 # Best Meeting Times of a Group that are scored
+SWAP_TIME_LIMIT = 0.5 # Seconds
 
 
 def form_groups(tutorial):
@@ -15,25 +23,22 @@ def form_groups(tutorial):
     if not total_students:
         return dict()
 
-    # Balance Group Sizes, restricting the Maximum Total of Groups if set
-    total_groups = math.ceil(total_students / group_size)
-    if max_groups:
-        total_groups = min(total_groups, max_groups)
-    base_size, extra = divmod(total_students, total_groups)
-    group_sizes = [base_size + 1] * extra + [base_size] * (total_groups - extra)
-    largest_group = group_sizes[0]
+    group_sizes = get_group_sizes(total_students, group_size, max_groups)
 
     available_attributes = tutorial["available_attributes"]
 
     connections: np.ndarray = build_matrix(student_ids, student_details, available_attributes)
+    availability: np.ndarray = build_availability(student_ids, student_details, available_attributes)
+    rematches: np.ndarray = build_rematches(student_ids, tutorial["previous_matches"], largest_group=group_sizes[0])
 
-    groups = dict()
-    previous_matches = tutorial["previous_matches"]
+    def score(group):
+        return score_group(group, connections, availability, rematches)
 
-    REMATCH_RATE = (0.5 / (largest_group ** 1.1)) # NOTE This is a Magic Number
-    unmatched = set(enumerate(student_ids))
+    # Students are referred to by their Index (in student_ids) while matching
+    groups = []
+    unmatched = set(range(total_students))
 
-    for group_id, target_size in enumerate(group_sizes, start=1):
+    for target_size in group_sizes:
         # Pick a Random Starting Student
         first_student = random.choice(tuple(unmatched))
         unmatched.remove(first_student)
@@ -41,39 +46,129 @@ def form_groups(tutorial):
 
         # Fill group with most Compatible Students
         while len(group) < target_size and unmatched:
-            best_student, best_score = None, -math.inf
-
-            for (candidate, c_id) in unmatched:
-                # Compatibility with Entire Group
-                score = rematches = 0
-                for (member, m_id) in group:
-                    # Track rematches between Students in the Group, with a slight chance to allow Rematches
-                    if c_id in previous_matches.get(m_id, ()) and random.random() > REMATCH_RATE:
-                        rematches += 1
-                    score += connections[candidate][member]
-
-                # Penalise score from Student Rematches
-                if rematches:
-                    score *= 0.4 - (0.4 * (rematches / largest_group)) # NOTE This is a Magic Number
-                    score -= 1e-3 * rematches # Avoid rematches when students share no attributes
-
-                # Break Ties Randomly so rounds differ even when Students are Equally Compatible
-                score += random.random() * 1e-6
-
-                if score > best_score:
-                    best_score = score
-                    best_student = (candidate, c_id)
+            # Break Ties Randomly so rounds differ even when Students are Equally Compatible
+            best_student = max(unmatched, key=lambda student: score(group + [student]) + random.random() * 1e-6)
 
             group.append(best_student)
             unmatched.remove(best_student)
 
         # Save group
-        groups[group_id] = [id for (_, id) in group]
+        groups.append(group)
 
-    return groups
+    # The Last Groups are left with whoever remains, so improve all Groups afterwards
+    improve_groups(groups, score)
+
+    return {group_id: [student_ids[student] for student in group] for group_id, group in enumerate(groups, start=1)}
+
+
+def get_group_sizes(total_students, group_size, max_groups=None):
+    """
+    Sizes of the Groups to Form, with as many of the Group Size as possible:
+      - 2 or more Students left over become a smaller Group (e.g. 7 students in groups of 5 becomes [5, 2])
+      - 1 Student left over joins another Group, to not be alone (e.g. 6 students in groups of 5 becomes [6])
+    """
+    full_groups, left_over = divmod(total_students, group_size)
+    group_sizes = [group_size] * full_groups
+
+    if left_over == 1 and group_sizes:
+        group_sizes[0] += 1
+    elif left_over:
+        group_sizes.append(left_over)
+
+    # Balance Larger Groups if restricted to a Maximum Total of Groups
+    if max_groups and len(group_sizes) > max_groups:
+        base_size, extra = divmod(total_students, max_groups)
+        group_sizes = [base_size + 1] * extra + [base_size] * (max_groups - extra)
+
+    return group_sizes
+
+
+def improve_groups(groups, score):
+    """Swaps Students between Groups for as long as it improves their Combined Score (modifies the groups)"""
+    deadline = time.monotonic() + SWAP_TIME_LIMIT
+    scores = [score(group) for group in groups]
+
+    improved = True
+    while improved:
+        improved = False
+
+        for a, b in itertools.combinations(range(len(groups)), 2):
+            # Large Tutorials have many possible Swaps, so don't hold up the server
+            if time.monotonic() > deadline:
+                return
+
+            for i, j in itertools.product(range(len(groups[a])), range(len(groups[b]))):
+                group_a, group_b = groups[a].copy(), groups[b].copy()
+                group_a[i], group_b[j] = group_b[j], group_a[i]
+                score_a, score_b = score(group_a), score(group_b)
+
+                if score_a + score_b > scores[a] + scores[b] + 1e-9:
+                    groups[a], groups[b] = group_a, group_b
+                    scores[a], scores[b] = score_a, score_b
+                    improved = True
+
+
+def score_group(group, connections, availability, rematches):
+    """Compatibility of an Entire Group, from each pair of Students, their Common Times, and any Rematches"""
+    size = len(group)
+    if size < 2:
+        return 0
+
+    members = np.ix_(group, group)
+    total_pairs = size * (size - 1) # Both directions of each pair
+
+    score = connections[members].sum() / total_pairs
+    score -= REMATCH_WEIGHT * rematches[members].sum() / total_pairs
+    if availability is not None:
+        score += AVAILABILITY_WEIGHT * score_common_times(availability[group])
+
+    return score * size
+
+
+def score_common_times(times):
+    """
+    How well a Group's best Meeting Times suit its Students (0 to 1, where everyone is available for them).
+    A Meeting needs the Entire Group, so times suiting only some Students are worth much less.
+    """
+    provided = times[times.any(axis=1)] # Students without any Availability aren't counted
+    if len(provided) < 2:
+        return 0
+
+    portions = provided.sum(axis=0) / len(provided)
+    best_portions = np.sort(portions)[-COMMON_TIMES:]
+    return (best_portions ** 3).mean() # NOTE This is a Magic Number
+
+
+def build_availability(ids, students, available_attributes):
+    """Matrix of whether each Student (row) is available for each Time (column), or None if not enabled"""
+    if str(AttributeType.AVAILABILITY) not in available_attributes:
+        return None
+
+    codes = sorted(VALID_AVAILABILITY_CODES)
+    matrix = np.zeros((len(ids), len(codes)))
+    for i, student_id in enumerate(ids):
+        attributes = students.get(student_id, {}).get("attributes") or {}
+        provided = set(attributes.get(str(AttributeType.AVAILABILITY)) or [])
+        matrix[i] = [code in provided for code in codes]
+
+    return matrix
+
+
+def build_rematches(ids, previous_matches, largest_group):
+    """Matrix of which Students were previously matched, with a slight chance to allow a Rematch"""
+    REMATCH_RATE = (0.5 / (largest_group ** 1.1)) # NOTE This is a Magic Number
+    student_count = len(ids)
+    matrix = np.zeros((student_count, student_count))
+
+    for i, j in itertools.combinations(range(student_count), 2):
+        if ids[j] in previous_matches.get(ids[i], ()) and random.random() > REMATCH_RATE:
+            matrix[i][j] = matrix[j][i] = 1
+
+    return matrix
 
 
 def build_matrix(ids, students, available_attributes):
+    """Matrix of how compatible each pair of Students is (Availability is scored across the Entire Group instead)"""
     student_count = len(ids)
 
     matrix = np.zeros((student_count, student_count))
@@ -93,7 +188,6 @@ def build_matrix(ids, students, available_attributes):
         details.append({
             "current_gpa": grade_or_default(attributes.get(str(AttributeType.CURRENT_GPA)), default_current_gpa),
             "goal_grade": grade_or_default(attributes.get(str(AttributeType.GOAL_GRADE)), default_goal_grade),
-            "availability": set(attributes.get(str(AttributeType.AVAILABILITY)) or []),
             "communication": set(attributes.get(str(AttributeType.COMMUNICATION)) or []),
             "meeting_mode": attributes.get(str(AttributeType.MEETING_MODE)),
         })
@@ -114,9 +208,6 @@ def build_matrix(ids, students, available_attributes):
             if str(AttributeType.GOAL_GRADE) in available_attributes:
                 diff = abs(s1["goal_grade"] - s2["goal_grade"])
                 weight += 5 if diff == 0 else 2.5 if diff == 1 else 0
-
-            if str(AttributeType.AVAILABILITY) in available_attributes:
-                weight += 0.5 * len(s1["availability"] & s2["availability"])
 
             if str(AttributeType.COMMUNICATION) in available_attributes:
                 weight += len(s1["communication"] & s2["communication"])

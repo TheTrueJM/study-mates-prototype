@@ -18,7 +18,7 @@ export default function TutorialSettingsFields({ values, onChange, errors = {} }
         min={MIN_GROUP_SIZE}
         max={MAX_GROUP_SIZE}
         onChange={set("groupSize")}
-        hint={errors.groupSize || "Group Sizes are Balanced, so some Groups may have One Fewer Student."}
+        hint={errors.groupSize || "Students left over form a Smaller Group, or join another Group if there's only one Student."}
       />
 
       <div className="form-group">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useTutorial } from "../../contexts/TutorialContext";
@@ -20,10 +20,10 @@ function Tutorial() {
   const { code } = useParams();
 
   const {
-    sessionReady, tutorialCode, tutorialName, tutorialState, groupSize, maxGroups, availableAttributes,
-    students, groups, questions, timeDuration, timeRemaining, timeRunning,
-    updateTutorial, backToLobby, startGrouping, startDiscussion, endTutorial,
-    startTimer, stopTimer, resetTimer, notify,
+    sessionReady, tutorialCode, tutorialName, tutorialState, locked, groupSize, maxGroups, availableAttributes,
+    students, groups, round, questions, timeDuration, timeRemaining, timeRunning, timeEndsAt,
+    updateTutorial, lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion, endTutorial,
+    startTimer, stopTimer, resetTimer, adjustTimer, notify,
   } = useTutorial();
 
   const [settingsValues, setSettingsValues] = useState(null);
@@ -31,18 +31,26 @@ function Tutorial() {
   const [savingSettings, setSavingSettings] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [ending, setEnding] = useState(false);
+  const [removing, setRemoving] = useState(null); // Student ID
+  const [removeBusy, setRemoveBusy] = useState(false);
   const [busy, setBusy] = useState("");
+
+  const wasRunning = useRef(false);
 
 
   // Once the Session is Known, redirect if this isn't the Staff Member's Running Tutorial
   useEffect(() => {
     if (!sessionReady) return;
     if (!tutorialCode) {
+      // Otherwise it was running when this page opened, so why it has Closed is already notified
+      if (!wasRunning.current) notify(`Session ${code} is no longer Running.`, "info", 8000);
+      wasRunning.current = true;
       navigate("/staff/", { replace: true });
-    } else if (tutorialCode !== code) {
-      navigate(`/staff/tutorial/${tutorialCode}`, { replace: true });
+    } else {
+      wasRunning.current = true;
+      if (tutorialCode !== code) navigate(`/staff/tutorial/${tutorialCode}`, { replace: true });
     }
-  }, [sessionReady, tutorialCode, code, navigate]);
+  }, [sessionReady, tutorialCode, code, navigate, notify]);
 
 
   // Errors are Reported by the Server as Notifications
@@ -85,6 +93,13 @@ function Tutorial() {
     setConfirmEnd(false);
   };
 
+  const handleRemove = async () => {
+    setRemoveBusy(true);
+    await removeStudent(removing);
+    setRemoveBusy(false);
+    setRemoving(null);
+  };
+
 
   if (!tutorialState || tutorialCode !== code) {
     return (
@@ -102,29 +117,41 @@ function Tutorial() {
   }
 
   const studentCount = Object.keys(students).length;
+  const inLobby = tutorialState === "lobby";
 
   return (
     <div className="container container-lg page">
       <Card
         title={tutorialName}
-        subtitle={<>Code <strong className="code-inline">{code}</strong> · {studentCount} Student{studentCount === 1 ? "" : "s"}</>}
+        subtitle={
+          <>
+            Code <strong className="code-inline">{code}</strong>
+            {locked && " (Locked)"} · {studentCount} Student{studentCount === 1 ? "" : "s"}
+            {round > 0 && !inLobby && <> · <strong>Round {round}</strong></>}
+          </>
+        }
         actions={
           <>
-            {tutorialState !== "lobby" && (
+            {!inLobby && (
               <Button variant="outline" size="sm" onClick={run("lobby", backToLobby)} disabled={!!busy}>
                 Back to Lobby
               </Button>
             )}
+            <Button variant="outline" size="sm" onClick={() => lockTutorial(!locked)} aria-pressed={locked}>
+              {locked ? "Unlock Joining" : "Lock Joining"}
+            </Button>
             <Button variant="outline" size="sm" onClick={openSettings}>Settings</Button>
             <Button variant="danger" size="sm" onClick={() => setConfirmEnd(true)}>End Session</Button>
           </>
         }
       >
-        {tutorialState === "lobby" && (
+        {inLobby && (
           <LobbyLayout
             code={code}
+            locked={locked}
             students={students}
             availableAttributes={availableAttributes}
+            onRemoveStudent={setRemoving}
             onGrouping={run("grouping", startGrouping)}
             busy={busy === "grouping"}
           />
@@ -135,6 +162,7 @@ function Tutorial() {
             groups={groups}
             onGrouping={run("grouping", startGrouping)}
             onDiscussion={run("discussion", startDiscussion)}
+            onRemoveStudent={setRemoving}
             busy={busy}
           />
         )}
@@ -144,12 +172,15 @@ function Tutorial() {
             timeRemaining={timeRemaining}
             timeDuration={timeDuration}
             timeRunning={timeRunning}
+            timeEndsAt={timeEndsAt}
             students={students}
             groups={groups}
             onGrouping={run("grouping", startGrouping)}
             onStartTimer={startTimer}
             onStopTimer={stopTimer}
             onResetTimer={() => resetTimer()}
+            onAdjustTimer={adjustTimer}
+            onRemoveStudent={setRemoving}
             busy={busy}
           />
         )}
@@ -195,6 +226,17 @@ function Tutorial() {
         busy={ending}
         onConfirm={handleEnd}
         onCancel={() => setConfirmEnd(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={!!removing}
+        title={`Remove ${students[removing]?.name ?? "this Student"}?`}
+        message="Their Details will be Deleted and they'll leave their Group. They can Rejoin with the Code unless Joining is Locked."
+        confirmLabel="Remove Student"
+        danger
+        busy={removeBusy}
+        onConfirm={handleRemove}
+        onCancel={() => setRemoving(null)}
       />
     </div>
   );
