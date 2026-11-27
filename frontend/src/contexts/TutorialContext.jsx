@@ -157,7 +157,8 @@ export function TutorialProvider({ children }) {
     const exitTutorial = () => {
       const showResults = ns === STUDENT_NAMESPACE && !!resultsKeyRef.current;
       resultsKeyRef.current = null;
-      navigateRef.current(showResults ? "/results" : homePath);
+      if (showResults) navigateRef.current("/results", { state: { justClosed: true } });
+      else navigateRef.current(homePath);
       startTransition(() => setTutorial(INITIAL_TUTORIAL));
     };
 

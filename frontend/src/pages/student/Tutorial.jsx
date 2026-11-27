@@ -213,7 +213,7 @@ function Tutorial() {
       </Card>
 
       {/* Editing details during group rounds */}
-      <Modal title="Your details" isOpen={editing && !inLobby} onClose={() => setEditing(false)}>
+      <Modal title="Your Details" isOpen={editing && !inLobby} onClose={() => setEditing(false)}>
         <p className="text-muted mb-md">
           Changes save automatically and your Group sees them straight away. Everything is Optional.
         </p>
