@@ -24,6 +24,7 @@ function TutorialSetup() {
     discussionTime: 5,
     availableAttributes: [...DEFAULT_AVAILABLE_ATTRIBUTES],
     customAttributes: [],
+    shortlisting: false,
   });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");

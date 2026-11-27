@@ -1,12 +1,14 @@
 from flask import request
 from flask_socketio import emit, join_room
 from functools import wraps
+import secrets
 
 from .utils import (
     tutorials, users, sessions, MAX_STUDENTS, generate_unique_user_uuid, generate_unique_student_name,
     emit_tutorial_update, emit_staff_update, record_activity, remove_student, get_shareable_attributes
 )
 from ..custom_attributes import validate_custom_value
+from . import meetings
 from ..enums import (
     TutorialState, AttributeType, VALID_GRADES, VALID_MEETING_MODE, SHAREABLE_ATTRIBUTES, DEFAULT_SHARED_ATTRIBUTES,
     MIN_STUDY_YEAR, MAX_STUDY_YEAR, MIN_STUDY_SEMESTER, MAX_STUDY_SEMESTER, parse_availability, parse_communication
@@ -145,6 +147,44 @@ def register_student_events(socketio):
         return {"ok": True}
 
 
+    @socketio.on("shortlist", namespace="/")
+    @with_tutorial_auth
+    def shortlist(user_id, code, data=None):
+        """Adds (or Removes) a Classmate the Student has Met to their Shortlist of potential Teammates"""
+        tutorial = tutorials[code]
+        if not tutorial.get("shortlisting"):
+            return _error("Shortlisting isn't turned on for this Session.")
+
+        data = data if isinstance(data, dict) else {}
+        public_id, shortlisted = data.get("id"), data.get("shortlisted")
+        if not isinstance(public_id, str) or not isinstance(shortlisted, bool):
+            return _error("Invalid shortlist change.")
+        if not meetings.can_shortlist(tutorial, user_id, public_id):
+            return _error("You can only Shortlist Classmates you've Met.")
+
+        wrapping_up = tutorial["state"] == TutorialState.WRAP_UP
+        shortlist = tutorial["shortlists"].setdefault(user_id, set())
+
+        if shortlisted:
+            shortlist.add(public_id)
+        else:
+            # Once revealed, a Mutual Shortlist stays (the other Student has already been told)
+            if wrapping_up and meetings.is_mutual(tutorial, user_id, public_id):
+                return _error("You've both Shortlisted each other, so they've already been told.")
+            shortlist.discard(public_id)
+
+        # Students who Shortlist each other during the Wrap-Up are both told straight away
+        other_id = meetings.find_student(tutorial, public_id)
+        if shortlisted and wrapping_up and meetings.is_mutual(tutorial, user_id, public_id):
+            students = tutorial["students"]
+            for student_id, other in ((user_id, other_id), (other_id, user_id)):
+                emit("mutual_shortlist", {"name": students[other]["name"]}, room=student_id, namespace="/")
+
+        record_activity(code)
+        emit_tutorial_update(code)
+        return {"ok": True}
+
+
     @socketio.on("leave_tutorial", namespace="/")
     @with_tutorial_auth
     def leave_tutorial(user_id, code, data=None):
@@ -187,7 +227,8 @@ def join_tutorial(user_id, code):
                 get_shareable_attributes(tutorial) - SHAREABLE_ATTRIBUTES
             )),
             "attributes_complete": False,
-            "group": None
+            "group": None,
+            "public_id": _generate_public_id(tutorial),
         }
 
         if tutorial.get("state") in {TutorialState.GROUPING, TutorialState.INTRODUCTION, TutorialState.DISCUSSION}:
@@ -215,7 +256,17 @@ def late_assignment_to_group(tutorial_code, student_id):
 
     groups[best_group_id].append(student_id)
     students[student_id]["group"] = best_group_id
+    if tutorial["state"] in meetings.MEETING_STATES:
+        meetings.record_group(tutorial, best_group_id)
     return True
+
+
+def _generate_public_id(tutorial):
+    used = {student.get("public_id") for student in tutorial["students"].values()}
+    public_id = secrets.token_hex(6)
+    while public_id in used:
+        public_id = secrets.token_hex(6)
+    return public_id
 
 
 def _validate_attribute(attribute, value):

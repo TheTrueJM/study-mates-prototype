@@ -7,10 +7,12 @@ import Button from "../../components/Button";
 import AttributeValue from "../../components/AttributeValue";
 import StudentDetailsForm from "../../components/StudentDetailsForm";
 
+import { PreviousPeople } from "./GroupLayout";
+
 
 export default function LobbyLayout({
   username, studentCount, attributes, sharedAttributes, attributesComplete, availableAttributes = [],
-  editing, onEdit, onSave, onDone,
+  editing, onEdit, onSave, onDone, history = [], shortlisting = false, onShortlist,
 }) {
   const [showDetails, setShowDetails] = useState(false);
   const catalog = useAttributeCatalog();
@@ -115,6 +117,8 @@ export default function LobbyLayout({
           )}
         </section>
       )}
+
+      <PreviousPeople history={history} shortlisting={shortlisting} onShortlist={onShortlist} />
     </div>
   );
 }

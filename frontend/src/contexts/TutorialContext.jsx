@@ -2,6 +2,7 @@ import { createContext, startTransition, useCallback, useContext, useEffect, use
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { getSocket, emitWithAck, setStudentId, STUDENT_NAMESPACE, STAFF_NAMESPACE } from "../socket";
+import { saveResults } from "../results";
 import { useAuth } from "./AuthContext";
 
 const TutorialContext = createContext(null);
@@ -31,6 +32,10 @@ const INITIAL_TUTORIAL = {
   groupNumber: null,
   groupMembers: [],
   formation: 0,
+  history: [],
+
+  // Both
+  shortlisting: false,
 
   // Staff
   locked: false,
@@ -38,6 +43,7 @@ const INITIAL_TUTORIAL = {
   groups: {},
   groupSize: null,
   maxGroups: null,
+  mutualPairs: 0,
 };
 
 // The Remaining Time is from when the update is received, so is kept as an End Time while the Timer is running
@@ -66,6 +72,8 @@ const mapStudentUpdate = (data) => ({
   groupNumber: data.group_number ?? null,
   groupMembers: data.group_members || [],
   formation: data.formation ?? 0,
+  history: data.history || [],
+  shortlisting: !!data.shortlisting,
 });
 
 const mapStaffUpdate = (data) => ({
@@ -83,6 +91,8 @@ const mapStaffUpdate = (data) => ({
   groups: data.groups || {},
   groupSize: data.group_size ?? null,
   maxGroups: data.max_groups ?? null,
+  shortlisting: !!data.shortlisting,
+  mutualPairs: data.mutual_pairs ?? 0,
 });
 
 
@@ -109,6 +119,7 @@ export function TutorialProvider({ children }) {
   const tutorialCodeRef = useRef("");
   const activeKey = useRef(undefined);
   const activeNamespace = useRef(null);
+  const resultsKeyRef = useRef(null); // The Student's Saved Results of their Current Session
   const attachedNamespaces = useRef(new Set());
 
   useEffect(() => {
@@ -141,9 +152,12 @@ export function TutorialProvider({ children }) {
     const homePath = ns === STAFF_NAMESPACE ? "/staff/" : "/";
 
     // Navigation is applied as a transition, so clearing the Tutorial is too, letting both happen together
-    // (otherwise the student's tutorial page would see it isn't in the session and join it again)
+    // (otherwise the student's tutorial page would see it isn't in the session and join it again).
+    // Students who Met anyone see their Saved Results, to help them find their Classmates afterwards.
     const exitTutorial = () => {
-      navigateRef.current(homePath);
+      const showResults = ns === STUDENT_NAMESPACE && !!resultsKeyRef.current;
+      resultsKeyRef.current = null;
+      navigateRef.current(showResults ? "/results" : homePath);
       startTransition(() => setTutorial(INITIAL_TUTORIAL));
     };
 
@@ -229,8 +243,20 @@ export function TutorialProvider({ children }) {
         if (isActive() && data?.group_number) notify(`Your Tutor Moved you to Group ${data.group_number}.`, "info", 8000);
       });
 
+      socket.on("mutual_shortlist", (data) => {
+        if (!isActive()) return;
+        if (data?.name) {
+          notify(`It's a Match! You and ${data.name} both Shortlisted each other.`, "success", 8000);
+        } else if (data?.count) {
+          const others = data.count === 1 ? "1 Classmate" : `${data.count} Classmates`;
+          notify(`You and ${others} Shortlisted each other! See who below.`, "success", 8000);
+        }
+      });
+
       socket.on("student_update", (data) => {
-        if (isActive()) setTutorial((current) => ({ ...current, ...mapStudentUpdate(data) }));
+        if (!isActive()) return;
+        resultsKeyRef.current = saveResults(data) ?? resultsKeyRef.current;
+        setTutorial((current) => ({ ...current, ...mapStudentUpdate(data) }));
       });
     } else {
       socket.on("tutorial_created", (data) => {
@@ -275,6 +301,10 @@ export function TutorialProvider({ children }) {
   const updateDetails = useCallback((details) => emitWithAck(STUDENT_NAMESPACE, "update_details", details), []);
   const confirmDetails = useCallback(() => emitWithAck(STUDENT_NAMESPACE, "confirm_details"), []);
   const leaveTutorial = useCallback(() => emitWithAck(STUDENT_NAMESPACE, "leave_tutorial"), []);
+  const shortlistStudent = useCallback(
+    (id, shortlisted) => emitWithAck(STUDENT_NAMESPACE, "shortlist", { id, shortlisted }),
+    []
+  );
 
   // Staff Actions
   const createTutorial = useCallback(async (settings) => {
@@ -312,12 +342,12 @@ export function TutorialProvider({ children }) {
     ...tutorial,
     namespace, connected, connectionLost, sessionReady,
     toasts, notify, dismissToast,
-    enterTutorial, updateDetails, confirmDetails, leaveTutorial,
+    enterTutorial, updateDetails, confirmDetails, leaveTutorial, shortlistStudent,
     createTutorial, updateTutorial, lockTutorial, removeStudent, moveStudent, backToLobby, startGrouping, startDiscussion,
     skipIntroduction, startTimer, stopTimer, resetTimer, adjustTimer, wrapUp, endTutorial,
   }), [
     tutorial, namespace, connected, connectionLost, sessionReady, toasts, notify, dismissToast,
-    enterTutorial, updateDetails, confirmDetails, leaveTutorial, createTutorial, updateTutorial,
+    enterTutorial, updateDetails, confirmDetails, leaveTutorial, shortlistStudent, createTutorial, updateTutorial,
     lockTutorial, removeStudent, moveStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction,
     startTimer, stopTimer, resetTimer, adjustTimer, wrapUp, endTutorial,
   ]);

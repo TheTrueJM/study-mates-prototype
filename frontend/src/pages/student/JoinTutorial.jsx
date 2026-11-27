@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { useTutorial } from "../../contexts/TutorialContext";
+import { loadResults } from "../../results";
 
 import Card from "../../components/Card";
 import Button from "../../components/Button";
@@ -21,6 +22,7 @@ function JoinTutorial() {
   const [code, setCode] = useState(() => cleanCode(searchParams.get("code") || ""));
   const [error, setError] = useState("");
   const [joining, setJoining] = useState(false);
+  const [pastSessions] = useState(() => loadResults().length);
 
 
   const handleJoin = async (event) => {
@@ -82,6 +84,12 @@ function JoinTutorial() {
             {joining ? "Joining…" : "Join Session"}
           </Button>
         </form>
+
+        {pastSessions > 0 && (
+          <p className="text-center mt-sm">
+            <Link to="/results">See your Past Sessions ({pastSessions})</Link>
+          </p>
+        )}
       </Card>
     </div>
   );

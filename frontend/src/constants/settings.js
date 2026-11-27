@@ -33,6 +33,7 @@ export function validateSettings(values) {
       max_groups: values.limitGroups ? maxGroups : null,
       discussion_time: discussionTime,
       available_attributes: values.availableAttributes,
+      shortlisting: !!values.shortlisting,
       custom_attributes: (values.customAttributes || []).map(({ id, label, hint, options, multiple, matching, saved_id }) => (
         { id, label, hint, options, multiple, matching, saved_id: saved_id ?? null }
       )),
@@ -50,14 +51,15 @@ export function settingsToValues(settings) {
     discussionTime: Math.round(settings.discussion_time * 100) / 100,
     availableAttributes: [...(settings.available_attributes || [])],
     customAttributes: (settings.custom_attributes || []).map((detail) => ({ ...detail, options: [...detail.options] })),
+    shortlisting: !!settings.shortlisting,
   };
 }
 
 /** Whether Settings Form Values match some Saved Settings */
 export function matchesSettings(values, settings) {
-  const normalise = ({ group_size, max_groups, discussion_time, available_attributes = [], custom_attributes = [] }) =>
+  const normalise = ({ group_size, max_groups, discussion_time, available_attributes = [], custom_attributes = [], shortlisting }) =>
     JSON.stringify([
-      group_size, max_groups ?? null, Number(discussion_time), [...available_attributes].sort(),
+      group_size, max_groups ?? null, Number(discussion_time), [...available_attributes].sort(), !!shortlisting,
       custom_attributes.map(({ label, hint, options, multiple, matching }) => [label, hint || "", options, multiple, matching]),
     ]);
 

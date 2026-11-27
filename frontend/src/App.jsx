@@ -9,6 +9,7 @@ import ConnectionBanner from "./components/ConnectionBanner";
 // Student Pages
 import JoinTutorial from "./pages/student/JoinTutorial";
 import StudentTutorial from "./pages/student/Tutorial";
+import Results from "./pages/student/Results";
 
 // Staff Pages
 import Login from "./pages/staff/Login";
@@ -56,6 +57,8 @@ function App() {
           <Route path="/tutorial/:code"
             element={<ProtectedStudentRoute><StudentTutorial /></ProtectedStudentRoute>}
           />
+
+          <Route path="/results" element={<Results />} />
 
           {/* Staff Routes */}
           <Route path="/staff/login" element={<Login />} />

@@ -63,6 +63,23 @@ export default function TutorialSettingsFields({ values, onChange, errors = {} }
         error={errors.discussionTime}
       />
 
+      <div className="form-group">
+        <div className="input-label-row">
+          <label className="input-label" htmlFor="shortlisting">Teammate Shortlist</label>
+          <Switch
+            id="shortlisting"
+            label="Teammate Shortlist"
+            onLabel="On"
+            offLabel="Off"
+            checked={!!values.shortlisting}
+            onChange={set("shortlisting")}
+          />
+        </div>
+        <p className="input-hint">
+          Students can Shortlist Classmates they'd like to Team Up with. Students who Shortlist each other are told at the Wrap-Up.
+        </p>
+      </div>
+
       <AttributeToggleList
         value={values.availableAttributes}
         onChange={set("availableAttributes")}

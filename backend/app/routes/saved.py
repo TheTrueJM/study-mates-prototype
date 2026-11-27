@@ -110,6 +110,7 @@ def _preset_settings(data):
         "discussion_time": settings["discussion_time"] / 60, # Minutes
         "available_attributes": [a for a in settings["available_attributes"] if a in SELECTABLE_ATTRIBUTES],
         "custom_attributes": settings["custom_attributes"],
+        "shortlisting": settings["shortlisting"],
     }, None
 
 

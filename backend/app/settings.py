@@ -66,6 +66,10 @@ def validate_settings(data, current=None):
     else:
         custom_attributes = list()
 
+    shortlisting = data.get("shortlisting", current["shortlisting"] if current else False)
+    if not isinstance(shortlisting, bool):
+        return None, "Invalid shortlist setting."
+
     # Custom Details are always enabled, after the Selected Built-In Details
     available_attributes += [definition["id"] for definition in custom_attributes]
 
@@ -75,4 +79,5 @@ def validate_settings(data, current=None):
         "discussion_time": discussion_time,
         "available_attributes": available_attributes,
         "custom_attributes": custom_attributes,
+        "shortlisting": shortlisting,
     }, None

@@ -4,12 +4,14 @@ import Button from "../../components/Button";
 import TimerDisplay from "../../components/TimerDisplay";
 import QuestionList from "../../components/QuestionList";
 
+import PeopleMet from "../../components/PeopleMet";
+
 import MemberCard from "./MemberCard";
 
 
 export default function GroupLayout({
   state, username, round = 0, groupNumber, groupMembers = [], attributes, availableAttributes = [], attributesComplete,
-  questions = [], timeRemaining, timeRunning, timeEndsAt, onEdit,
+  questions = [], timeRemaining, timeRunning, timeEndsAt, onEdit, history = [], shortlisting = false, onShortlist,
 }) {
   const remaining = useCountdown(timeRemaining, timeEndsAt);
 
@@ -90,14 +92,40 @@ export default function GroupLayout({
               member={member}
               isSelf={member.name === username}
               ownAttributes={attributes}
+              shortlisting={shortlisting}
+              onShortlist={onShortlist}
             />
           ))}
         </div>
+        {shortlisting && (
+          <p className="section-hint mt-xs">
+            Shortlist anyone you'd like to Team Up with. If they Shortlist you too, you'll both be told at the End of the Session.
+          </p>
+        )}
       </section>
+
+      <PreviousPeople history={history} groupMembers={members} shortlisting={shortlisting} onShortlist={onShortlist} />
 
       {canEdit && (
         <Button variant="outline" fullWidth onClick={onEdit}>Edit my Details</Button>
       )}
     </div>
+  );
+}
+
+
+// Classmates Met in Previous Rounds (not including the Current Group)
+export function PreviousPeople({ history = [], groupMembers = [], shortlisting = false, onShortlist }) {
+  const current = new Set(groupMembers.map((member) => member.id));
+  const previous = history.filter((person) => !current.has(person.id));
+  if (!previous.length) return null;
+
+  return (
+    <details className="disclosure">
+      <summary>People you've Met ({previous.length})</summary>
+      <div className="disclosure-body">
+        <PeopleMet people={previous} shortlisting={shortlisting} onToggle={onShortlist} />
+      </div>
+    </details>
   );
 }

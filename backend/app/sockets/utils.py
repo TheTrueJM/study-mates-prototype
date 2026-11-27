@@ -2,6 +2,7 @@ from flask_socketio import emit, leave_room, close_room
 import random, string, uuid, time
 
 from .timer import timer
+from . import meetings
 from ..enums import TutorialState, AttributeType, SHAREABLE_ATTRIBUTES, PUBLIC_ATTRIBUTES
 from ..custom_attributes import is_shareable, public_definition, coerce_custom_value
 
@@ -26,12 +27,16 @@ tutorials = dict()
 #               attributes: { ... },
 #               shared_attributes: [ ... ],
 #               attributes_complete: bool,
-#               group: int
+#               group: int,
+#               public_id: str (identifies the Student to Other Students)
 #           },
 #           ...
 #       },
 #       groups: { number: [ UUID, ... ], ... },
-#       previous_matches: { UUID: ? },
+#       previous_matches: { UUID: {UUID, ...} }, (used to avoid Rematches)
+#       shortlisting: bool,
+#       history: { UUID: { public ID: {name, times, common, round, group} } }, (who each Student has Met)
+#       shortlists: { UUID: {public ID, ...} },
 #       round: int,
 #       round_discussed: bool,
 #       formation: int,
@@ -105,6 +110,8 @@ def emit_staff_update(code):
         "max_groups": tutorial.get("max_groups"),
         "available_attributes": tutorial.get("available_attributes", []),
         "custom_attributes": tutorial.get("custom_attributes", []),
+        "shortlisting": tutorial.get("shortlisting", False),
+        "mutual_pairs": meetings.mutual_pairs(tutorial) if tutorial.get("state") == TutorialState.WRAP_UP else 0,
         "students": {
             student_id: {
                 "name": student.get("name"),
@@ -147,14 +154,26 @@ def emit_tutorial_update(code):
     for group_number, member_ids in groups.items():
         formatted_groups[group_number] = [
             {
+                "id": students[member_id].get("public_id"),
                 "name": students[member_id].get("name"),
                 "attributes": get_public_attributes(students[member_id], available_attributes, custom_attributes),
             }
             for member_id in member_ids if member_id in students
         ]
 
+    shortlisting = tutorial.get("shortlisting", False)
+
     for student_id, student_data in students.items():
         group_number = student_data.get("group")
+        shortlist = tutorial["shortlists"].get(student_id, set())
+        group_members = [
+            {
+                **member,
+                "met": meetings.previously_met(tutorial, student_id, member["id"]),
+                "shortlisted": shortlisting and member["id"] in shortlist,
+            }
+            for member in formatted_groups.get(group_number, [])
+        ] if group_number in formatted_groups else None
 
         payload = {
             "username": student_data.get("name"),
@@ -168,7 +187,10 @@ def emit_tutorial_update(code):
             "custom_attributes": public_custom_attributes,
             "student_count": len(students),
             "group_number": group_number,
-            "group_members": formatted_groups.get(group_number),
+            "group_members": group_members,
+            "public_id": student_data.get("public_id"),
+            "shortlisting": shortlisting,
+            "history": meetings.get_history(tutorial, student_id),
             "round": tutorial.get("round"),
             "formation": tutorial.get("formation"),
             "questions": questions,
@@ -206,6 +228,8 @@ def remove_student(user_id, code):
     previous_matches.pop(user_id, None)
     for matches in previous_matches.values():
         matches.discard(user_id)
+
+    meetings.forget_student(tutorial, user_id)
 
     if user := users.get(user_id):
         if user.get("tutorial") == code:

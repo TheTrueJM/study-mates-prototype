@@ -22,7 +22,7 @@ function Tutorial() {
   const { code } = useParams();
 
   const {
-    sessionReady, tutorialCode, tutorialName, tutorialState, locked, groupSize, maxGroups, availableAttributes, customAttributes,
+    sessionReady, tutorialCode, tutorialName, tutorialState, locked, groupSize, maxGroups, availableAttributes, customAttributes, shortlisting, mutualPairs,
     students, groups, round, questions, discussionTime, timeDuration, timeRemaining, timeRunning, timeEndsAt,
     updateTutorial, lockTutorial, removeStudent, moveStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction, wrapUp, endTutorial,
     startTimer, stopTimer, resetTimer, adjustTimer, notify,
@@ -72,6 +72,7 @@ function Tutorial() {
       discussionTime: discussionTime ? Math.round((discussionTime / 60) * 100) / 100 : 5,
       availableAttributes: availableAttributes.filter((attribute) => !isCustomAttribute(attribute)),
       customAttributes: customAttributes.map((detail) => ({ ...detail, options: [...detail.options] })),
+      shortlisting,
     });
   };
 
@@ -205,6 +206,8 @@ function Tutorial() {
             timer={timer}
             round={round}
             studentCount={studentCount}
+            shortlisting={shortlisting}
+            mutualPairs={mutualPairs}
             onResetTimer={() => resetTimer()}
             onClose={() => setConfirmClose(true)}
           />

@@ -23,8 +23,8 @@ function Tutorial() {
   const {
     sessionReady, studentName, attributes, sharedAttributes, attributesComplete, studentCount,
     tutorialCode, tutorialName, tutorialState, availableAttributes,
-    round, formation, groupNumber, groupMembers, questions, timeRemaining, timeRunning, timeEndsAt,
-    enterTutorial, updateDetails, confirmDetails, leaveTutorial, notify,
+    round, formation, groupNumber, groupMembers, questions, timeRemaining, timeRunning, timeEndsAt, history, shortlisting,
+    enterTutorial, updateDetails, confirmDetails, leaveTutorial, shortlistStudent, notify,
   } = useTutorial();
 
   const catalog = useAttributeCatalog();
@@ -177,9 +177,19 @@ function Tutorial() {
             onEdit={() => setEditing(true)}
             onSave={updateDetails}
             onDone={handleDone}
+            history={history}
+            shortlisting={shortlisting}
+            onShortlist={shortlistStudent}
           />
         ) : tutorialState === "wrap_up" ? (
-          <WrapUpLayout timeRemaining={timeRemaining} timeRunning={timeRunning} timeEndsAt={timeEndsAt} />
+          <WrapUpLayout
+            timeRemaining={timeRemaining}
+            timeRunning={timeRunning}
+            timeEndsAt={timeEndsAt}
+            history={history}
+            shortlisting={shortlisting}
+            onShortlist={shortlistStudent}
+          />
         ) : (
           <GroupLayout
             state={tutorialState}
@@ -195,6 +205,9 @@ function Tutorial() {
             timeRunning={timeRunning}
             timeEndsAt={timeEndsAt}
             onEdit={() => setEditing(true)}
+            history={history}
+            shortlisting={shortlisting}
+            onShortlist={shortlistStudent}
           />
         )}
       </Card>

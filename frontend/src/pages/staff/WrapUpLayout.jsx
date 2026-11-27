@@ -3,7 +3,9 @@ import TimerPanel from "../../components/TimerPanel";
 
 
 // Shown once the Tutorial has Ended, giving everyone time to Return to their Seats before the Session Closes
-export default function WrapUpLayout({ timer, round = 0, studentCount = 0, onResetTimer, onClose }) {
+export default function WrapUpLayout({
+  timer, round = 0, studentCount = 0, shortlisting = false, mutualPairs = 0, onResetTimer, onClose,
+}) {
   return (
     <div className="stack">
       <div className="phase-banner">
@@ -24,7 +26,8 @@ export default function WrapUpLayout({ timer, round = 0, studentCount = 0, onRes
       />
 
       <p className="text-muted text-center">
-        {round} Round{round === 1 ? "" : "s"} · {studentCount} Student{studentCount === 1 ? "" : "s"}.
+        {round} Round{round === 1 ? "" : "s"} · {studentCount} Student{studentCount === 1 ? "" : "s"}
+        {shortlisting && ` · ${mutualPairs} Mutual Shortlist${mutualPairs === 1 ? "" : "s"}`}.
         The Countdown is only a Guide, so the Session stays Open until you Close it.
       </p>
 

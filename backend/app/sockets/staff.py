@@ -11,6 +11,7 @@ from .utils import (
 )
 from .timer import timer
 from .matching import form_groups
+from .meetings import record_group, record_meetings, get_history
 from ..auth import verify_staff_token
 from ..enums import TutorialState
 from ..settings import MAX_DISCUSSION_MINUTES, is_int, validate_discussion_time, validate_settings
@@ -142,9 +143,12 @@ def register_staff_events(socketio):
             "max_groups": settings["max_groups"],
             "available_attributes": settings["available_attributes"],
             "custom_attributes": settings["custom_attributes"],
+            "shortlisting": settings["shortlisting"],
             "students": dict(),
             "groups": dict(),
             "previous_matches": dict(),
+            "history": dict(),
+            "shortlists": dict(),
             "round": 0,
             "round_discussed": False,
             "formation": 0,
@@ -174,6 +178,7 @@ def register_staff_events(socketio):
         tutorial["max_groups"] = settings["max_groups"]
         tutorial["available_attributes"] = settings["available_attributes"]
         apply_custom_attributes(tutorial, settings["custom_attributes"])
+        tutorial["shortlisting"] = settings["shortlisting"]
 
         # A running Discussion is only reset when its Duration actually changes
         # (Introductions keep counting down, and roll into a Discussion of the new duration)
@@ -247,6 +252,8 @@ def register_staff_events(socketio):
             tutorial["previous_matches"].setdefault(student_id, set()).add(member_id)
         groups[target].append(student_id)
         student["group"] = target
+        if tutorial["state"] != TutorialState.GROUPING:
+            record_group(tutorial, target)
 
         emit("moved_group", {"group_number": target}, room=student_id, namespace="/")
         emit_tutorial_update(code)
@@ -257,6 +264,7 @@ def register_staff_events(socketio):
     @with_tutorial_auth
     def return_lobby(user_id, code, data=None):
         tutorial = tutorials[code]
+        record_meetings(tutorial) # As they were when the Groups left
         tutorial["state"] = TutorialState.LOBBY
         tutorial["groups"].clear()
         tutorial["questions"].clear()
@@ -284,6 +292,7 @@ def register_staff_events(socketio):
         tutorial["questions"].clear()
         timer.reset(code, tutorial["discussion_time"])
 
+        record_meetings(tutorial) # As they were when the Groups left
         tutorial["groups"].clear()
         tutorial["state"] = TutorialState.GROUPING
 
@@ -319,6 +328,7 @@ def register_staff_events(socketio):
         # Students first Introduce themselves, then the Discussion begins automatically (with its full time)
         tutorial["state"] = TutorialState.INTRODUCTION
         tutorial["round_discussed"] = True
+        record_meetings(tutorial)
 
         questions = []
         for category in ["academic", "casual", "study"]:
@@ -412,12 +422,20 @@ def register_staff_events(socketio):
         if tutorial["state"] == TutorialState.WRAP_UP:
             return _error("The Session is already Wrapping Up.")
 
+        record_meetings(tutorial) # As they were when the Groups left
         tutorial["state"] = TutorialState.WRAP_UP
         tutorial["questions"].clear()
         timer.reset(code, WRAP_UP_SECONDS)
         timer.start(code)
 
         emit_tutorial_update(code)
+
+        # Mutual Shortlists are revealed now
+        if tutorial["shortlisting"]:
+            for student_id in tutorial["students"]:
+                mutuals = sum(entry["mutual"] for entry in get_history(tutorial, student_id))
+                if mutuals:
+                    emit("mutual_shortlist", {"count": mutuals}, room=student_id, namespace="/")
         return {"ok": True}
 
     @socketio.on("end_tutorial", namespace="/staff")
