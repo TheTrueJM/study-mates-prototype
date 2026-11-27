@@ -86,9 +86,9 @@ function JoinTutorial() {
         </form>
 
         {pastSessions > 0 && (
-          <p className="text-center mt-sm">
-            <Link to="/results">See Your Past Sessions ({pastSessions})</Link>
-          </p>
+          <Button variant="subtle" size="sm" fullWidth className="mt-sm" onClick={() => navigate("/results")}>
+            Your Past Sessions ({pastSessions})
+          </Button>
         )}
       </Card>
     </div>

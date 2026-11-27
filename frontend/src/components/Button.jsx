@@ -1,4 +1,5 @@
-// Variants: "primary" (blue), "secondary" (orange), "outline" (border only), "danger" (red outline), "link" (text only)
+// Variants: "primary" (blue), "secondary" (orange), "outline" (border only), "subtle" (grey outline, for less important actions),
+//   "danger" (red outline), "danger-solid" (red)
 // Sizes: "md" (default), "sm"
 function Button({
   children, onClick, variant = "primary", size = "md", fullWidth = false, disabled = false,
