@@ -147,6 +147,69 @@ def test_round_counter(staff, connect_student):
     assert (update["round"], update["formation"]) == (2, 4)
 
 
+# ===== Moving Students ===== #
+
+def grouped(staff, connect_student, students=5, **settings):
+    staff.emit("update_settings", {"group_size": 2, **settings})
+    clients = [connect_student(staff.code) for _ in range(students)]
+    assert staff.emit("start_grouping")["ok"]
+    return clients
+
+def group_of(staff, client):
+    return tutorials[staff.code]["students"][client.id]["group"]
+
+def test_moving_a_student_to_another_group(staff, connect_student):
+    clients = grouped(staff, connect_student, 4)
+    student = clients[0]
+    current = group_of(staff, student)
+    target = next(group for group in tutorials[staff.code]["groups"] if group != current)
+
+    response = staff.emit("move_student", {"student_id": student.id, "group": target})
+    assert response["ok"] and response["group_number"] == target
+    groups = tutorials[staff.code]["groups"]
+    assert student.id in groups[target] and student.id not in groups[current] and group_of(staff, student) == target
+    assert latest(student, "moved_group")["group_number"] == target
+    assert latest(student, "student_update")["group_number"] == target
+
+    # Moved Students are counted as matched with their new Group
+    assert set(groups[target]) - {student.id} <= tutorials[staff.code]["previous_matches"][student.id]
+
+def test_moving_a_student_to_a_new_group(staff, connect_student):
+    clients = grouped(staff, connect_student, 4)
+    response = staff.emit("move_student", {"student_id": clients[0].id, "group": "new"})
+    assert response["ok"] and tutorials[staff.code]["groups"][response["group_number"]] == [clients[0].id]
+
+    # Already Alone
+    assert not staff.emit("move_student", {"student_id": clients[0].id, "group": "new"})["ok"]
+
+    # Moving the Last Student out removes the Empty Group
+    staff.emit("move_student", {"student_id": clients[1].id, "group": response["group_number"]})
+    previous = group_of(staff, clients[0])
+    staff.emit("move_student", {"student_id": clients[0].id, "group": next(g for g in tutorials[staff.code]["groups"] if g != previous)})
+    assert all(tutorials[staff.code]["groups"].values())
+
+def test_new_groups_respect_the_group_limit(staff, connect_student):
+    clients = grouped(staff, connect_student, 4, max_groups=2)
+    response = staff.emit("move_student", {"student_id": clients[0].id, "group": "new"})
+    assert not response["ok"] and "Limit" in response["message"] and len(tutorials[staff.code]["groups"]) == 2
+
+@pytest.mark.parametrize("data", [{}, {"student_id": "nobody", "group": 1}, {"group": 1}, {"group": 99}, {"group": "1"}, {"group": True}, "1"])
+def test_invalid_moves(staff, connect_student, data):
+    clients = grouped(staff, connect_student, 4)
+    if isinstance(data, dict) and "student_id" not in data and data:
+        data = {**data, "student_id": clients[0].id}
+    assert not staff.emit("move_student", data)["ok"]
+
+def test_moving_needs_groups(staff, connect_student):
+    student = connect_student(staff.code)
+    connect_student(staff.code)
+    assert not staff.emit("move_student", {"student_id": student.id, "group": "new"})["ok"]
+
+def test_moving_into_the_same_group(staff, connect_student):
+    student = grouped(staff, connect_student, 4)[0]
+    assert not staff.emit("move_student", {"student_id": student.id, "group": group_of(staff, student)})["ok"]
+
+
 # ===== Introductions ===== #
 
 def test_discussion_begins_with_introductions(staff, connect_student):

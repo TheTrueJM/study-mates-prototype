@@ -70,6 +70,7 @@ def with_timer(f):
         return f(user_id, code, *args, **kwargs)
     return wrapper
 
+GROUPED_STATES = {TutorialState.GROUPING, TutorialState.INTRODUCTION, TutorialState.DISCUSSION}
 TIMED_STATES = {TutorialState.INTRODUCTION, TutorialState.DISCUSSION, TutorialState.WRAP_UP}
 
 
@@ -205,6 +206,50 @@ def register_staff_events(socketio):
         emit("left_tutorial", {"tutorial_code": code, "removed": True}, room=student_id, namespace="/")
         emit_tutorial_update(code)
         return {"ok": True}
+
+
+    @socketio.on("move_student", namespace="/staff")
+    @with_tutorial_auth
+    def move_student(user_id, code, data=None):
+        """Moves a Student into another Group, or alone into a New Group (for the Staff Member to fill)"""
+        tutorial = tutorials[code]
+        if tutorial["state"] not in GROUPED_STATES or not tutorial["groups"]:
+            return _error("Students can only be Moved once Groups have been Formed.")
+
+        data = data if isinstance(data, dict) else {}
+        student_id, target = data.get("student_id"), data.get("group")
+        if not isinstance(student_id, str) or not (student := tutorial["students"].get(student_id)):
+            return _error("This Student is no longer in the Session.")
+
+        groups = tutorial["groups"]
+        current = student.get("group")
+
+        if target == "new":
+            if current in groups and groups[current] == [student_id]:
+                return _error("This Student is already in a Group by themselves.")
+            if tutorial["max_groups"] and len(groups) >= tutorial["max_groups"]:
+                return _error(f"The Limit of {tutorial['max_groups']} Groups has been Reached.")
+            target = max(groups) + 1
+            groups[target] = []
+        elif not _is_int(target) or target not in groups:
+            return _error("This Group no longer exists.")
+        elif target == current:
+            return _error("This Student is already in that Group.")
+
+        if current in groups:
+            groups[current].remove(student_id)
+            if not groups[current]:
+                del groups[current]
+
+        for member_id in groups[target]:
+            tutorial["previous_matches"].setdefault(member_id, set()).add(student_id)
+            tutorial["previous_matches"].setdefault(student_id, set()).add(member_id)
+        groups[target].append(student_id)
+        student["group"] = target
+
+        emit("moved_group", {"group_number": target}, room=student_id, namespace="/")
+        emit_tutorial_update(code)
+        return {"ok": True, "group_number": target}
 
 
     @socketio.on("return_lobby", namespace="/staff")

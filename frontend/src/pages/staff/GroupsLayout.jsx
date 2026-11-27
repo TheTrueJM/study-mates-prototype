@@ -4,7 +4,7 @@ import GroupGrid from "./GroupGrid";
 
 
 export default function GroupsLayout({
-  students = {}, groups = {}, onGrouping, onDiscussion, onRemoveStudent, busy = "",
+  students = {}, groups = {}, maxGroups = null, onGrouping, onDiscussion, onRemoveStudent, onMoveStudent, busy = "",
 }) {
   const groupCount = Object.keys(groups).length;
   const studentCount = Object.values(groups).reduce((total, members) => total + members.length, 0);
@@ -21,7 +21,13 @@ export default function GroupsLayout({
         <div className="empty-state mb-lg">No Groups Formed Yet. Select "Reform groups" to create them.</div>
       ) : (
         <div className="mb-lg">
-          <GroupGrid groups={groups} students={students} onRemove={onRemoveStudent} />
+          <GroupGrid
+            groups={groups}
+            students={students}
+            maxGroups={maxGroups}
+            onRemove={onRemoveStudent}
+            onMove={onMoveStudent}
+          />
         </div>
       )}
 

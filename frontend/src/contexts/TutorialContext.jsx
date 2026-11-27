@@ -222,6 +222,10 @@ export function TutorialProvider({ children }) {
         exitTutorial();
       });
 
+      socket.on("moved_group", (data) => {
+        if (isActive() && data?.group_number) notify(`Your Tutor Moved you to Group ${data.group_number}.`, "info", 8000);
+      });
+
       socket.on("student_update", (data) => {
         if (isActive()) setTutorial((current) => ({ ...current, ...mapStudentUpdate(data) }));
       });
@@ -282,6 +286,10 @@ export function TutorialProvider({ children }) {
     (studentId) => emitWithAck(STAFF_NAMESPACE, "remove_student", { student_id: studentId }),
     []
   );
+  const moveStudent = useCallback(
+    (studentId, group) => emitWithAck(STAFF_NAMESPACE, "move_student", { student_id: studentId, group }),
+    []
+  );
   const backToLobby = useCallback(() => emitWithAck(STAFF_NAMESPACE, "return_lobby"), []);
   const startGrouping = useCallback(() => emitWithAck(STAFF_NAMESPACE, "start_grouping"), []);
   const startDiscussion = useCallback(() => emitWithAck(STAFF_NAMESPACE, "start_discussion"), []);
@@ -302,12 +310,12 @@ export function TutorialProvider({ children }) {
     namespace, connected, connectionLost, sessionReady,
     toasts, notify, dismissToast,
     enterTutorial, updateDetails, confirmDetails, leaveTutorial,
-    createTutorial, updateTutorial, lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion,
+    createTutorial, updateTutorial, lockTutorial, removeStudent, moveStudent, backToLobby, startGrouping, startDiscussion,
     skipIntroduction, startTimer, stopTimer, resetTimer, adjustTimer, wrapUp, endTutorial,
   }), [
     tutorial, namespace, connected, connectionLost, sessionReady, toasts, notify, dismissToast,
     enterTutorial, updateDetails, confirmDetails, leaveTutorial, createTutorial, updateTutorial,
-    lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction,
+    lockTutorial, removeStudent, moveStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction,
     startTimer, stopTimer, resetTimer, adjustTimer, wrapUp, endTutorial,
   ]);
 

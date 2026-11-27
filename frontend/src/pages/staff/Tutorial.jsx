@@ -23,7 +23,7 @@ function Tutorial() {
   const {
     sessionReady, tutorialCode, tutorialName, tutorialState, locked, groupSize, maxGroups, availableAttributes,
     students, groups, round, questions, discussionTime, timeDuration, timeRemaining, timeRunning, timeEndsAt,
-    updateTutorial, lockTutorial, removeStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction, wrapUp, endTutorial,
+    updateTutorial, lockTutorial, removeStudent, moveStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction, wrapUp, endTutorial,
     startTimer, stopTimer, resetTimer, adjustTimer, notify,
   } = useTutorial();
 
@@ -174,6 +174,8 @@ function Tutorial() {
           <GroupsLayout
             students={students}
             groups={groups}
+            maxGroups={maxGroups}
+            onMoveStudent={moveStudent}
             onGrouping={run("grouping", startGrouping)}
             onDiscussion={run("discussion", startDiscussion)}
             onRemoveStudent={setRemoving}
@@ -187,6 +189,8 @@ function Tutorial() {
             timer={timer}
             students={students}
             groups={groups}
+            maxGroups={maxGroups}
+            onMoveStudent={moveStudent}
             onGrouping={run("grouping", startGrouping)}
             onResetTimer={() => resetTimer()}
             onSkipIntroduction={run("skip", skipIntroduction)}

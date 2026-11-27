@@ -7,8 +7,8 @@ import GroupGrid from "./GroupGrid";
 
 // The Introductions (a short countdown which rolls into the Discussion) and the Discussion itself
 export default function DiscussionLayout({
-  introduction = false, questions = [], timer, students = {}, groups = {},
-  onGrouping, onResetTimer, onSkipIntroduction, onRemoveStudent, busy = "",
+  introduction = false, questions = [], timer, students = {}, groups = {}, maxGroups = null,
+  onGrouping, onResetTimer, onSkipIntroduction, onRemoveStudent, onMoveStudent, busy = "",
 }) {
   const prompts = <QuestionList questions={questions} />;
 
@@ -50,7 +50,13 @@ export default function DiscussionLayout({
       <details className="disclosure">
         <summary>Show Groups ({Object.keys(groups).length})</summary>
         <div className="disclosure-body">
-          <GroupGrid groups={groups} students={students} onRemove={onRemoveStudent} />
+          <GroupGrid
+            groups={groups}
+            students={students}
+            maxGroups={maxGroups}
+            onRemove={onRemoveStudent}
+            onMove={onMoveStudent}
+          />
         </div>
       </details>
 
