@@ -5,8 +5,9 @@ import secrets
 
 from .utils import (
     tutorials, users, sessions, MAX_STUDENTS, generate_unique_user_uuid, generate_unique_student_name,
-    emit_tutorial_update, emit_staff_update, record_activity, remove_student, get_shareable_attributes
+    emit_tutorial_update, emit_staff_update, record_activity, remove_student, get_shareable_attributes, move_to_group
 )
+from .seating import GROUPED_STATES, get_table, validate_table
 from ..custom_attributes import validate_custom_value
 from . import meetings
 from ..enums import (
@@ -147,6 +148,37 @@ def register_student_events(socketio):
         return {"ok": True}
 
 
+    @socketio.on("update_seating", namespace="/")
+    @with_tutorial_auth
+    def update_seating(user_id, code, data=None):
+        """
+        Sets whether the Student needs to stay at their Table, and which Table (None until they know it,
+        which lets their Staff Member know that someone needs the Table Numbers). See seating.py
+        """
+        tutorial = tutorials[code]
+        if not tutorial.get("seating"):
+            return _error("Seating Needs aren't turned on for this Session.")
+
+        data = data if isinstance(data, dict) else {}
+        stay_seated = data.get("stay_seated")
+        if not isinstance(stay_seated, bool):
+            return _error("Invalid Seating Setting.")
+
+        table, error = validate_table(data.get("table")) if stay_seated else (None, None)
+        if error:
+            return _error(error)
+
+        student = tutorial["students"][user_id]
+        student["stay_seated"] = stay_seated
+        student["table"] = table
+        if table is not None:
+            place_seated_student(tutorial, user_id)
+
+        record_activity(code)
+        emit_tutorial_update(code)
+        return {"ok": True, "group_number": student.get("group")}
+
+
     @socketio.on("shortlist", namespace="/")
     @with_tutorial_auth
     def shortlist(user_id, code, data=None):
@@ -232,6 +264,8 @@ def join_tutorial(user_id, code):
             "attributes_complete": False,
             "group": None,
             "public_id": _generate_public_id(tutorial),
+            "stay_seated": False,
+            "table": None,
         }
 
         if tutorial.get("state") in {TutorialState.GROUPING, TutorialState.INTRODUCTION, TutorialState.DISCUSSION}:
@@ -262,6 +296,41 @@ def late_assignment_to_group(tutorial_code, student_id):
     if tutorial["state"] in meetings.MEETING_STATES:
         meetings.record_group(tutorial, best_group_id)
     return True
+
+
+def place_seated_student(tutorial, student_id):
+    """
+    Once Groups are Formed, a Student who sets the Table they're staying at is placed in the Group meeting there:
+      - While Groups are still finding their Tables, they join the Group with their Table's Number, or otherwise
+        their own Group is Renumbered to their Table (so its other Members come to them)
+      - During Introductions or a Discussion, they only join the Group with their Table's Number if Groups are
+        meeting at the Table with their Number (otherwise their Staff Member can Move Students or Reform the Groups)
+    """
+    if tutorial["state"] not in GROUPED_STATES or not tutorial["groups"]:
+        return
+
+    groups = tutorial["groups"]
+    students = tutorial["students"]
+    student = students[student_id]
+    table, current = student["table"], student.get("group")
+    finding_tables = tutorial["state"] == TutorialState.GROUPING
+
+    if current == table:
+        pass
+    elif table in groups and (finding_tables or tutorial.get("table_numbering")):
+        move_to_group(tutorial, student_id, table)
+    elif finding_tables and current in groups and table not in groups and not any(
+        get_table(tutorial, students[member_id]) not in (None, table) for member_id in groups[current]
+    ):
+        groups[table] = groups.pop(current)
+        for member_id in groups[table]:
+            students[member_id]["group"] = table
+    else:
+        return
+
+    # Groups are now meeting at the Table with their Number
+    if finding_tables:
+        tutorial["table_numbering"] = True
 
 
 def _generate_public_id(tutorial):

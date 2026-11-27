@@ -34,8 +34,14 @@ const INITIAL_TUTORIAL = {
   formation: 0,
   history: [],
 
+  // Students staying at their Table (see backend/app/sockets/seating.py)
+  staySeated: false,
+  table: null,
+
   // Both
   shortlisting: false,
+  seating: false,
+  tableNumbering: false, // Groups meet at the Table with their Number
 
   // Staff
   locked: false,
@@ -74,6 +80,10 @@ const mapStudentUpdate = (data) => ({
   formation: data.formation ?? 0,
   history: data.history || [],
   shortlisting: !!data.shortlisting,
+  seating: !!data.seating,
+  staySeated: !!data.stay_seated,
+  table: data.table ?? null,
+  tableNumbering: !!data.table_numbering,
 });
 
 const mapStaffUpdate = (data) => ({
@@ -92,6 +102,8 @@ const mapStaffUpdate = (data) => ({
   groupSize: data.group_size ?? null,
   maxGroups: data.max_groups ?? null,
   shortlisting: !!data.shortlisting,
+  seating: !!data.seating,
+  tableNumbering: !!data.table_numbering,
   mutualPairs: data.mutual_pairs ?? 0,
 });
 
@@ -241,7 +253,14 @@ export function TutorialProvider({ children }) {
       });
 
       socket.on("moved_group", (data) => {
-        if (isActive() && data?.group_number) notify(`Your Tutor Moved you to Group ${data.group_number}.`, "info", 8000);
+        if (!isActive() || !data?.group_number) return;
+        notify(
+          data.table
+            ? `Your Tutor Moved you to Group ${data.group_number}, so you're now staying at Table ${data.table}.`
+            : `Your Tutor Moved you to Group ${data.group_number}.`,
+          "info",
+          8000
+        );
       });
 
       socket.on("mutual_shortlist", (data) => {
@@ -302,6 +321,10 @@ export function TutorialProvider({ children }) {
   const updateDetails = useCallback((details) => emitWithAck(STUDENT_NAMESPACE, "update_details", details), []);
   const confirmDetails = useCallback(() => emitWithAck(STUDENT_NAMESPACE, "confirm_details"), []);
   const leaveTutorial = useCallback(() => emitWithAck(STUDENT_NAMESPACE, "leave_tutorial"), []);
+  const updateSeating = useCallback(
+    (staySeated, table = null) => emitWithAck(STUDENT_NAMESPACE, "update_seating", { stay_seated: staySeated, table }),
+    []
+  );
   const shortlistStudent = useCallback(
     (id, shortlisted) => emitWithAck(STUDENT_NAMESPACE, "shortlist", { id, shortlisted }),
     []
@@ -321,7 +344,10 @@ export function TutorialProvider({ children }) {
     []
   );
   const moveStudent = useCallback(
-    (studentId, group) => emitWithAck(STAFF_NAMESPACE, "move_student", { student_id: studentId, group }),
+    // Students staying at their Table are only Moved when Forced (once the Staff Member confirms)
+    (studentId, group, force = false) => emitWithAck(
+      STAFF_NAMESPACE, "move_student", { student_id: studentId, group, ...(force && { force: true }) }
+    ),
     []
   );
   const backToLobby = useCallback(() => emitWithAck(STAFF_NAMESPACE, "return_lobby"), []);
@@ -343,12 +369,12 @@ export function TutorialProvider({ children }) {
     ...tutorial,
     namespace, connected, connectionLost, sessionReady,
     toasts, notify, dismissToast,
-    enterTutorial, updateDetails, confirmDetails, leaveTutorial, shortlistStudent,
+    enterTutorial, updateDetails, confirmDetails, leaveTutorial, shortlistStudent, updateSeating,
     createTutorial, updateTutorial, lockTutorial, removeStudent, moveStudent, backToLobby, startGrouping, startDiscussion,
     skipIntroduction, startTimer, stopTimer, resetTimer, adjustTimer, wrapUp, endTutorial,
   }), [
     tutorial, namespace, connected, connectionLost, sessionReady, toasts, notify, dismissToast,
-    enterTutorial, updateDetails, confirmDetails, leaveTutorial, shortlistStudent, createTutorial, updateTutorial,
+    enterTutorial, updateDetails, confirmDetails, leaveTutorial, shortlistStudent, updateSeating, createTutorial, updateTutorial,
     lockTutorial, removeStudent, moveStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction,
     startTimer, stopTimer, resetTimer, adjustTimer, wrapUp, endTutorial,
   ]);

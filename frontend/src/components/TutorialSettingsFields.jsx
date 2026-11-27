@@ -80,6 +80,24 @@ export default function TutorialSettingsFields({ values, onChange, errors = {} }
         </p>
       </div>
 
+      <div className="form-group">
+        <div className="input-label-row">
+          <label className="input-label" htmlFor="seating">Seating Needs</label>
+          <Switch
+            id="seating"
+            label="Seating Needs"
+            onLabel="On"
+            offLabel="Off"
+            checked={values.seating ?? true}
+            onChange={set("seating")}
+          />
+        </div>
+        <p className="input-hint">
+          Students who can't easily move between Tables (e.g. due to a Disability or Injury) can ask to stay at theirs, and their Group is Formed at their Table each Round.
+          Keep this On for In-Person Classes.
+        </p>
+      </div>
+
       <AttributeToggleList
         value={values.availableAttributes}
         onChange={set("availableAttributes")}

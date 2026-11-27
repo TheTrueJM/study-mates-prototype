@@ -25,6 +25,7 @@ function TutorialSetup() {
     availableAttributes: [...DEFAULT_AVAILABLE_ATTRIBUTES],
     customAttributes: [],
     shortlisting: false,
+    seating: true,
   });
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");

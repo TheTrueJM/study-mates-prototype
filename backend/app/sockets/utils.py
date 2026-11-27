@@ -3,6 +3,7 @@ import random, string, uuid, time
 
 from .timer import timer
 from . import meetings
+from .seating import needs_table
 from ..enums import TutorialState, AttributeType, SHAREABLE_ATTRIBUTES, PUBLIC_ATTRIBUTES
 from ..custom_attributes import is_shareable, public_definition, coerce_custom_value
 
@@ -21,6 +22,8 @@ tutorials = dict()
 #       max_groups: int | None,
 #       available_attributes: [ ... ], (built-in details, then the IDs of custom details)
 #       custom_attributes: [{ id, label, hint, options, multiple, matching, saved_id }, ...],
+#       seating: bool, (whether Students can ask to stay at their Table, see seating.py)
+#       table_numbering: bool, (whether the Current Groups meet at the Table with their Number)
 #       students: {
 #           UUID: {
 #               name: str,
@@ -28,7 +31,9 @@ tutorials = dict()
 #               shared_attributes: [ ... ],
 #               attributes_complete: bool,
 #               group: int,
-#               public_id: str (identifies the Student to Other Students)
+#               public_id: str, (identifies the Student to Other Students)
+#               stay_seated: bool, (needs to stay at their Table, only seen by them and their Staff Member)
+#               table: int | None (the Table they're staying at, once they know it)
 #           },
 #           ...
 #       },
@@ -111,12 +116,17 @@ def emit_staff_update(code, index=None):
         "available_attributes": tutorial.get("available_attributes", []),
         "custom_attributes": tutorial.get("custom_attributes", []),
         "shortlisting": tutorial.get("shortlisting", False),
+        "seating": tutorial.get("seating", False),
+        "table_numbering": tutorial.get("table_numbering", False),
         "mutual_pairs": meetings.mutual_pairs(tutorial, index) if tutorial.get("state") == TutorialState.WRAP_UP else 0,
         "students": {
             student_id: {
                 "name": student.get("name"),
                 "attributes_complete": student.get("attributes_complete"),
                 "connected": is_connected(student_id),
+                "stay_seated": bool(student.get("stay_seated")),
+                "table": student.get("table"),
+                "needs_table": needs_table(tutorial, student),
             }
             for student_id, student in tutorial.get("students", {}).items()
         },
@@ -191,6 +201,10 @@ def emit_tutorial_update(code):
             "group_members": group_members,
             "public_id": student_data.get("public_id"),
             "shortlisting": shortlisting,
+            "seating": tutorial.get("seating", False),
+            "stay_seated": bool(student_data.get("stay_seated")),
+            "table": student_data.get("table"),
+            "table_numbering": tutorial.get("table_numbering", False),
             "history": meetings.get_history(tutorial, student_id, index),
             "round": tutorial.get("round"),
             "formation": tutorial.get("formation"),
@@ -241,6 +255,31 @@ def remove_student(user_id, code):
             del users[user_id]
 
     return True
+
+
+def move_to_group(tutorial, student_id, target):
+    """
+    Moves a Student into a Group (created if it doesn't exist yet), leaving any Group they were in.
+    They count as having Met the Group's Members (straight away once Introductions have begun).
+    """
+    groups = tutorial["groups"]
+    student = tutorial["students"][student_id]
+    current = student.get("group")
+
+    if current in groups:
+        groups[current].remove(student_id)
+        if not groups[current]:
+            del groups[current]
+
+    members = groups.setdefault(target, [])
+    for member_id in members:
+        tutorial["previous_matches"].setdefault(member_id, set()).add(student_id)
+        tutorial["previous_matches"].setdefault(student_id, set()).add(member_id)
+    members.append(student_id)
+    student["group"] = target
+
+    if tutorial["state"] in meetings.MEETING_STATES:
+        meetings.record_group(tutorial, target)
 
 
 def begin_discussion(code):

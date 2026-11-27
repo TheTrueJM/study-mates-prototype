@@ -7,11 +7,12 @@ import time
 from .utils import (
     tutorials, users, sessions, generate_unique_tutorial_code, emit_tutorial_update, emit_staff_update,
     record_activity, remove_student as remove_tutorial_student, close_tutorial, begin_discussion,
-    apply_custom_attributes
+    apply_custom_attributes, move_to_group
 )
 from .timer import timer
 from .matching import form_groups
-from .meetings import record_group, record_meetings, get_history
+from .meetings import record_meetings, get_history
+from .seating import get_table, seated_tables, next_group_number
 from ..auth import verify_staff_token
 from ..enums import TutorialState
 from ..settings import MAX_DISCUSSION_MINUTES, is_int, validate_discussion_time, validate_settings
@@ -144,6 +145,8 @@ def register_staff_events(socketio):
             "available_attributes": settings["available_attributes"],
             "custom_attributes": settings["custom_attributes"],
             "shortlisting": settings["shortlisting"],
+            "seating": settings["seating"],
+            "table_numbering": False,
             "students": dict(),
             "groups": dict(),
             "previous_matches": dict(),
@@ -179,6 +182,7 @@ def register_staff_events(socketio):
         tutorial["available_attributes"] = settings["available_attributes"]
         apply_custom_attributes(tutorial, settings["custom_attributes"])
         tutorial["shortlisting"] = settings["shortlisting"]
+        tutorial["seating"] = settings["seating"]
 
         # A running Discussion is only reset when its Duration actually changes
         # (Introductions keep counting down, and roll into a Discussion of the new duration)
@@ -217,7 +221,11 @@ def register_staff_events(socketio):
     @socketio.on("move_student", namespace="/staff")
     @with_tutorial_auth
     def move_student(user_id, code, data=None):
-        """Moves a Student into another Group, or alone into a New Group (for the Staff Member to fill)"""
+        """
+        Moves a Student into another Group, or alone into a New Group (for the Staff Member to fill).
+        Students staying at their Table are only Moved once the Staff Member confirms (with `force`), such as when
+        their Table Number was wrong, and then stay at the Table of their New Group.
+        """
         tutorial = tutorials[code]
         if tutorial["state"] not in GROUPED_STATES or not tutorial["groups"]:
             return _error("Students can only be Moved once Groups have been Formed.")
@@ -229,33 +237,27 @@ def register_staff_events(socketio):
 
         groups = tutorial["groups"]
         current = student.get("group")
+        seated = get_table(tutorial, student) is not None
+
+        if seated and data.get("force") is not True:
+            return _error("This Student is staying at their Table, so Move the Other Students instead.", seated=True)
 
         if target == "new":
             if current in groups and groups[current] == [student_id]:
                 return _error("This Student is already in a Group by themselves.")
             if tutorial["max_groups"] and len(groups) >= tutorial["max_groups"]:
                 return _error(f"The Limit of {tutorial['max_groups']} Groups has been Reached.")
-            target = max(groups) + 1
-            groups[target] = []
+            target = next_group_number(tutorial)
         elif not is_int(target) or target not in groups:
             return _error("This Group no longer exists.")
         elif target == current:
             return _error("This Student is already in that Group.")
 
-        if current in groups:
-            groups[current].remove(student_id)
-            if not groups[current]:
-                del groups[current]
+        move_to_group(tutorial, student_id, target)
+        if seated:
+            student["table"] = target
 
-        for member_id in groups[target]:
-            tutorial["previous_matches"].setdefault(member_id, set()).add(student_id)
-            tutorial["previous_matches"].setdefault(student_id, set()).add(member_id)
-        groups[target].append(student_id)
-        student["group"] = target
-        if tutorial["state"] != TutorialState.GROUPING:
-            record_group(tutorial, target)
-
-        emit("moved_group", {"group_number": target}, room=student_id, namespace="/")
+        emit("moved_group", {"group_number": target, "table": student["table"] if seated else None}, room=student_id, namespace="/")
         emit_tutorial_update(code)
         return {"ok": True, "group_number": target}
 
@@ -266,6 +268,7 @@ def register_staff_events(socketio):
         tutorial = tutorials[code]
         record_meetings(tutorial) # As they were when the Groups left
         tutorial["state"] = TutorialState.LOBBY
+        tutorial["table_numbering"] = False
         tutorial["groups"].clear()
         tutorial["questions"].clear()
         timer.reset(code, tutorial["discussion_time"])
@@ -295,6 +298,7 @@ def register_staff_events(socketio):
         record_meetings(tutorial) # As they were when the Groups left
         tutorial["groups"].clear()
         tutorial["state"] = TutorialState.GROUPING
+        tutorial["table_numbering"] = bool(seated_tables(tutorial)) # Groups are numbered by their Table
 
         # Reforming Groups before their Discussion doesn't count as another Round
         if not tutorial["round"] or tutorial["round_discussed"]:

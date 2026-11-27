@@ -111,6 +111,7 @@ def _preset_settings(data):
         "available_attributes": [a for a in settings["available_attributes"] if a in SELECTABLE_ATTRIBUTES],
         "custom_attributes": settings["custom_attributes"],
         "shortlisting": settings["shortlisting"],
+        "seating": settings["seating"],
     }, None
 
 

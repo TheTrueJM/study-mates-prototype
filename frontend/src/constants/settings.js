@@ -5,6 +5,9 @@ export const MAX_GROUP_SIZE = 10;
 export const MIN_DISCUSSION_MINUTES = 1;
 export const MAX_DISCUSSION_MINUTES = 60;
 
+// How long a Table a Student has just set is shown beside their Name (on the Staff Screen)
+export const SEAT_FLASH_DURATION = 5000;
+
 
 /** Validates Settings Form Values, returning { settings, errors } */
 export function validateSettings(values) {
@@ -34,6 +37,7 @@ export function validateSettings(values) {
       discussion_time: discussionTime,
       available_attributes: values.availableAttributes,
       shortlisting: !!values.shortlisting,
+      seating: values.seating ?? true,
       custom_attributes: (values.customAttributes || []).map(({ id, label, hint, options, multiple, matching, weight, saved_id }) => (
         { id, label, hint, options, multiple, matching, weight: weight || "normal", saved_id: saved_id ?? null }
       )),
@@ -52,14 +56,17 @@ export function settingsToValues(settings) {
     availableAttributes: [...(settings.available_attributes || [])],
     customAttributes: (settings.custom_attributes || []).map((detail) => ({ ...detail, options: [...detail.options] })),
     shortlisting: !!settings.shortlisting,
+    seating: settings.seating ?? true, // Presets saved before Seating Needs existed
   };
 }
 
 /** Whether Settings Form Values match some Saved Settings */
 export function matchesSettings(values, settings) {
-  const normalise = ({ group_size, max_groups, discussion_time, available_attributes = [], custom_attributes = [], shortlisting }) =>
+  const normalise = ({
+    group_size, max_groups, discussion_time, available_attributes = [], custom_attributes = [], shortlisting, seating = true,
+  }) =>
     JSON.stringify([
-      group_size, max_groups ?? null, Number(discussion_time), [...available_attributes].sort(), !!shortlisting,
+      group_size, max_groups ?? null, Number(discussion_time), [...available_attributes].sort(), !!shortlisting, !!seating,
       custom_attributes.map(({ label, hint, options, multiple, matching, weight }) => (
         [label, hint || "", options, multiple, matching, weight || "normal"]
       )),

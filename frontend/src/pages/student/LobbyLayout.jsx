@@ -6,13 +6,14 @@ import { useAttributeCatalog } from "../../hooks/useAttributeCatalog";
 import Button from "../../components/Button";
 import AttributeValue from "../../components/AttributeValue";
 import StudentDetailsForm from "../../components/StudentDetailsForm";
+import SeatingField from "../../components/SeatingField";
 
 import { PreviousPeople } from "./GroupLayout";
 
 
 export default function LobbyLayout({
   username, studentCount, attributes, sharedAttributes, attributesComplete, availableAttributes = [],
-  editing, onEdit, onSave, onDone, history = [], shortlisting = false, onShortlist,
+  editing, onEdit, onSave, onDone, history = [], shortlisting = false, onShortlist, seating = null,
 }) {
   const [showDetails, setShowDetails] = useState(false);
   const catalog = useAttributeCatalog();
@@ -42,6 +43,7 @@ export default function LobbyLayout({
           onSave={onSave}
           onDone={onDone}
           doneLabel={attributesComplete ? "Done" : "I'm Ready"}
+          seating={seating}
         />
       </>
     );
@@ -67,6 +69,8 @@ export default function LobbyLayout({
           <p className="text-muted mt-xs">Your Tutor isn't asking for any Details in this Session.</p>
         )}
       </div>
+
+      {seating && !hasDetails && <SeatingField {...seating} />}
 
       {hasDetails && (
         <section className="summary-card">
@@ -111,6 +115,12 @@ export default function LobbyLayout({
                     </div>
                   );
                 })}
+                {seating?.staySeated && (
+                  <div className="detail-row">
+                    <dt>Seating <span className="tag">Only your Tutor</span></dt>
+                    <dd>{seating.table ? `Staying at Table ${seating.table}` : "Staying at your Table (Table Number needed)"}</dd>
+                  </div>
+                )}
               </dl>
               <p className="member-note">You can Change these at any time, including during Group Rounds.</p>
             </div>

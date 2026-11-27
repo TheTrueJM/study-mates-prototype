@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import { useTutorial } from "../../contexts/TutorialContext";
@@ -8,7 +8,7 @@ import Button from "../../components/Button";
 import Modal from "../../components/Modal";
 import ConfirmDialog from "../../components/ConfirmDialog";
 import TutorialSettingsFields from "../../components/TutorialSettingsFields";
-import { validateSettings } from "../../constants/settings";
+import { validateSettings, SEAT_FLASH_DURATION } from "../../constants/settings";
 import { isCustomAttribute } from "../../constants/attributes";
 
 import LobbyLayout from "./LobbyLayout";
@@ -17,12 +17,14 @@ import DiscussionLayout from "./DiscussionLayout";
 import WrapUpLayout from "./WrapUpLayout";
 
 
+
 function Tutorial() {
   const navigate = useNavigate();
   const { code } = useParams();
 
   const {
     sessionReady, tutorialCode, tutorialName, tutorialState, locked, groupSize, maxGroups, availableAttributes, customAttributes, shortlisting, mutualPairs,
+    seating, tableNumbering,
     students, groups, round, questions, discussionTime, timeDuration, timeRemaining, timeRunning, timeEndsAt,
     updateTutorial, lockTutorial, removeStudent, moveStudent, backToLobby, startGrouping, startDiscussion, skipIntroduction, wrapUp, endTutorial,
     startTimer, stopTimer, resetTimer, adjustTimer, notify,
@@ -37,8 +39,11 @@ function Tutorial() {
   const [removing, setRemoving] = useState(null); // Student ID
   const [removeBusy, setRemoveBusy] = useState(false);
   const [busy, setBusy] = useState("");
+  const [seatFlashes, setSeatFlashes] = useState({}); // { Student ID: Table }
 
   const wasRunning = useRef(false);
+  const previousSeats = useRef(null);
+  const flashTimers = useRef([]);
 
 
   // Once the Session is Known, redirect if this isn't the Staff Member's Running Tutorial
@@ -54,6 +59,44 @@ function Tutorial() {
       if (tutorialCode !== code) navigate(`/staff/tutorial/${tutorialCode}`, { replace: true });
     }
   }, [sessionReady, tutorialCode, code, navigate, notify]);
+
+
+  // Students staying at their Table (only when Seating Needs are on)
+  const seats = useMemo(() => Object.fromEntries(Object.entries(students).map(([id, student]) => [id, {
+    table: seating && student.stay_seated ? (student.table ?? null) : null,
+    needsTable: seating && !!student.needs_table,
+  }])), [students, seating]);
+  const needsTableCount = Object.values(seats).filter((seat) => seat.needsTable).length;
+
+  // A Table a Student has just set is briefly shown beside their Name, and Staff are told (without saying who)
+  // when someone needs the Table Numbers. Nothing is shown for Students already Seated when the page opens.
+  useEffect(() => {
+    const previous = previousSeats.current;
+    previousSeats.current = seats;
+    if (!previous) return;
+
+    const set = Object.entries(seats).filter(([id, seat]) => seat.table !== null && seat.table !== previous[id]?.table);
+    if (set.length) {
+      setSeatFlashes((current) => ({ ...current, ...Object.fromEntries(set.map(([id, seat]) => [id, seat.table])) }));
+      flashTimers.current.push(setTimeout(() => setSeatFlashes((current) => {
+        const next = { ...current };
+        set.forEach(([id, seat]) => next[id] === seat.table && delete next[id]);
+        return next;
+      }), SEAT_FLASH_DURATION));
+    }
+
+    const asking = Object.entries(seats).filter(([id, seat]) => seat.needsTable && !previous[id]?.needsTable).length;
+    if (asking) notify(asking === 1 ? "A Student needs the Table Numbers." : `${asking} Students need the Table Numbers.`, "info", 8000);
+  }, [seats, notify]);
+
+  useEffect(() => () => flashTimers.current.forEach(clearTimeout), []);
+
+  const displayStudents = useMemo(() => Object.fromEntries(Object.entries(students).map(([id, student]) => [id, {
+    ...student,
+    seatTable: seats[id]?.table ?? null,
+    needsTable: !!seats[id]?.needsTable,
+    flash: seatFlashes[id] !== undefined && seatFlashes[id] === seats[id]?.table,
+  }])), [students, seats, seatFlashes]);
 
 
   // Errors are Reported by the Server as Notifications
@@ -73,6 +116,7 @@ function Tutorial() {
       availableAttributes: availableAttributes.filter((attribute) => !isCustomAttribute(attribute)),
       customAttributes: customAttributes.map((detail) => ({ ...detail, options: [...detail.options] })),
       shortlisting,
+      seating,
     });
   };
 
@@ -162,11 +206,20 @@ function Tutorial() {
           </>
         }
       >
+        {needsTableCount > 0 && !wrappingUp && (
+          <div className="seating-note mb-md" role="status">
+            <p>
+              <strong>{needsTableCount === 1 ? "A Student needs" : `${needsTableCount} Students need`} the Table Numbers.</strong>{" "}
+              Let the Class know how the Tables are Numbered or show a Seating Plan so they can enter theirs.
+            </p>
+          </div>
+        )}
+
         {inLobby && (
           <LobbyLayout
             code={code}
             locked={locked}
-            students={students}
+            students={displayStudents}
             availableAttributes={availableAttributes}
             onRemoveStudent={setRemoving}
             onGrouping={run("grouping", startGrouping)}
@@ -175,9 +228,10 @@ function Tutorial() {
         )}
         {tutorialState === "grouping" && (
           <GroupsLayout
-            students={students}
+            students={displayStudents}
             groups={groups}
             maxGroups={maxGroups}
+            tableNumbering={seating && tableNumbering}
             onMoveStudent={moveStudent}
             onGrouping={run("grouping", startGrouping)}
             onDiscussion={run("discussion", startDiscussion)}
@@ -190,7 +244,7 @@ function Tutorial() {
             introduction={tutorialState === "introduction"}
             questions={questions}
             timer={timer}
-            students={students}
+            students={displayStudents}
             groups={groups}
             maxGroups={maxGroups}
             onMoveStudent={moveStudent}
