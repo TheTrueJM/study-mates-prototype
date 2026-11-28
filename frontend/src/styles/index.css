@@ -1027,6 +1027,27 @@ ul {
     margin-right: 0.75rem;
 }
 
+/* On Phones, a Classmate's "in Common" Tag moves below their Name, so the Name isn't squeezed by the Connect Button */
+@media (max-width: 480px) {
+    .member-card:not(.is-self) .member-card-header {
+        flex-wrap: wrap;
+        row-gap: 0.25rem;
+    }
+
+    .member-card:not(.is-self) .member-name {
+        flex: 1 1 calc(100% - 5rem);
+    }
+
+    .member-card:not(.is-self) .member-card-header .chevron {
+        order: 1;
+    }
+
+    .member-card:not(.is-self) .member-card-header .tag {
+        order: 2;
+        margin-left: calc(2.25rem + 0.75rem);
+    }
+}
+
 .member-met {
     display: block;
     font-size: 0.75rem;
